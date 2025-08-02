@@ -270,4 +270,5 @@ htmlcov/
 # AI and Project specific
 .ai/
 .bmad-core/temp/
-*.tmp
+*.tmp.DS_Store
+Thumbs.db

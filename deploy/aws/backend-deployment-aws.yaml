@@ -1,0 +1,356 @@
+# AWS EKS后端应用部署配置
+# 针对AWS环境优化的FastAPI后端部署
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: livin-matrix-backend
+  namespace: livin-matrix-prod
+  labels:
+    app: livin-matrix-backend
+    version: v1
+    component: api
+  annotations:
+    deployment.kubernetes.io/revision: "1"
+spec:
+  replicas: 2  # 在免费层t3.micro节点上运行2个副本
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: livin-matrix-backend
+  template:
+    metadata:
+      labels:
+        app: livin-matrix-backend
+        version: v1
+        component: api
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8000"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: livin-matrix-backend-sa
+      
+      # 节点亲和性 - 优先调度到工作节点
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            preference:
+              matchExpressions:
+              - key: nodegroup-type
+                operator: In
+                values:
+                - worker
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchLabels:
+                  app: livin-matrix-backend
+              topologyKey: kubernetes.io/hostname
+      
+      # 安全上下文
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 2000
+      
+      containers:
+      - name: backend
+        image: 068712345678.dkr.ecr.us-east-1.amazonaws.com/livin-matrix/backend:latest  # 替换为实际ECR URL
+        imagePullPolicy: Always
+        
+        ports:
+        - name: http
+          containerPort: 8000
+          protocol: TCP
+        - name: metrics
+          containerPort: 9090
+          protocol: TCP
+        
+        # 环境变量配置
+        env:
+        # 数据库连接 - 使用AWS RDS
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: livin-matrix-db-secret
+              key: database-url
+        - name: DB_HOST
+          valueFrom:
+            secretKeyRef:
+              name: livin-matrix-db-secret
+              key: host
+        - name: DB_PORT
+          value: "5432"
+        - name: DB_NAME
+          value: "livin_matrix"
+        - name: DB_USER
+          valueFrom:
+            secretKeyRef:
+              name: livin-matrix-db-secret
+              key: username
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: livin-matrix-db-secret
+              key: password
+        
+        # 应用配置
+        - name: SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: livin-matrix-app-secrets
+              key: secret-key
+        - name: ENVIRONMENT
+          value: "production"
+        - name: PROJECT_NAME
+          value: "LiVin Matrix"
+        - name: API_V1_STR
+          value: "/api/v1"
+        - name: DEBUG
+          value: "false"
+        
+        # CORS配置
+        - name: ALLOWED_ORIGINS
+          valueFrom:
+            configMapKeyRef:
+              name: livin-matrix-config
+              key: allowed-origins
+        
+        # AWS配置
+        - name: AWS_REGION
+          value: "us-east-1"
+        - name: AWS_DEFAULT_REGION
+          value: "us-east-1"
+        
+        # 日志配置
+        - name: LOG_LEVEL
+          value: "INFO"
+        - name: LOG_FORMAT
+          value: "json"
+        
+        # 健康检查配置
+        - name: HEALTH_CHECK_PATH
+          value: "/health"
+        
+        # 资源限制 - 适配t3.micro节点
+        resources:
+          limits:
+            memory: "400Mi"      # 减少内存使用以适配t3.micro
+            cpu: "400m"
+            ephemeral-storage: "1Gi"
+          requests:
+            memory: "200Mi"
+            cpu: "200m"
+            ephemeral-storage: "500Mi"
+        
+        # 安全上下文
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          runAsUser: 1000
+          capabilities:
+            drop:
+            - ALL
+        
+        # 健康检查
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: http
+            scheme: HTTP
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
+          successThreshold: 1
+        
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: http
+            scheme: HTTP
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+          successThreshold: 1
+        
+        # 启动探针
+        startupProbe:
+          httpGet:
+            path: /health
+            port: http
+            scheme: HTTP
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 30
+          successThreshold: 1
+        
+        # 卷挂载
+        volumeMounts:
+        - name: tmp-volume
+          mountPath: /tmp
+        - name: app-logs
+          mountPath: /app/logs
+      
+      # 卷定义
+      volumes:
+      - name: tmp-volume
+        emptyDir: {}
+      - name: app-logs
+        emptyDir: {}
+      
+      # DNS配置
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+
+---
+# 后端服务定义
+apiVersion: v1
+kind: Service
+metadata:
+  name: livin-matrix-backend-service
+  namespace: livin-matrix-prod
+  labels:
+    app: livin-matrix-backend
+    service: backend
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+    service.beta.kubernetes.io/aws-load-balancer-backend-protocol: "http"
+spec:
+  selector:
+    app: livin-matrix-backend
+  ports:
+  - name: http
+    port: 8000
+    targetPort: http
+    protocol: TCP
+  - name: metrics
+    port: 9090
+    targetPort: metrics
+    protocol: TCP
+  type: ClusterIP
+  sessionAffinity: None
+
+---
+# 服务账户
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: livin-matrix-backend-sa
+  namespace: livin-matrix-prod
+  labels:
+    app: livin-matrix-backend
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::ACCOUNT_ID:role/LiVinMatrixBackendRole
+automountServiceAccountToken: true
+
+---
+# 水平Pod自动扩缩容
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: livin-matrix-backend-hpa
+  namespace: livin-matrix-prod
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: livin-matrix-backend
+  minReplicas: 2
+  maxReplicas: 4  # 限制最大副本数以控制成本
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Percent
+        value: 50
+        periodSeconds: 60
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      policies:
+      - type: Percent
+        value: 100
+        periodSeconds: 60
+
+---
+# Pod中断预算
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: livin-matrix-backend-pdb
+  namespace: livin-matrix-prod
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: livin-matrix-backend
+
+---
+# 网络策略
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: livin-matrix-backend-netpol
+  namespace: livin-matrix-prod
+spec:
+  podSelector:
+    matchLabels:
+      app: livin-matrix-backend
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: kube-system
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: aws-load-balancer-controller
+    ports:
+    - protocol: TCP
+      port: 8000
+  egress:
+  # 允许访问RDS数据库
+  - to: []
+    ports:
+    - protocol: TCP
+      port: 5432
+  # 允许DNS解析
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: kube-system
+    ports:
+    - protocol: UDP
+      port: 53
+  # 允许HTTPS访问（用于AWS API调用）
+  - to: []
+    ports:
+    - protocol: TCP
+      port: 443

@@ -1,0 +1,105 @@
+template:
+  id: infrastructure-architecture-template
+  name: Infrastructure Architecture
+  version: 2.0
+  output:
+    format: markdown
+    filename: docs/infrastructure-architecture.md
+    title: "{{project_name}} Infrastructure Architecture"
+
+workflow:
+  mode: interactive
+  elicitation: advanced-elicitation
+
+sections:
+  - id: initial-setup
+    instruction: |
+      Initial Setup
+      
+      1. Replace {{project_name}} with the actual project name throughout the document
+      2. Gather and review required inputs:
+         - Product Requirements Document (PRD) - Required for business needs and scale requirements
+         - Main System Architecture - Required for infrastructure dependencies
+         - Technical Preferences/Tech Stack Document - Required for technology choices
+      
+      Output file location: `docs/infrastructure-architecture.md`
+
+  - id: infrastructure-overview
+    title: Infrastructure Overview
+    instruction: |
+      Review the product requirements document to understand business needs and scale requirements. Analyze the main system architecture to identify infrastructure dependencies. Document non-functional requirements (performance, scalability, reliability, security).
+    elicit: true
+    template: |
+      - Cloud Provider(s)
+      - Core Services & Resources
+      - Regional Architecture
+      - Multi-environment Strategy
+
+  - id: iac
+    title: Infrastructure as Code (IaC)
+    instruction: Define IaC approach based on technical preferences and existing patterns. Consider team expertise, tooling ecosystem, and maintenance requirements.
+    template: |
+      - Tools & Frameworks
+      - Repository Structure
+      - State Management
+      - Dependency Management
+      
+      <critical_rule>All infrastructure must be defined as code. No manual resource creation in production environments.</critical_rule>
+
+  - id: network-architecture
+    title: Network Architecture
+    instruction: |
+      Design network topology considering security zones, traffic patterns, and compliance requirements. Reference main architecture for service communication patterns.
+      
+      Create diagram showing:
+      - VPC/Network structure
+      - Security zones and boundaries
+      - Traffic flow patterns
+      - Load balancer placement
+    template: |
+      - VPC/VNET Design
+      - Subnet Strategy
+      - Security Groups & NACLs
+      - Load Balancers & API Gateways
+
+  - id: security-architecture
+    title: Security Architecture
+    instruction: Implement defense-in-depth strategy. Reference security requirements from PRD and compliance needs. Consider zero-trust principles where applicable.
+    template: |
+      - IAM & Authentication
+      - Network Security
+      - Data Encryption
+      - Compliance Controls
+      - Security Scanning & Monitoring
+      
+      <critical_rule>Apply principle of least privilege for all access controls. Document all security exceptions with business justification.</critical_rule>
+
+  - id: monitoring-observability
+    title: Monitoring & Observability
+    instruction: Design comprehensive observability strategy covering metrics, logs, traces, and business KPIs. Ensure alignment with SLA/SLO requirements.
+    template: |
+      - Metrics Collection
+      - Logging Strategy
+      - Tracing Implementation
+      - Alerting & Incident Response
+      - Dashboards & Visualization
+
+  - id: disaster-recovery
+    title: Disaster Recovery
+    instruction: Design DR strategy based on business continuity requirements. Define clear RTO/RPO targets and ensure they align with business needs.
+    template: |
+      - Backup Strategy
+      - Recovery Procedures
+      - RTO & RPO Targets
+      - DR Testing Approach
+      
+      <critical_rule>DR procedures must be tested at least quarterly. Document test results and improvement actions.</critical_rule>
+
+  - id: final-review
+    instruction: Final Review - Ensure all sections are complete and consistent. Apply final validation against infrastructure checklist.
+    content: |
+      ---
+      
+      _Document Version: 1.0_
+      _Last Updated: {{current_date}}_
+      _Next Review: {{review_date}}_

@@ -24,6 +24,12 @@ class Settings(BaseSettings):
     # 数据库配置
     DATABASE_URL: Optional[str] = None
     
+    # 数据库连接池配置
+    DB_POOL_SIZE: int = 20
+    DB_MAX_OVERFLOW: int = 30
+    DB_POOL_RECYCLE: int = 3600
+    DB_POOL_PRE_PING: bool = True
+    
     # Redis 配置
     REDIS_URL: str = "redis://localhost:6379"
     
@@ -38,6 +44,32 @@ class Settings(BaseSettings):
         elif isinstance(v, (list, str)):
             return v
         raise ValueError(v)
+    
+    # 默认CORS配置（基于环境）
+    def get_cors_origins(self) -> List[str]:
+        """根据环境返回CORS配置"""
+        if self.BACKEND_CORS_ORIGINS:
+            return [str(origin) for origin in self.BACKEND_CORS_ORIGINS]
+        
+        if self.ENVIRONMENT == "development":
+            return [
+                "http://localhost:3000",
+                "http://127.0.0.1:3000",
+                "http://localhost:5173",  # Vite默认端口
+                "http://127.0.0.1:5173"   # Vite默认端口
+            ]
+        elif self.ENVIRONMENT == "production":
+            return [
+                "https://your-domain.github.io",
+                "https://livin-matrix.com"
+            ]
+        else:
+            return []
+    
+    # Auth0 配置
+    AUTH0_DOMAIN: str = ""
+    AUTH0_AUDIENCE: str = ""
+    AUTH0_ALGORITHM: str = "RS256"
     
     # 环境配置
     ENVIRONMENT: str = "development"

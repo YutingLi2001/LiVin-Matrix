@@ -148,7 +148,7 @@ const DimensionCard: React.FC<DimensionCardProps> = ({
         <div className="flex items-center space-x-4">
           <div className={cn(
             'w-10 h-10 rounded-lg flex items-center justify-center',
-            isCompleted ? 'bg-green-500 text-white' : 'bg-primary-500/20 text-primary'
+            isCompleted ? 'bg-green-500 text-primary' : 'bg-primary-500/20 text-primary'
           )}>
             {isCompleted ? <CheckIcon /> : icon}
           </div>

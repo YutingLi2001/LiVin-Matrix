@@ -1,5 +1,16 @@
 # LiVin Matrix 前端技术规范文档
 
+## 🔄 Epic 1 Story 2 关键改进需求
+
+**基于Epic 1 Story 1的UX问题发现，本文档已更新以包含以下关键改进：**
+
+### ⚠️ 紧急修复项目：
+1. **字体样式统一** - 禁止白色泛光文字，建立严格的视觉层级
+2. **滑块组件完善** - 添加缺失的轨道设计，提升交互可用性  
+3. **视觉一致性** - 统一/login、/dashboard、/data-entry页面的设计标准
+
+**实施优先级**：Epic 1 Story 2 必须实施
+
 ## 1. 设计系统概览
 
 ### 1.1 设计哲学
@@ -30,11 +41,18 @@
 --bg-elevated: #1a1a1a;      /* 浮起组件背景 */
 --bg-glass: rgba(139, 92, 246, 0.05); /* 玻璃效果背景 */
 
-/* 文本颜色系统 */
---text-primary: #ffffff;     /* 纯白主要文本 */
---text-secondary: #b4b4b4;   /* 银灰次要文本 */
+/* 文本颜色系统 - Epic 1 Story 2 更新 */
+--text-primary: #ffffff;     /* 纯白主要文本 - ⚠️ 严禁与发光效果组合使用 */
+--text-secondary: #e5e5e5;   /* 浅灰次要文本 - 高可读性，无发光 */
+--text-tertiary: #a3a3a3;    /* 中灰辅助文本 - 无发光 */
 --text-muted: #6b6b6b;       /* 暗灰辅助文本 */
 --text-accent: #a78bfa;      /* 紫色强调文本 */
+
+/* ⚠️ 关键约束：文字发光规范 */
+--text-glow-h1: #8b5cf6;     /* H1标题专用紫色发光 */
+--text-glow-h2: #7c3aed;     /* H2标题中等紫色发光 */
+--text-glow-h3: #a78bfa;     /* H3标题轻微紫色发光 */
+/* 🚫 绝对禁止：白色文字 + 任何发光效果的组合 */
 
 /* 霓虹发光色彩 */
 --neon-purple: #8b5cf6;      /* 霓虹紫 */
@@ -80,8 +98,56 @@
 --font-bold: 700;
 --font-extrabold: 800;
 
-/* 特殊效果 */
---text-glow: 0 0 10px currentColor;  /* 霓虹发光效果 */
+/* Epic 1 Story 2 字体层级规范 - 严格执行 */
+
+/* 标题层级 - 允许发光 */
+.text-h1 {
+  font-size: var(--text-4xl);
+  font-weight: var(--font-bold);
+  color: #8b5cf6;  /* 主紫色 */
+  text-shadow: 0 0 10px #8b5cf6;  /* 强发光 */
+  line-height: 1.2;
+}
+
+.text-h2 {
+  font-size: var(--text-3xl);
+  font-weight: var(--font-semibold);
+  color: #7c3aed;  /* 深紫色 */
+  text-shadow: 0 0 8px #7c3aed;   /* 中等发光 */
+  line-height: 1.3;
+}
+
+.text-h3 {
+  font-size: var(--text-2xl);
+  font-weight: var(--font-semibold);
+  color: #a78bfa;  /* 浅紫色 */
+  text-shadow: 0 0 5px #a78bfa;   /* 轻微发光 */
+  line-height: 1.4;
+}
+
+/* 正文内容 - 严禁发光 */
+.text-body {
+  font-size: var(--text-base);
+  font-weight: var(--font-normal);
+  color: #e5e5e5;  /* 浅灰 - 高可读性 */
+  /* 🚫 绝对不使用 text-shadow */
+  line-height: 1.6;
+}
+
+.text-secondary {
+  font-size: var(--text-sm);
+  font-weight: var(--font-normal);
+  color: #a3a3a3;  /* 中灰 */
+  /* 🚫 绝对不使用 text-shadow */
+  line-height: 1.5;
+}
+
+.text-label {
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  color: #e5e5e5;  /* 表单标签高可读性 */
+  /* 🚫 绝对不使用 text-shadow */
+}
 ```
 
 #### 空间系统
@@ -235,6 +301,79 @@ interface DimensionInputProps {
 - 智能默认值预填充
 - Tab键导航优化
 - 进度指示器显示完成状态
+
+#### SliderInput 组件 - Epic 1 Story 2 关键改进
+
+**⚠️ 当前问题**: /data-entry页面滑块缺少轨道，用户无法识别可交互范围
+
+```typescript
+interface SliderInputProps {
+  value: number;
+  onChange: (value: number) => void;
+  min: number;
+  max: number;
+  step?: number;
+  label?: string;
+  unit?: string;
+  disabled?: boolean;
+  showValue?: boolean;
+}
+```
+
+**🎯 Epic 1 Story 2 必需设计规范：**
+
+```css
+/* 滑块轨道 - 必须实现 */
+.slider-track {
+  width: 100%;
+  height: 8px;
+  background: linear-gradient(
+    to right,
+    rgba(139, 92, 246, 0.3) 0%,
+    rgba(139, 92, 246, 0.6) var(--value-percent),
+    rgba(255, 255, 255, 0.1) var(--value-percent)
+  );
+  border: 1px solid rgba(139, 92, 246, 0.5);
+  border-radius: 4px;
+  position: relative;
+}
+
+/* 滑块thumb - 改进后 */
+.slider-thumb {
+  width: 20px;
+  height: 20px;
+  background: radial-gradient(circle, #8b5cf6, #7c3aed);
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  box-shadow: 
+    0 0 10px rgba(139, 92, 246, 0.8),
+    0 2px 8px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.slider-thumb:hover {
+  transform: scale(1.1);
+  box-shadow: 
+    0 0 15px rgba(139, 92, 246, 1),
+    0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+/* 数值显示 - 实时反馈 */
+.slider-value {
+  color: var(--text-secondary); /* 无发光白色文字 */
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  margin-top: 8px;
+}
+```
+
+**交互要求：**
+- ✅ 必须有完整的轨道背景
+- ✅ 渐变填充显示当前值
+- ✅ Thumb悬停放大效果
+- ✅ 实时数值显示
+- ✅ 键盘导航支持（方向键调节）
 
 #### RatingInput 组件
 ```typescript
@@ -589,13 +728,47 @@ interface AnalysisState {
 
 ## 10. 迭代计划
 
-### 10.1 MVP核心功能 (4个月)
+### 10.1 Epic 1 Story 2 - 紧急修复项目（优先级1）
+
+**目标**: 解决Epic 1 Story 1发现的关键UX问题
+
+**必须完成的任务：**
+
+1. **字体样式统一修复**
+   - [ ] 更新 `/dashboard` 页面所有文本使用新的字体层级规范
+   - [ ] 更新 `/data-entry` 页面所有文本使用新的字体层级规范  
+   - [ ] 移除所有白色文字的发光效果
+   - [ ] 确保标题层级(H1-H3)使用指定的紫色发光
+   - [ ] 验证文本对比度符合WCAG AA标准
+
+2. **滑块组件完整实现**
+   - [ ] 为 /data-entry 页面所有滑块添加轨道背景
+   - [ ] 实现渐变填充显示当前值
+   - [ ] 添加thumb悬停放大效果
+   - [ ] 实现实时数值显示
+   - [ ] 添加键盘导航支持
+   - [ ] 在移动端优化触摸区域
+
+3. **视觉一致性验证**
+   - [ ] 确保三个页面(/login, /dashboard, /data-entry)设计风格统一
+   - [ ] 验证颜色使用符合品牌规范
+   - [ ] 确保交互元素行为一致
+
+**验收标准:**
+- ✅ 无任何白色文字使用发光效果
+- ✅ 所有滑块组件有完整的轨道和交互反馈
+- ✅ 三个页面视觉风格完全统一
+- ✅ 通过无障碍性测试
+
+**估算时间**: 2-3个工作日
+
+### 10.2 MVP核心功能 (4个月)
 - 基础UI组件库
 - 6维度数据录入
 - 矩阵热力图可视化
 - 基础响应式支持
 
-### 10.2 后续优化 (Phase 2)
+### 10.3 后续优化 (Phase 2)
 - Framer Motion动画增强
 - 高级图表交互
 - PWA移动端支持
@@ -615,4 +788,18 @@ interface AnalysisState {
 
 ---
 
-*本前端规范文档基于PRD中的UX设计目标制定，确保技术实现与产品愿景的一致性。*
+---
+
+## 📋 文档变更记录
+
+| 日期 | 版本 | 变更内容 | 变更人 | Epic/Story |
+|------|------|----------|--------|------------|
+| 2025-07-31 | 1.1 | 整合Epic 1 Story 2 UX改进需求 | Sarah (PO) | Epic 1 Story 2 |
+| - | - | 添加严格的字体发光约束规范 | - | - |
+| - | - | 新增详细的滑块组件设计规范 | - | - |  
+| - | - | 明确视觉一致性实施要求 | - | - |
+| - | - | 整合Sally (UX Expert)的设计建议 | - | - |
+
+---
+
+*本前端规范文档基于PRD中的UX设计目标制定，并根据Epic 1 Story 1的用户反馈持续优化，确保技术实现与产品愿景的一致性。*

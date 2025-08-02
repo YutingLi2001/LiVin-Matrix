@@ -6,14 +6,23 @@ LiVin Matrix Backend API
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
 
 from app.core.config import settings
 from app.api.api_v1.api import api_router
+from app.middleware.error_handler import (
+    setup_exception_handlers,
+    RequestIDMiddleware,
+    APIVersionMiddleware,
+    setup_logging
+)
+from app.schemas.responses import create_success_response
 
 
 def create_application() -> FastAPI:
     """创建 FastAPI 应用实例"""
+    
+    # 配置日志
+    setup_logging()
     
     application = FastAPI(
         title=settings.PROJECT_NAME,
@@ -24,14 +33,24 @@ def create_application() -> FastAPI:
         redoc_url="/redoc",
     )
 
-    # 配置 CORS
+    # 添加中间件（按添加顺序执行）
+    # 1. 请求ID中间件
+    application.add_middleware(RequestIDMiddleware)
+    
+    # 2. API版本中间件
+    application.add_middleware(APIVersionMiddleware, version="v1")
+    
+    # 3. CORS中间件
     application.add_middleware(
         CORSMiddleware,
-        allow_origins=settings.BACKEND_CORS_ORIGINS,
+        allow_origins=settings.get_cors_origins(),
         allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
+        allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        allow_headers=["Authorization", "Content-Type", "X-Requested-With"],
     )
+
+    # 设置全局异常处理器
+    setup_exception_handlers(application)
 
     # 包含路由
     application.include_router(api_router, prefix=settings.API_V1_STR)
@@ -45,10 +64,11 @@ app = create_application()
 @app.get("/health")
 async def health_check():
     """健康检查端点"""
-    return JSONResponse(
-        content={
+    return create_success_response(
+        data={
             "status": "healthy",
             "service": "livin-matrix-backend",
             "version": settings.VERSION,
-        }
+        },
+        message="Service is running normally"
     )

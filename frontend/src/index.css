@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 :root {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
@@ -18,15 +18,15 @@
   --primary-500: #8b5cf6;
   --primary-600: #7c3aed;
   --primary-400: #a78bfa;
-  
+
   --bg-primary: #000000;
   --bg-secondary: #0a0a0a;
   --bg-tertiary: #1a1a1a;
-  
+
   --text-primary: #ffffff;
   --text-secondary: #e5e5e5;
   --text-tertiary: #a3a3a3;
-  
+
   --neon-cyan: #00ffff;
   --neon-pink: #ff00ff;
   --neon-green: #00ff00;
@@ -60,7 +60,7 @@ body {
 
 /* 霓虹发光效果 */
 .neon-glow {
-  text-shadow: 
+  text-shadow:
     0 0 5px currentColor,
     0 0 10px currentColor,
     0 0 15px currentColor,
@@ -76,7 +76,7 @@ body {
 
 /* 网格背景效果 */
 .cyber-grid-bg {
-  background-image: 
+  background-image:
     linear-gradient(rgba(139, 92, 246, 0.1) 1px, transparent 1px),
     linear-gradient(90deg, rgba(139, 92, 246, 0.1) 1px, transparent 1px);
   background-size: 20px 20px;
@@ -140,4 +140,68 @@ body {
   border-radius: 0.5rem;
   padding: 1.5rem;
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+/* 滑块样式 - Story 1.2 要求 */
+.slider-track {
+  width: 100%;
+  height: 8px;
+  background: linear-gradient(
+    to right,
+    rgba(139, 92, 246, 0.3) 0%,
+    rgba(139, 92, 246, 0.6) var(--value-percent, 50%),
+    rgba(255, 255, 255, 0.1) var(--value-percent, 50%)
+  );
+  border: 1px solid rgba(139, 92, 246, 0.5);
+  border-radius: 4px;
+  position: relative;
+  appearance: none;
+  outline: none;
+  cursor: pointer;
+}
+
+.slider-track::-webkit-slider-thumb {
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  background: radial-gradient(circle, #8b5cf6, #7c3aed);
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  box-shadow:
+    0 0 10px rgba(139, 92, 246, 0.8),
+    0 2px 8px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.slider-track::-webkit-slider-thumb:hover {
+  transform: scale(1.1);
+  box-shadow:
+    0 0 15px rgba(139, 92, 246, 1),
+    0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.slider-track::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  background: radial-gradient(circle, #8b5cf6, #7c3aed);
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  box-shadow:
+    0 0 10px rgba(139, 92, 246, 0.8),
+    0 2px 8px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.slider-track::-moz-range-thumb:hover {
+  transform: scale(1.1);
+  box-shadow:
+    0 0 15px rgba(139, 92, 246, 1),
+    0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.slider-track:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.5);
 }

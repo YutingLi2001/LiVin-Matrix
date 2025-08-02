@@ -1,0 +1,173 @@
+# VPC和网络基础设施配置
+# 用于LiVin Matrix项目的AWS VPC配置
+
+apiVersion: ec2.aws.amazon.com/v1beta1
+kind: VPC
+metadata:
+  name: livin-matrix-vpc
+  region: us-east-1
+spec:
+  cidrBlock: "10.0.0.0/16"
+  enableDnsHostnames: true
+  enableDnsSupport: true
+  tags:
+    Name: "livin-matrix-vpc"
+    Project: "LiVin-Matrix"
+    Environment: "production"
+    CostCenter: "free-tier"
+
+---
+# Internet Gateway
+apiVersion: ec2.aws.amazon.com/v1beta1
+kind: InternetGateway
+metadata:
+  name: livin-matrix-igw
+spec:
+  tags:
+    Name: "livin-matrix-igw"
+    Project: "LiVin-Matrix"
+
+---
+# 公有子网 - 用于ALB和NAT Gateway
+apiVersion: ec2.aws.amazon.com/v1beta1
+kind: Subnet
+metadata:
+  name: livin-matrix-public-subnet-1a
+spec:
+  vpcId: !Ref LivinMatrixVPC
+  cidrBlock: "10.0.1.0/24"
+  availabilityZone: "us-east-1a"
+  mapPublicIpOnLaunch: true
+  tags:
+    Name: "livin-matrix-public-1a"
+    Type: "public"
+    kubernetes.io/role/elb: "1"
+
+---
+apiVersion: ec2.aws.amazon.com/v1beta1
+kind: Subnet
+metadata:
+  name: livin-matrix-public-subnet-1b
+spec:
+  vpcId: !Ref LivinMatrixVPC
+  cidrBlock: "10.0.2.0/24"
+  availabilityZone: "us-east-1b"
+  mapPublicIpOnLaunch: true
+  tags:
+    Name: "livin-matrix-public-1b"
+    Type: "public"
+    kubernetes.io/role/elb: "1"
+
+---
+# 私有子网 - 用于EKS工作节点和RDS
+apiVersion: ec2.aws.amazon.com/v1beta1
+kind: Subnet
+metadata:
+  name: livin-matrix-private-subnet-1a
+spec:
+  vpcId: !Ref LivinMatrixVPC
+  cidrBlock: "10.0.10.0/24"
+  availabilityZone: "us-east-1a"
+  tags:
+    Name: "livin-matrix-private-1a"
+    Type: "private"
+    kubernetes.io/role/internal-elb: "1"
+
+---
+apiVersion: ec2.aws.amazon.com/v1beta1
+kind: Subnet
+metadata:
+  name: livin-matrix-private-subnet-1b
+spec:
+  vpcId: !Ref LivinMatrixVPC
+  cidrBlock: "10.0.11.0/24"
+  availabilityZone: "us-east-1b"
+  tags:
+    Name: "livin-matrix-private-1b"
+    Type: "private"
+    kubernetes.io/role/internal-elb: "1"
+
+---
+# 数据库子网 - 专用于RDS实例
+apiVersion: ec2.aws.amazon.com/v1beta1
+kind: Subnet
+metadata:
+  name: livin-matrix-db-subnet-1a
+spec:
+  vpcId: !Ref LivinMatrixVPC
+  cidrBlock: "10.0.20.0/24"
+  availabilityZone: "us-east-1a"
+  tags:
+    Name: "livin-matrix-db-1a"
+    Type: "database"
+
+---
+apiVersion: ec2.aws.amazon.com/v1beta1
+kind: Subnet
+metadata:
+  name: livin-matrix-db-subnet-1b
+spec:
+  vpcId: !Ref LivinMatrixVPC
+  cidrBlock: "10.0.21.0/24"
+  availabilityZone: "us-east-1b"
+  tags:
+    Name: "livin-matrix-db-1b"
+    Type: "database"
+
+---
+# NAT Gateway - 私有子网访问互联网
+apiVersion: ec2.aws.amazon.com/v1beta1
+kind: NatGateway
+metadata:
+  name: livin-matrix-nat-gw
+spec:
+  subnetId: !Ref LivinMatrixPublicSubnet1a
+  tags:
+    Name: "livin-matrix-nat-gw"
+    Project: "LiVin-Matrix"
+
+---
+# 路由表配置
+# 公有子网路由表
+apiVersion: ec2.aws.amazon.com/v1beta1
+kind: RouteTable
+metadata:
+  name: livin-matrix-public-rt
+spec:
+  vpcId: !Ref LivinMatrixVPC
+  routes:
+    - destinationCidrBlock: "0.0.0.0/0"
+      gatewayId: !Ref LivinMatrixIGW
+  tags:
+    Name: "livin-matrix-public-rt"
+
+---
+# 私有子网路由表
+apiVersion: ec2.aws.amazon.com/v1beta1
+kind: RouteTable
+metadata:
+  name: livin-matrix-private-rt
+spec:
+  vpcId: !Ref LivinMatrixVPC
+  routes:
+    - destinationCidrBlock: "0.0.0.0/0"
+      natGatewayId: !Ref LivinMatrixNatGW
+  tags:
+    Name: "livin-matrix-private-rt"
+
+---
+# VPC Flow Logs
+apiVersion: logs.aws.amazon.com/v1beta1
+kind: FlowLog
+metadata:
+  name: livin-matrix-vpc-flow-logs
+spec:
+  resourceType: "VPC"
+  resourceId: !Ref LivinMatrixVPC
+  trafficType: "ALL"
+  logDestinationType: "cloud-watch-logs"
+  logGroupName: "/aws/vpc/flowlogs"
+  deliverLogsPermissionArn: !GetAtt FlowLogRole.Arn
+  tags:
+    Name: "livin-matrix-vpc-flow-logs"
+    Project: "LiVin-Matrix"

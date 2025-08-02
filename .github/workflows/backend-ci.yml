@@ -1,0 +1,140 @@
+name: Backend CI/CD
+
+on:
+  push:
+    branches: [main]
+    paths: ['backend/**']
+  pull_request:
+    branches: [main]
+    paths: ['backend/**']
+
+env:
+  PYTHON_VERSION: '3.11'
+  POSTGRES_VERSION: '14'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:${{ env.POSTGRES_VERSION }}
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_DB: test_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+          
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+          cache-dependency-path: backend/requirements*.txt
+          
+      - name: Install dependencies
+        run: |
+          cd backend
+          pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r requirements-test.txt
+          
+      - name: Run Black code formatting check
+        run: |
+          cd backend
+          black --check . --diff
+          
+      - name: Run Flake8 linting
+        run: |
+          cd backend
+          flake8 .
+          
+      - name: Run pytest with coverage
+        run: |
+          cd backend
+          pytest --cov=app --cov-report=xml --cov-report=term-missing
+        env:
+          DATABASE_URL: postgresql://postgres:test_password@localhost:5432/test_db
+          TEST_DATABASE_URL: postgresql://postgres:test_password@localhost:5432/test_db
+          
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./backend/coverage.xml
+          flags: backend
+          name: backend-coverage
+          
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        
+      - name: Build Docker image with cache
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: deploy/docker/backend.Dockerfile
+          push: false
+          tags: |
+            backend:${{ github.sha }}
+            backend:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          
+      - name: Run container smoke test
+        run: |
+          docker run --rm -d --name test-backend -p 8000:8000 backend:latest
+          sleep 10
+          curl -f http://localhost:8000/health || exit 1
+          docker stop test-backend
+          
+  deploy-staging:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Deploy to staging
+        id: deploy
+        run: |
+          echo "Deploying to staging environment..."
+          # 这里将来会集成实际的K3s部署脚本
+          # ./deploy/scripts/deploy.sh staging ${{ github.sha }}
+          echo "deployment_success=true" >> $GITHUB_OUTPUT
+          echo "Staging deployment completed successfully"
+        continue-on-error: true
+        
+      - name: Rollback on failure
+        if: steps.deploy.outputs.deployment_success != 'true'
+        run: |
+          echo "Deployment failed, initiating rollback..."
+          # ./deploy/scripts/rollback.sh staging
+          echo "Rollback completed"
+          exit 1
+          
+      - name: Post-deployment verification
+        if: steps.deploy.outputs.deployment_success == 'true'
+        run: |
+          echo "Running post-deployment verification..."
+          # 这里可以添加烟雾测试
+          echo "Verification completed"

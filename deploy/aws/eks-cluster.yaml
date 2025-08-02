@@ -1,0 +1,133 @@
+# EKS集群配置
+# 基于AWS免费层的轻量级Kubernetes集群
+
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+
+metadata:
+  name: livin-matrix-cluster
+  region: us-east-1
+  version: "1.28"
+  tags:
+    Project: "LiVin-Matrix"
+    Environment: "production"
+    CostCenter: "free-tier"
+
+# VPC配置
+vpc:
+  id: !Ref LivinMatrixVPC
+  subnets:
+    public:
+      us-east-1a:
+        id: !Ref LivinMatrixPublicSubnet1a
+      us-east-1b:
+        id: !Ref LivinMatrixPublicSubnet1b
+    private:
+      us-east-1a:
+        id: !Ref LivinMatrixPrivateSubnet1a
+      us-east-1b:
+        id: !Ref LivinMatrixPrivateSubnet1b
+
+# IAM配置
+iam:
+  withOIDC: true
+  serviceAccounts:
+    - metadata:
+        name: aws-load-balancer-controller
+        namespace: kube-system
+      wellKnownPolicies:
+        awsLoadBalancerController: true
+    - metadata:
+        name: ebs-csi-controller-sa
+        namespace: kube-system
+      wellKnownPolicies:
+        ebsCSIController: true
+
+# 工作节点组配置
+nodeGroups:
+  - name: worker-nodes
+    instanceType: t3.micro  # 免费层实例类型
+    desiredCapacity: 2      # 最小化节点数量
+    minSize: 1
+    maxSize: 3
+    volumeSize: 20          # 免费层EBS限制
+    volumeType: gp3
+    
+    # 放置在私有子网中
+    subnets:
+      - !Ref LivinMatrixPrivateSubnet1a
+      - !Ref LivinMatrixPrivateSubnet1b
+    
+    # 安全组配置
+    securityGroups:
+      withShared: true
+      withLocal: true
+      attachIDs:
+        - !Ref LivinMatrixEKSSG
+    
+    # SSH访问配置（紧急情况使用）
+    ssh:
+      enableSsm: true  # 使用SSM而不是SSH密钥
+    
+    # 标签配置
+    tags:
+      Name: "livin-matrix-worker"
+      Project: "LiVin-Matrix"
+      NodeGroup: "worker-nodes"
+      # EKS自动扩缩容标签
+      "k8s.io/cluster-autoscaler/enabled": "true"
+      "k8s.io/cluster-autoscaler/livin-matrix-cluster": "owned"
+    
+    # 实例配置
+    instanceProfile: # 将自动创建
+    ami: auto
+    
+    # 节点启动配置
+    preBootstrapCommands:
+      - "yum update -y"
+      - "amazon-linux-extras install docker"
+    
+    # Kubernetes标签
+    labels:
+      nodegroup-type: "worker"
+      instance-type: "t3.micro"
+
+# 插件配置
+addons:
+  - name: vpc-cni
+    version: latest
+    configurationValues: |-
+      enableNetworkPolicy: "true"
+  - name: coredns
+    version: latest
+  - name: kube-proxy
+    version: latest
+  - name: aws-ebs-csi-driver
+    version: latest
+    wellKnownPolicies:
+      ebsCSIController: true
+
+# CloudWatch日志配置
+cloudWatch:
+  clusterLogging:
+    enable:
+      - "api"
+      - "audit"
+      - "authenticator"
+      - "controllerManager"
+      - "scheduler"
+    logRetentionInDays: 7  # 控制日志成本
+
+# Fargate配置（可选，用于系统pod）
+fargateProfiles:
+  - name: kube-system
+    selectors:
+      - namespace: kube-system
+        labels:
+          k8s-app: kube-dns
+    subnets:
+      - !Ref LivinMatrixPrivateSubnet1a
+      - !Ref LivinMatrixPrivateSubnet1b
+    tags:
+      Project: "LiVin-Matrix"
+      ProfileType: "system"

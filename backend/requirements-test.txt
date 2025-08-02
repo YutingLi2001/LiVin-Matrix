@@ -1,0 +1,16 @@
+# 测试框架
+pytest==7.4.3
+pytest-asyncio==0.21.1
+pytest-cov==4.1.0
+pytest-mock==3.12.0
+httpx==0.25.2  # 用于FastAPI测试客户端
+
+# 代码质量和格式化
+black==23.11.0
+isort==5.12.0
+flake8==6.1.0
+mypy==1.7.1
+
+# 类型注解支持
+types-redis==4.6.0.11
+types-passlib==1.7.7.13

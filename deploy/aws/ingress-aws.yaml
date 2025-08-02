@@ -1,0 +1,356 @@
+# AWS ALB Ingress配置
+# 使用AWS Load Balancer Controller创建Application Load Balancer
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: livin-matrix-alb-ingress
+  namespace: livin-matrix-prod
+  labels:
+    app: livin-matrix
+    component: ingress
+  annotations:
+    # AWS Load Balancer Controller配置
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/load-balancer-name: livin-matrix-alb
+    
+    # HTTP到HTTPS重定向
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
+    alb.ingress.kubernetes.io/ssl-redirect: '443'
+    
+    # SSL配置
+    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:us-east-1:ACCOUNT_ID:certificate/CERTIFICATE_ID
+    alb.ingress.kubernetes.io/ssl-policy: ELBSecurityPolicy-TLS-1-2-2017-01
+    
+    # 健康检查配置
+    alb.ingress.kubernetes.io/healthcheck-protocol: HTTP
+    alb.ingress.kubernetes.io/healthcheck-port: traffic-port
+    alb.ingress.kubernetes.io/healthcheck-path: /health
+    alb.ingress.kubernetes.io/healthcheck-timeout-seconds: '5'
+    alb.ingress.kubernetes.io/healthcheck-interval-seconds: '30'
+    alb.ingress.kubernetes.io/healthy-threshold-count: '2'
+    alb.ingress.kubernetes.io/unhealthy-threshold-count: '3'
+    
+    # 负载均衡器属性
+    alb.ingress.kubernetes.io/load-balancer-attributes: |
+      idle_timeout.timeout_seconds=60,
+      routing.http2.enabled=true,
+      routing.http.drop_invalid_header_fields.enabled=true,
+      access_logs.s3.enabled=true,
+      access_logs.s3.bucket=livin-matrix-alb-logs,
+      access_logs.s3.prefix=alb-logs
+    
+    # 子网配置（公有子网用于internet-facing ALB）
+    alb.ingress.kubernetes.io/subnets: subnet-12345678,subnet-87654321  # 将由部署脚本替换
+    
+    # 安全组配置
+    alb.ingress.kubernetes.io/security-groups: sg-12345678  # 将由部署脚本替换
+    
+    # 其他配置
+    alb.ingress.kubernetes.io/group.name: livin-matrix
+    alb.ingress.kubernetes.io/group.order: '1'
+    
+    # 标签配置
+    alb.ingress.kubernetes.io/tags: |
+      Name=livin-matrix-alb,
+      Project=LiVin-Matrix,
+      Environment=production,
+      CostCenter=free-tier
+
+spec:
+  ingressClassName: alb
+  
+  # TLS配置
+  tls:
+  - hosts:
+    - api.livin-matrix.example.com  # 替换为实际域名
+    - livin-matrix.example.com
+    secretName: livin-matrix-tls-cert
+  
+  rules:
+  # 主域名规则
+  - host: api.livin-matrix.example.com  # 替换为实际域名
+    http:
+      paths:
+      # API路由
+      - path: /api
+        pathType: Prefix
+        backend:
+          service:
+            name: livin-matrix-backend-service
+            port:
+              number: 8000
+      
+      # 健康检查路由
+      - path: /health
+        pathType: Exact
+        backend:
+          service:
+            name: livin-matrix-backend-service
+            port:
+              number: 8000
+      
+      # API文档路由
+      - path: /docs
+        pathType: Exact
+        backend:
+          service:
+            name: livin-matrix-backend-service
+            port:
+              number: 8000
+      
+      - path: /redoc
+        pathType: Exact
+        backend:
+          service:
+            name: livin-matrix-backend-service
+            port:
+              number: 8000
+      
+      # OpenAPI规范
+      - path: /openapi.json
+        pathType: Exact
+        backend:
+          service:
+            name: livin-matrix-backend-service
+            port:
+              number: 8000
+      
+      # 监控端点（仅内部访问）
+      - path: /metrics
+        pathType: Exact
+        backend:
+          service:
+            name: livin-matrix-backend-service
+            port:
+              number: 9090
+      
+      # 默认路由 - 重定向到前端
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: livin-matrix-redirect-service
+            port:
+              number: 80
+
+---
+# 重定向服务 - 将非API请求重定向到GitHub Pages
+apiVersion: v1
+kind: Service
+metadata:
+  name: livin-matrix-redirect-service
+  namespace: livin-matrix-prod
+  labels:
+    app: livin-matrix
+    component: redirect
+spec:
+  selector:
+    app: livin-matrix-redirect
+  ports:
+  - port: 80
+    targetPort: 8080
+    protocol: TCP
+  type: ClusterIP
+
+---
+# 重定向Pod配置
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: livin-matrix-redirect
+  namespace: livin-matrix-prod
+  labels:
+    app: livin-matrix-redirect
+    component: redirect
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: livin-matrix-redirect
+  template:
+    metadata:
+      labels:
+        app: livin-matrix-redirect
+    spec:
+      containers:
+      - name: nginx-redirect
+        image: nginx:alpine
+        ports:
+        - containerPort: 8080
+        resources:
+          limits:
+            memory: "64Mi"
+            cpu: "100m"
+          requests:
+            memory: "32Mi"
+            cpu: "50m"
+        volumeMounts:
+        - name: nginx-config
+          mountPath: /etc/nginx/nginx.conf
+          subPath: nginx.conf
+          readOnly: true
+        - name: nginx-html
+          mountPath: /usr/share/nginx/html
+          readOnly: true
+      volumes:
+      - name: nginx-config
+        configMap:
+          name: nginx-redirect-config
+      - name: nginx-html
+        configMap:
+          name: nginx-redirect-html
+
+---
+# Nginx重定向配置
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-redirect-config
+  namespace: livin-matrix-prod
+data:
+  nginx.conf: |
+    worker_processes 1;
+    error_log /var/log/nginx/error.log warn;
+    pid /tmp/nginx.pid;
+    
+    events {
+        worker_connections 1024;
+    }
+    
+    http {
+        include /etc/nginx/mime.types;
+        default_type application/octet-stream;
+        
+        # 临时文件目录配置
+        client_body_temp_path /tmp/client_body;
+        proxy_temp_path /tmp/proxy;
+        fastcgi_temp_path /tmp/fastcgi;
+        uwsgi_temp_path /tmp/uwsgi;
+        scgi_temp_path /tmp/scgi;
+        
+        server {
+            listen 8080;
+            server_name _;
+            
+            # 健康检查
+            location /health {
+                access_log off;
+                return 200 "healthy\n";
+                add_header Content-Type text/plain;
+            }
+            
+            # 重定向所有请求到GitHub Pages
+            location / {
+                return 301 https://livin-matrix.github.io$request_uri;
+            }
+        }
+    }
+
+---
+# 重定向HTML页面
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-redirect-html
+  namespace: livin-matrix-prod
+data:
+  index.html: |
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>LiVin Matrix - Redirecting...</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta http-equiv="refresh" content="0; url=https://livin-matrix.github.io">
+        <script>
+            window.location.href = 'https://livin-matrix.github.io';
+        </script>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                text-align: center;
+                padding: 50px;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                margin: 0;
+            }
+            .container {
+                max-width: 600px;
+                margin: 0 auto;
+                background: rgba(255, 255, 255, 0.1);
+                padding: 40px;
+                border-radius: 10px;
+                backdrop-filter: blur(10px);
+            }
+            .spinner {
+                border: 4px solid rgba(255, 255, 255, 0.3);
+                border-top: 4px solid white;
+                border-radius: 50%;
+                width: 40px;
+                height: 40px;
+                animation: spin 1s linear infinite;
+                margin: 20px auto;
+            }
+            @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>LiVin Matrix</h1>
+            <div class="spinner"></div>
+            <p>Redirecting to the application...</p>
+            <p><a href="https://livin-matrix.github.io" style="color: white;">Click here if you are not redirected automatically</a></p>
+        </div>
+    </body>
+    </html>
+
+---
+# 额外的Ingress用于裸域名重定向
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: livin-matrix-domain-redirect
+  namespace: livin-matrix-prod
+  labels:
+    app: livin-matrix
+    component: domain-redirect
+  annotations:
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/group.name: livin-matrix
+    alb.ingress.kubernetes.io/group.order: '2'
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
+    alb.ingress.kubernetes.io/ssl-redirect: '443'
+    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:us-east-1:ACCOUNT_ID:certificate/CERTIFICATE_ID
+    alb.ingress.kubernetes.io/actions.redirect-to-github: |
+      {
+        "type": "redirect",
+        "redirectConfig": {
+          "protocol": "HTTPS",
+          "port": "443",
+          "host": "livin-matrix.github.io",
+          "path": "/#{path}",
+          "query": "#{query}",
+          "statusCode": "HTTP_301"
+        }
+      }
+spec:
+  ingressClassName: alb
+  rules:
+  - host: livin-matrix.example.com  # 替换为实际域名
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: redirect-to-github
+            port:
+              name: use-annotation

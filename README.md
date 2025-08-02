@@ -1,5 +1,9 @@
 # LiVin Matrix 🌟
 
+[![Frontend CI/CD](https://github.com/your-org/livin-matrix/actions/workflows/frontend-ci.yml/badge.svg)](https://github.com/your-org/livin-matrix/actions/workflows/frontend-ci.yml)
+[![Backend CI/CD](https://github.com/your-org/livin-matrix/actions/workflows/backend-ci.yml/badge.svg)](https://github.com/your-org/livin-matrix/actions/workflows/backend-ci.yml)
+[![codecov](https://codecov.io/gh/your-org/livin-matrix/branch/main/graph/badge.svg)](https://codecov.io/gh/your-org/livin-matrix)
+
 > 生活数据相关性分析平台 - 通过数据发现生活维度间的隐藏联系
 
 LiVin Matrix 是一个现代化的全栈应用，帮助用户记录和分析生活各个维度的数据（睡眠、饮食、运动、情绪等），并通过相关性矩阵和热力图可视化展示这些维度之间的关联性，为用户提供个性化的生活洞察。
@@ -272,7 +276,7 @@ cd backend && pip-compile requirements.in
 
 ## 👥 团队
 
-- **项目负责人**: [Your Name]
+- **项目负责人**: Yuting Li
 - **前端开发**: [Frontend Dev]
 - **后端开发**: [Backend Dev]
 - **UI/UX 设计**: [Designer]
@@ -285,5 +289,5 @@ cd backend && pip-compile requirements.in
 
 <div align="center">
   <p>用 ❤️ 和 ☕ 制作</p>
-  <p>© 2024 LiVin Matrix Team</p>
+  <p>© 2025 LiVin Matrix Team</p>
 </div>

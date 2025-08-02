@@ -1,0 +1,113 @@
+template:
+  id: infrastructure-platform-template
+  name: Platform Infrastructure Implementation
+  version: 2.0
+  output:
+    format: markdown
+    filename: docs/platform-infrastructure/platform-implementation.md
+    title: "{{project_name}} Platform Infrastructure Implementation"
+
+workflow:
+  mode: interactive
+  elicitation: advanced-elicitation
+
+sections:
+  - id: initial-setup
+    instruction: |
+      Initial Setup
+      
+      1. Replace {{project_name}} with the actual project name throughout the document
+      2. Gather and review required inputs:
+         - **Infrastructure Architecture Document** (Primary input - REQUIRED)
+         - Infrastructure Change Request (if applicable)
+         - Infrastructure Guidelines
+         - Technology Stack Document
+         - Infrastructure Checklist
+      
+      3. Validate that the infrastructure architecture has been reviewed and approved
+      4. <critical_rule>All platform implementation must align with the approved infrastructure architecture. Any deviations require architect approval.</critical_rule>
+      
+      Output file location: `docs/platform-infrastructure/platform-implementation.md`
+
+  - id: executive-summary
+    title: Executive Summary
+    instruction: Provide a high-level overview of the platform infrastructure being implemented, referencing the infrastructure architecture document's key decisions and requirements.
+    template: |
+      - Platform implementation scope and objectives
+      - Key architectural decisions being implemented
+      - Expected outcomes and benefits
+      - Timeline and milestones
+
+  - id: foundation-infrastructure
+    title: Foundation Infrastructure Layer
+    instruction: Implement the base infrastructure layer based on the infrastructure architecture. This forms the foundation for all platform services.
+    elicit: true
+    sections:
+      - id: cloud-provider-setup
+        title: Cloud Provider Setup
+        template: |
+          - Account/Subscription configuration
+          - Region selection and setup
+          - Resource group/organizational structure
+          - Cost management setup
+      - id: network-foundation
+        title: Network Foundation
+        template: |
+          - VPC/Network setup
+          - Subnet configuration
+          - Security groups and routing
+          - DNS and connectivity
+      - id: security-foundation
+        title: Security Foundation
+        template: |
+          - IAM roles and policies
+          - Security groups and NACLs
+          - Encryption keys (KMS/Key Vault)
+          - Compliance controls
+
+  - id: container-platform
+    title: Container Platform Implementation
+    instruction: Build the container orchestration platform on top of the foundation infrastructure, following the architecture's container strategy.
+    sections:
+      - id: kubernetes-setup
+        title: Kubernetes Cluster Setup
+        template: |
+          - Cluster configuration
+          - Node groups/pools setup
+          - Networking setup
+          - Security and RBAC
+      - id: cluster-services
+        title: Cluster Services
+        template: |
+          - Ingress controller setup
+          - Certificate management
+          - Storage classes
+          - Monitoring integration
+
+  - id: platform-validation
+    title: Platform Validation & Testing
+    instruction: Execute comprehensive validation to ensure the platform meets all requirements.
+    sections:
+      - id: functional-testing
+        title: Functional Testing
+        template: |
+          - Component testing
+          - Integration testing
+          - End-to-end testing
+          - Performance testing
+      - id: security-validation
+        title: Security Validation
+        template: |
+          - Security scanning
+          - Compliance validation
+          - Access control testing
+          - Vulnerability assessment
+
+  - id: final-review
+    instruction: Final Review - Ensure all platform layers are properly implemented, integrated, and documented. Verify that the implementation fully supports all requirements.
+    content: |
+      ---
+      
+      _Platform Version: 1.0_
+      _Implementation Date: {{implementation_date}}_
+      _Next Review: {{review_date}}_

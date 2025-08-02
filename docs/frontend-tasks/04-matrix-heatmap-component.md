@@ -128,7 +128,7 @@ const MatrixCell: React.FC<MatrixCellProps> = ({
       onClick={() => onCellClick(rowIndex, colIndex, value)}
       onMouseEnter={() => onCellHover(rowIndex, colIndex, value)}
     >
-      <span className="text-white font-bold drop-shadow-lg">
+      <span className="text-primary font-bold font-mono">
         {value.toFixed(2)}
       </span>
       

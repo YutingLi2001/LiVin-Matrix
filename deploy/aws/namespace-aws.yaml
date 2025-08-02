@@ -1,0 +1,250 @@
+# AWS EKS生产环境命名空间配置
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: livin-matrix-prod
+  labels:
+    name: livin-matrix-prod
+    environment: production
+    project: livin-matrix
+    tier: application
+    cost-center: free-tier
+    istio-injection: disabled  # 免费层不使用Service Mesh
+  annotations:
+    scheduler.alpha.kubernetes.io/node-selector: nodegroup-type=worker
+    scheduler.alpha.kubernetes.io/tolerations: |
+      [
+        {
+          "key": "node.kubernetes.io/not-ready",
+          "operator": "Exists",
+          "effect": "NoExecute",
+          "tolerationSeconds": 300
+        },
+        {
+          "key": "node.kubernetes.io/unreachable",
+          "operator": "Exists",
+          "effect": "NoExecute",
+          "tolerationSeconds": 300
+        }
+      ]
+
+---
+# 资源配额 - 控制资源使用以适配免费层
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: livin-matrix-resource-quota
+  namespace: livin-matrix-prod
+spec:
+  hard:
+    # 计算资源限制
+    requests.cpu: "1000m"      # 总共1个CPU核心
+    requests.memory: "1.5Gi"   # 总共1.5GB内存
+    limits.cpu: "2000m"        # 最大2个CPU核心
+    limits.memory: "2Gi"       # 最大2GB内存
+    
+    # 存储资源限制
+    requests.storage: "10Gi"   # 持久化存储请求
+    persistentvolumeclaims: "5"  # PVC数量限制
+    
+    # 对象数量限制
+    pods: "10"                 # 最大Pod数量
+    services: "5"              # 最大Service数量
+    secrets: "10"              # 最大Secret数量
+    configmaps: "10"           # 最大ConfigMap数量
+    
+    # 网络资源限制
+    services.loadbalancers: "1"   # 最大LoadBalancer数量
+    services.nodeports: "2"       # 最大NodePort数量
+
+---
+# 限制范围 - 控制单个资源的大小
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: livin-matrix-limit-range
+  namespace: livin-matrix-prod
+spec:
+  limits:
+  # Pod限制
+  - type: Pod
+    max:
+      cpu: "800m"              # 单个Pod最大CPU
+      memory: "800Mi"          # 单个Pod最大内存
+    min:
+      cpu: "50m"               # 单个Pod最小CPU
+      memory: "50Mi"           # 单个Pod最小内存
+  
+  # 容器限制
+  - type: Container
+    default:
+      cpu: "200m"              # 默认CPU限制
+      memory: "256Mi"          # 默认内存限制
+    defaultRequest:
+      cpu: "100m"              # 默认CPU请求
+      memory: "128Mi"          # 默认内存请求
+    max:
+      cpu: "500m"              # 单个容器最大CPU
+      memory: "512Mi"          # 单个容器最大内存
+    min:
+      cpu: "50m"               # 单个容器最小CPU
+      memory: "50Mi"           # 单个容器最小内存
+  
+  # PVC限制
+  - type: PersistentVolumeClaim
+    max:
+      storage: "5Gi"           # 单个PVC最大存储
+    min:
+      storage: "1Gi"           # 单个PVC最小存储
+
+---
+# 网络策略 - 命名空间级别的网络隔离
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: livin-matrix-default-deny-all
+  namespace: livin-matrix-prod
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  - Egress
+
+---
+# 允许内部通信的网络策略
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: livin-matrix-allow-internal
+  namespace: livin-matrix-prod
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  # 允许来自同一命名空间的流量
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: livin-matrix-prod
+  # 允许来自kube-system的流量（DNS等）
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: kube-system
+  # 允许来自AWS Load Balancer Controller的流量
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: kube-system
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: aws-load-balancer-controller
+  egress:
+  # 允许到同一命名空间的流量
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: livin-matrix-prod
+  # 允许DNS查询
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: kube-system
+    ports:
+    - protocol: UDP
+      port: 53
+  # 允许到RDS的连接
+  - to: []
+    ports:
+    - protocol: TCP
+      port: 5432
+  # 允许HTTPS出站（AWS API等）
+  - to: []
+    ports:
+    - protocol: TCP
+      port: 443
+  # 允许HTTP出站（镜像拉取等）
+  - to: []
+    ports:
+    - protocol: TCP
+      port: 80
+
+---
+# 监控命名空间（如果需要）
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: livin-matrix-monitoring
+  labels:
+    name: livin-matrix-monitoring
+    environment: production
+    project: livin-matrix
+    tier: monitoring
+    cost-center: free-tier
+
+---
+# 监控命名空间资源配额
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: monitoring-resource-quota
+  namespace: livin-matrix-monitoring
+spec:
+  hard:
+    requests.cpu: "500m"
+    requests.memory: "1Gi"
+    limits.cpu: "1000m"
+    limits.memory: "1.5Gi"
+    pods: "5"
+    services: "3"
+    persistentvolumeclaims: "3"
+
+---
+# External Secrets命名空间（如果不存在）
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: external-secrets-system
+  labels:
+    name: external-secrets-system
+    control-plane: external-secrets-controller-manager
+
+---
+# RBAC配置 - 应用程序角色
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: livin-matrix-app-role
+  namespace: livin-matrix-prod
+rules:
+# 允许读取ConfigMaps和Secrets
+- apiGroups: [""]
+  resources: ["configmaps", "secrets"]
+  verbs: ["get", "list", "watch"]
+# 允许读取Services和Endpoints
+- apiGroups: [""]
+  resources: ["services", "endpoints"]
+  verbs: ["get", "list", "watch"]
+# 允许读取Pod信息（用于健康检查）
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list", "watch"]
+
+---
+# RBAC绑定
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: livin-matrix-app-role-binding
+  namespace: livin-matrix-prod
+subjects:
+- kind: ServiceAccount
+  name: livin-matrix-backend-sa
+  namespace: livin-matrix-prod
+roleRef:
+  kind: Role
+  name: livin-matrix-app-role
+  apiGroup: rbac.authorization.k8s.io

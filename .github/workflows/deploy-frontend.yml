@@ -1,0 +1,310 @@
+# GitHub Pages前端部署工作流
+# 自动构建和部署React前端到GitHub Pages
+
+name: Deploy Frontend to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'frontend/**'
+      - '.github/workflows/deploy-frontend.yml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'frontend/**'
+  workflow_dispatch:  # 允许手动触发
+
+# 设置权限以允许部署到GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# 确保只有一个部署作业同时运行
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  # 构建作业
+  build:
+    runs-on: ubuntu-latest
+    
+    env:
+      # 生产环境配置
+      VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL || 'https://api.livin-matrix.example.com' }}
+      VITE_APP_NAME: "LiVin Matrix"
+      VITE_APP_VERSION: ${{ github.sha }}
+      VITE_ENVIRONMENT: "production"
+      VITE_GITHUB_PAGES: "true"
+    
+    steps:
+    - name: Checkout代码
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # 获取完整历史用于版本信息
+    
+    - name: 设置Node.js环境
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: 'frontend/package-lock.json'
+    
+    - name: 安装依赖
+      working-directory: ./frontend
+      run: |
+        npm ci --prefer-offline --no-audit
+    
+    - name: 类型检查
+      working-directory: ./frontend
+      run: |
+        npm run type-check
+    
+    - name: 代码质量检查
+      working-directory: ./frontend
+      run: |
+        npm run lint
+    
+    - name: 运行测试
+      working-directory: ./frontend
+      run: |
+        npm run test:ci
+      env:
+        CI: true
+    
+    - name: 构建生产版本
+      working-directory: ./frontend
+      run: |
+        npm run build
+      env:
+        NODE_ENV: production
+        PUBLIC_URL: ${{ github.event.repository.name == 'LiVin-Matrix' && '/' || format('/{0}/', github.event.repository.name) }}
+    
+    - name: 生成部署信息
+      working-directory: ./frontend
+      run: |
+        # 创建部署信息文件
+        cat > dist/deploy-info.json << EOF
+        {
+          "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+          "commit": "${{ github.sha }}",
+          "branch": "${{ github.ref_name }}",
+          "version": "${{ github.run_number }}",
+          "environment": "production",
+          "build_url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+        }
+        EOF
+        
+        # 创建健康检查文件
+        cat > dist/health.json << EOF
+        {
+          "status": "healthy",
+          "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+          "version": "${{ github.run_number }}",
+          "commit": "${{ github.sha }}"
+        }
+        EOF
+    
+    - name: 优化静态资源
+      working-directory: ./frontend
+      run: |
+        # 压缩图片（如果有imagemin工具）
+        if command -v imagemin &> /dev/null; then
+          find dist -name "*.png" -o -name "*.jpg" -o -name "*.jpeg" | xargs imagemin --out-dir=dist
+        fi
+        
+        # 生成资源清单
+        find dist -type f -name "*.js" -o -name "*.css" -o -name "*.html" | \
+          xargs ls -la > dist/asset-manifest.txt
+        
+        # 添加安全头文件
+        cat > dist/_headers << 'EOF'
+        /*
+          X-Frame-Options: DENY
+          X-Content-Type-Options: nosniff
+          X-XSS-Protection: 1; mode=block
+          Referrer-Policy: strict-origin-when-cross-origin
+          Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://api.livin-matrix.example.com; font-src 'self' data:
+          Strict-Transport-Security: max-age=31536000; includeSubDomains
+        
+        /api/*
+          X-Robots-Tag: noindex
+        EOF
+    
+    - name: 设置GitHub Pages
+      uses: actions/configure-pages@v4
+    
+    - name: 上传构建产物
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: ./frontend/dist
+    
+    - name: 上传构建报告
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-report
+        path: |
+          ./frontend/dist/asset-manifest.txt
+          ./frontend/dist/deploy-info.json
+        retention-days: 30
+
+  # 部署作业
+  deploy:
+    # 只在主分支推送时部署
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    
+    runs-on: ubuntu-latest
+    needs: build
+    
+    steps:
+    - name: 部署到GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@v4
+    
+    - name: 部署成功通知
+      if: success()
+      run: |
+        echo "✅ 前端已成功部署到GitHub Pages"
+        echo "🌐 访问地址: ${{ steps.deployment.outputs.page_url }}"
+        echo "📦 部署时间: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+    
+    - name: 部署失败通知
+      if: failure()
+      run: |
+        echo "❌ 前端部署失败"
+        echo "🔍 请检查构建日志: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+
+  # 部署后测试
+  post-deploy-test:
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    
+    runs-on: ubuntu-latest
+    needs: deploy
+    
+    steps:
+    - name: 等待部署传播
+      run: sleep 30
+    
+    - name: 测试GitHub Pages可访问性
+      run: |
+        # 获取部署URL
+        PAGES_URL="${{ needs.deploy.outputs.page_url || format('https://{0}.github.io/{1}/', github.repository_owner, github.event.repository.name) }}"
+        
+        echo "🧪 测试GitHub Pages部署: $PAGES_URL"
+        
+        # 测试主页
+        if curl -f -s "$PAGES_URL" > /dev/null; then
+          echo "✅ 主页访问正常"
+        else
+          echo "❌ 主页访问失败"
+          exit 1
+        fi
+        
+        # 测试健康检查端点
+        if curl -f -s "${PAGES_URL}health.json" > /dev/null; then
+          echo "✅ 健康检查端点正常"
+        else
+          echo "⚠️ 健康检查端点不可访问"
+        fi
+        
+        # 测试静态资源
+        if curl -f -s -I "$PAGES_URL" | grep -q "content-type: text/html"; then
+          echo "✅ HTML内容类型正确"
+        else
+          echo "⚠️ HTML内容类型异常"
+        fi
+    
+    - name: 性能测试（基础）
+      run: |
+        PAGES_URL="${{ needs.deploy.outputs.page_url || format('https://{0}.github.io/{1}/', github.repository_owner, github.event.repository.name) }}"
+        
+        echo "⚡ 执行基础性能测试"
+        
+        # 测试页面加载时间
+        LOAD_TIME=$(curl -o /dev/null -s -w '%{time_total}' "$PAGES_URL")
+        echo "📊 页面加载时间: ${LOAD_TIME}秒"
+        
+        # 检查是否在合理范围内（3秒）
+        if (( $(echo "$LOAD_TIME < 3.0" | bc -l) )); then
+          echo "✅ 页面加载性能良好"
+        else
+          echo "⚠️ 页面加载时间较长，建议优化"
+        fi
+    
+    - name: SEO和可访问性基础检查
+      run: |
+        PAGES_URL="${{ needs.deploy.outputs.page_url || format('https://{0}.github.io/{1}/', github.repository_owner, github.event.repository.name) }}"
+        
+        echo "🔍 执行SEO和可访问性基础检查"
+        
+        # 获取页面内容
+        PAGE_CONTENT=$(curl -s "$PAGES_URL")
+        
+        # 检查必要的SEO元素
+        if echo "$PAGE_CONTENT" | grep -q "<title>"; then
+          echo "✅ 页面包含title标签"
+        else
+          echo "⚠️ 页面缺少title标签"
+        fi
+        
+        if echo "$PAGE_CONTENT" | grep -q "meta.*description"; then
+          echo "✅ 页面包含description元标签"
+        else
+          echo "⚠️ 页面缺少description元标签"
+        fi
+        
+        if echo "$PAGE_CONTENT" | grep -q "meta.*viewport"; then
+          echo "✅ 页面包含viewport元标签"
+        else
+          echo "⚠️ 页面缺少viewport元标签"
+        fi
+        
+        # 检查HTTPS
+        if [[ "$PAGES_URL" == https://* ]]; then
+          echo "✅ 使用HTTPS协议"
+        else
+          echo "⚠️ 未使用HTTPS协议"
+        fi
+
+  # 构建通知作业
+  notify:
+    if: always()
+    runs-on: ubuntu-latest
+    needs: [build, deploy, post-deploy-test]
+    
+    steps:
+    - name: 部署状态总结
+      run: |
+        echo "📋 GitHub Pages部署状态总结"
+        echo "================================"
+        echo "🏗️ 构建状态: ${{ needs.build.result }}"
+        echo "🚀 部署状态: ${{ needs.deploy.result }}"
+        echo "🧪 测试状态: ${{ needs.post-deploy-test.result }}"
+        echo "⏰ 完成时间: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+        echo "🔗 仓库: ${{ github.repository }}"
+        echo "📝 提交: ${{ github.sha }}"
+        
+        # 设置整体状态
+        if [[ "${{ needs.build.result }}" == "success" && "${{ needs.deploy.result }}" == "success" ]]; then
+          echo "🎉 GitHub Pages部署成功完成！"
+          echo "STATUS=success" >> $GITHUB_ENV
+        else
+          echo "❌ GitHub Pages部署过程中出现问题"
+          echo "STATUS=failure" >> $GITHUB_ENV
+        fi
+    
+    # 可以在这里添加通知到Slack、Teams等
+    # - name: 发送Slack通知
+    #   if: env.STATUS == 'failure'
+    #   uses: 8398a7/action-slack@v3
+    #   with:
+    #     status: failure
+    #     webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}

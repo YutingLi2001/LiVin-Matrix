@@ -1,0 +1,445 @@
+# CloudWatch监控和告警配置
+# 用于监控AWS基础设施和应用程序性能
+
+# SNS主题 - 用于告警通知
+apiVersion: sns.aws.amazon.com/v1beta1
+kind: Topic
+metadata:
+  name: livin-matrix-alerts
+spec:
+  name: "livin-matrix-alerts"
+  displayName: "LiVin Matrix Alerts"
+  policy:
+    Version: "2012-10-17"
+    Statement:
+      - Sid: "AllowCloudWatchAlarms"
+        Effect: "Allow"
+        Principal:
+          Service: "cloudwatch.amazonaws.com"
+        Action: "SNS:Publish"
+        Resource: !Ref LiVinMatrixSNSTopic
+  tags:
+    - key: "Project"
+      value: "LiVin-Matrix"
+    - key: "Environment"
+      value: "production"
+    - key: "Component"
+      value: "monitoring"
+
+---
+# 成本告警
+apiVersion: cloudwatch.aws.amazon.com/v1beta1
+kind: Alarm
+metadata:
+  name: livin-matrix-cost-alarm
+spec:
+  alarmName: "LiVin-Matrix-Monthly-Cost-Exceeded"
+  alarmDescription: "Alert when monthly AWS cost exceeds $5 threshold"
+  metricName: "EstimatedCharges"
+  namespace: "AWS/Billing"
+  statistic: "Maximum"
+  period: 86400  # 24 hours
+  evaluationPeriods: 1
+  threshold: 5.0
+  comparisonOperator: "GreaterThanThreshold"
+  treatMissingData: "notBreaching"
+  dimensions:
+    - name: "Currency"
+      value: "USD"
+  alarmActions:
+    - !Ref LiVinMatrixSNSTopic
+  okActions:
+    - !Ref LiVinMatrixSNSTopic
+  tags:
+    - key: "Project"
+      value: "LiVin-Matrix"
+    - key: "AlertType"
+      value: "cost"
+
+---
+# EKS集群CPU使用率告警
+apiVersion: cloudwatch.aws.amazon.com/v1beta1
+kind: Alarm
+metadata:
+  name: livin-matrix-eks-cpu-high
+spec:
+  alarmName: "LiVin-Matrix-EKS-HighCPU"
+  alarmDescription: "EKS cluster CPU utilization is high"
+  metricName: "CPUUtilization"
+  namespace: "AWS/EKS"
+  statistic: "Average"
+  period: 300
+  evaluationPeriods: 3
+  threshold: 80
+  comparisonOperator: "GreaterThanThreshold"
+  treatMissingData: "notBreaching"
+  dimensions:
+    - name: "ClusterName"
+      value: "livin-matrix-cluster"
+  alarmActions:
+    - !Ref LiVinMatrixSNSTopic
+  tags:
+    - key: "Project"
+      value: "LiVin-Matrix"
+    - key: "Component"
+      value: "eks"
+
+---
+# EKS节点组内存使用率告警
+apiVersion: cloudwatch.aws.amazon.com/v1beta1
+kind: Alarm
+metadata:
+  name: livin-matrix-nodegroup-memory-high
+spec:
+  alarmName: "LiVin-Matrix-NodeGroup-HighMemory"
+  alarmDescription: "EKS node group memory utilization is high"
+  metricName: "MemoryUtilization"
+  namespace: "CWAgent"
+  statistic: "Average"
+  period: 300
+  evaluationPeriods: 2
+  threshold: 85
+  comparisonOperator: "GreaterThanThreshold"
+  treatMissingData: "notBreaching"
+  dimensions:
+    - name: "AutoScalingGroupName"
+      value: "eks-worker-nodes-*"
+  alarmActions:
+    - !Ref LiVinMatrixSNSTopic
+  tags:
+    - key: "Project"
+      value: "LiVin-Matrix"
+    - key: "Component"
+      value: "nodegroup"
+
+---
+# RDS CPU使用率告警（已在RDS配置中定义，这里是补充）
+apiVersion: cloudwatch.aws.amazon.com/v1beta1
+kind: Alarm
+metadata:
+  name: livin-matrix-rds-cpu-critical
+spec:
+  alarmName: "LiVin-Matrix-RDS-CriticalCPU"
+  alarmDescription: "RDS CPU utilization is critically high"
+  metricName: "CPUUtilization"
+  namespace: "AWS/RDS"
+  statistic: "Average"
+  period: 300
+  evaluationPeriods: 2
+  threshold: 90
+  comparisonOperator: "GreaterThanThreshold"
+  treatMissingData: "notBreaching"
+  dimensions:
+    - name: "DBInstanceIdentifier"
+      value: "livin-matrix-db"
+  alarmActions:
+    - !Ref LiVinMatrixSNSTopic
+  tags:
+    - key: "Project"
+      value: "LiVin-Matrix"
+    - key: "Component"
+      value: "database"
+
+---
+# RDS存储空间告警
+apiVersion: cloudwatch.aws.amazon.com/v1beta1
+kind: Alarm
+metadata:
+  name: livin-matrix-rds-storage-low
+spec:
+  alarmName: "LiVin-Matrix-RDS-LowStorage"
+  alarmDescription: "RDS free storage space is critically low"
+  metricName: "FreeStorageSpace"
+  namespace: "AWS/RDS"
+  statistic: "Average"
+  period: 300
+  evaluationPeriods: 1
+  threshold: 1073741824  # 1GB in bytes
+  comparisonOperator: "LessThanThreshold"
+  treatMissingData: "breaching"
+  dimensions:
+    - name: "DBInstanceIdentifier"
+      value: "livin-matrix-db"
+  alarmActions:
+    - !Ref LiVinMatrixSNSTopic
+  tags:
+    - key: "Project"
+      value: "LiVin-Matrix"
+    - key: "Component"
+      value: "database"
+
+---
+# ALB响应时间告警
+apiVersion: cloudwatch.aws.amazon.com/v1beta1
+kind: Alarm
+metadata:
+  name: livin-matrix-alb-response-time
+spec:
+  alarmName: "LiVin-Matrix-ALB-HighResponseTime"
+  alarmDescription: "ALB response time is high"
+  metricName: "TargetResponseTime"
+  namespace: "AWS/ApplicationELB"
+  statistic: "Average"
+  period: 300
+  evaluationPeriods: 2
+  threshold: 2.0  # 2 seconds
+  comparisonOperator: "GreaterThanThreshold"
+  treatMissingData: "notBreaching"
+  dimensions:
+    - name: "LoadBalancer"
+      value: "app/livin-matrix-alb/*"
+  alarmActions:
+    - !Ref LiVinMatrixSNSTopic
+  tags:
+    - key: "Project"
+      value: "LiVin-Matrix"
+    - key: "Component"
+      value: "load-balancer"
+
+---
+# ALB HTTP 5xx错误告警
+apiVersion: cloudwatch.aws.amazon.com/v1beta1
+kind: Alarm
+metadata:
+  name: livin-matrix-alb-5xx-errors
+spec:
+  alarmName: "LiVin-Matrix-ALB-High5xxErrors"
+  alarmDescription: "ALB is experiencing high 5xx error rate"
+  metricName: "HTTPCode_ELB_5XX_Count"
+  namespace: "AWS/ApplicationELB"
+  statistic: "Sum"
+  period: 300
+  evaluationPeriods: 2
+  threshold: 10
+  comparisonOperator: "GreaterThanThreshold"
+  treatMissingData: "notBreaching"
+  dimensions:
+    - name: "LoadBalancer"
+      value: "app/livin-matrix-alb/*"
+  alarmActions:
+    - !Ref LiVinMatrixSNSTopic
+  tags:
+    - key: "Project"
+      value: "LiVin-Matrix"
+    - key: "Component"
+      value: "load-balancer"
+
+---
+# ALB目标健康告警
+apiVersion: cloudwatch.aws.amazon.com/v1beta1
+kind: Alarm
+metadata:
+  name: livin-matrix-alb-unhealthy-targets
+spec:
+  alarmName: "LiVin-Matrix-ALB-UnhealthyTargets"
+  alarmDescription: "ALB has unhealthy targets"
+  metricName: "UnHealthyHostCount"
+  namespace: "AWS/ApplicationELB"
+  statistic: "Average"
+  period: 300
+  evaluationPeriods: 2
+  threshold: 1
+  comparisonOperator: "GreaterThanOrEqualToThreshold"
+  treatMissingData: "notBreaching"
+  dimensions:
+    - name: "TargetGroup"
+      value: "targetgroup/livin-matrix-backend-tg/*"
+  alarmActions:
+    - !Ref LiVinMatrixSNSTopic
+  tags:
+    - key: "Project"
+      value: "LiVin-Matrix"
+    - key: "Component"
+      value: "load-balancer"
+
+---
+# Lambda函数错误告警（如果使用Lambda）
+apiVersion: cloudwatch.aws.amazon.com/v1beta1
+kind: Alarm
+metadata:
+  name: livin-matrix-lambda-errors
+spec:
+  alarmName: "LiVin-Matrix-Lambda-Errors"
+  alarmDescription: "Lambda function is experiencing errors"
+  metricName: "Errors"
+  namespace: "AWS/Lambda"
+  statistic: "Sum"
+  period: 300
+  evaluationPeriods: 1
+  threshold: 1
+  comparisonOperator: "GreaterThanOrEqualToThreshold"
+  treatMissingData: "notBreaching"
+  dimensions:
+    - name: "FunctionName"
+      value: "livin-matrix-*"
+  alarmActions:
+    - !Ref LiVinMatrixSNSTopic
+  tags:
+    - key: "Project"
+      value: "LiVin-Matrix"
+    - key: "Component"
+      value: "lambda"
+
+---
+# CloudWatch Dashboard
+apiVersion: cloudwatch.aws.amazon.com/v1beta1
+kind: Dashboard
+metadata:
+  name: livin-matrix-dashboard
+spec:
+  dashboardName: "LiVin-Matrix-Production-Dashboard"
+  dashboardBody: |
+    {
+      "widgets": [
+        {
+          "type": "metric",
+          "x": 0,
+          "y": 0,
+          "width": 12,
+          "height": 6,
+          "properties": {
+            "metrics": [
+              [ "AWS/Billing", "EstimatedCharges", "Currency", "USD", { "region": "us-east-1" } ]
+            ],
+            "view": "timeSeries",
+            "stacked": false,
+            "region": "us-east-1",
+            "title": "月度费用估算",
+            "period": 86400,
+            "stat": "Maximum",
+            "yAxis": {
+              "left": {
+                "min": 0,
+                "max": 10
+              }
+            }
+          }
+        },
+        {
+          "type": "metric",
+          "x": 12,
+          "y": 0,
+          "width": 12,
+          "height": 6,
+          "properties": {
+            "metrics": [
+              [ "AWS/RDS", "CPUUtilization", "DBInstanceIdentifier", "livin-matrix-db" ],
+              [ ".", "DatabaseConnections", ".", "." ],
+              [ ".", "FreeStorageSpace", ".", "." ]
+            ],
+            "view": "timeSeries",
+            "stacked": false,
+            "region": "us-east-1",
+            "title": "RDS性能指标",
+            "period": 300
+          }
+        },
+        {
+          "type": "metric",
+          "x": 0,
+          "y": 6,
+          "width": 12,
+          "height": 6,
+          "properties": {
+            "metrics": [
+              [ "AWS/ApplicationELB", "RequestCount", "LoadBalancer", "app/livin-matrix-alb/*" ],
+              [ ".", "TargetResponseTime", ".", "." ],
+              [ ".", "HTTPCode_Target_2XX_Count", ".", "." ],
+              [ ".", "HTTPCode_Target_4XX_Count", ".", "." ],
+              [ ".", "HTTPCode_Target_5XX_Count", ".", "." ]
+            ],
+            "view": "timeSeries",
+            "stacked": false,
+            "region": "us-east-1",
+            "title": "ALB性能和错误率",
+            "period": 300
+          }
+        },
+        {
+          "type": "metric",
+          "x": 12,
+          "y": 6,
+          "width": 12,
+          "height": 6,
+          "properties": {
+            "metrics": [
+              [ "AWS/EKS", "cluster_failed_request_count", "ClusterName", "livin-matrix-cluster" ],
+              [ ".", "cluster_request_total", ".", "." ]
+            ],
+            "view": "timeSeries",
+            "stacked": false,
+            "region": "us-east-1",
+            "title": "EKS集群指标",
+            "period": 300
+          }
+        },
+        {
+          "type": "log",
+          "x": 0,
+          "y": 12,
+          "width": 24,
+          "height": 6,
+          "properties": {
+            "query": "SOURCE '/aws/eks/livin-matrix-cluster/cluster'\n| fields @timestamp, @message\n| filter @message like /ERROR/\n| sort @timestamp desc\n| limit 20",
+            "region": "us-east-1",
+            "title": "最近的错误日志",
+            "view": "table"
+          }
+        }
+      ]
+    }
+
+---
+# CloudWatch日志组配置
+apiVersion: logs.aws.amazon.com/v1beta1
+kind: LogGroup
+metadata:
+  name: livin-matrix-app-logs
+spec:
+  logGroupName: "/aws/livin-matrix/application"
+  retentionInDays: 14  # 控制日志存储成本
+  tags:
+    Project: "LiVin-Matrix"
+    Environment: "production"
+    Component: "application-logs"
+
+---
+# 自定义指标过滤器
+apiVersion: logs.aws.amazon.com/v1beta1
+kind: MetricFilter
+metadata:
+  name: livin-matrix-error-filter
+spec:
+  logGroupName: "/aws/livin-matrix/application"
+  filterName: "ApplicationErrors"
+  filterPattern: "[timestamp, level=\"ERROR\", ...]"
+  metricTransformations:
+    - metricName: "ApplicationErrors"
+      metricNamespace: "LiVin-Matrix/Application"
+      metricValue: "1"
+      defaultValue: 0
+
+---
+# 应用程序错误率告警
+apiVersion: cloudwatch.aws.amazon.com/v1beta1
+kind: Alarm
+metadata:
+  name: livin-matrix-app-error-rate
+spec:
+  alarmName: "LiVin-Matrix-Application-ErrorRate"
+  alarmDescription: "Application error rate is high"
+  metricName: "ApplicationErrors"
+  namespace: "LiVin-Matrix/Application"
+  statistic: "Sum"
+  period: 300
+  evaluationPeriods: 2
+  threshold: 5
+  comparisonOperator: "GreaterThanThreshold"
+  treatMissingData: "notBreaching"
+  alarmActions:
+    - !Ref LiVinMatrixSNSTopic
+  tags:
+    - key: "Project"
+      value: "LiVin-Matrix"
+    - key: "Component"
+      value: "application"
