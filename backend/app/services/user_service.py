@@ -2,8 +2,9 @@
 用户服务业务逻辑
 """
 
-from typing import Optional, List
-from sqlalchemy.orm import Session
+from typing import Optional, List, Dict, Any
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 
 from app.models.user import User
@@ -13,47 +14,85 @@ from app.schemas.user import UserCreate, UserUpdate
 class UserService:
     """用户服务类"""
     
-    def __init__(self, db: Session):
+    def __init__(self, db: AsyncSession):
         self.db = db
     
-    def get_user_by_id(self, user_id: int) -> Optional[User]:
+    async def get_user_by_id(self, user_id: int) -> Optional[User]:
         """根据ID获取用户"""
-        return self.db.query(User).filter(User.id == user_id).first()
+        result = await self.db.execute(select(User).where(User.id == user_id))
+        return result.scalar_one_or_none()
     
-    def get_user_by_auth0_id(self, auth0_user_id: str) -> Optional[User]:
-        """根据Auth0 ID获取用户"""
-        return self.db.query(User).filter(User.auth0_user_id == auth0_user_id).first()
+    async def get_user_by_github_id(self, github_user_id: int) -> Optional[User]:
+        """根据GitHub用户ID获取用户"""
+        result = await self.db.execute(select(User).where(User.github_user_id == github_user_id))
+        return result.scalar_one_or_none()
     
-    def get_user_by_email(self, email: str) -> Optional[User]:
+    async def get_user_by_email(self, email: str) -> Optional[User]:
         """根据邮箱获取用户"""
-        return self.db.query(User).filter(User.email == email).first()
+        result = await self.db.execute(select(User).where(User.email == email))
+        return result.scalar_one_or_none()
     
-    def create_user(self, user_create: UserCreate) -> User:
-        """创建新用户"""
+    async def get_user_by_github_username(self, github_username: str) -> Optional[User]:
+        """根据GitHub用户名获取用户"""
+        result = await self.db.execute(select(User).where(User.github_username == github_username))
+        return result.scalar_one_or_none()
+    
+    async def create_or_update_github_user(self, github_user_info: Dict[str, Any]) -> User:
+        """
+        创建或更新GitHub用户
+        
+        Args:
+            github_user_info: GitHub用户信息字典
+            
+        Returns:
+            创建或更新的用户对象
+        """
         try:
-            db_user = User(
-                auth0_user_id=user_create.auth0_user_id,
-                email=user_create.email,
-                username=user_create.username,
-                timezone=user_create.timezone,
-                is_active=user_create.is_active
-            )
-            self.db.add(db_user)
-            self.db.commit()
-            self.db.refresh(db_user)
-            return db_user
-        except IntegrityError as e:
-            self.db.rollback()
-            if "auth0_user_id" in str(e):
-                raise ValueError(f"Auth0用户ID已存在: {user_create.auth0_user_id}")
-            elif "email" in str(e):
-                raise ValueError(f"邮箱已存在: {user_create.email}")
+            # 首先尝试根据GitHub用户ID查找现有用户
+            existing_user = await self.get_user_by_github_id(github_user_info["github_user_id"])
+            
+            if existing_user:
+                # 更新现有用户信息
+                existing_user.github_username = github_user_info["github_username"]
+                existing_user.email = github_user_info["email"]
+                existing_user.name = github_user_info.get("name")
+                existing_user.avatar_url = github_user_info.get("avatar_url")
+                existing_user.bio = github_user_info.get("bio")
+                existing_user.location = github_user_info.get("location")
+                
+                await self.db.commit()
+                await self.db.refresh(existing_user)
+                return existing_user
             else:
-                raise ValueError(f"创建用户失败: {str(e)}")
+                # 创建新用户
+                db_user = User(
+                    github_user_id=github_user_info["github_user_id"],
+                    github_username=github_user_info["github_username"],
+                    email=github_user_info["email"],
+                    name=github_user_info.get("name"),
+                    avatar_url=github_user_info.get("avatar_url"),
+                    bio=github_user_info.get("bio"),
+                    location=github_user_info.get("location"),
+                    timezone="UTC",
+                    is_active=True
+                )
+                self.db.add(db_user)
+                await self.db.commit()
+                await self.db.refresh(db_user)
+                return db_user
+                
+        except IntegrityError as e:
+            await self.db.rollback()
+            if "github_user_id" in str(e):
+                raise ValueError(f"GitHub用户ID已存在: {github_user_info['github_user_id']}")
+            elif "email" in str(e):
+                raise ValueError(f"邮箱已存在: {github_user_info['email']}")
+            else:
+                raise ValueError(f"创建或更新用户失败: {str(e)}")
     
-    def update_user(self, user_id: int, user_update: UserUpdate) -> Optional[User]:
+    async def update_user(self, user_id: int, user_update: UserUpdate) -> Optional[User]:
         """更新用户信息"""
-        db_user = self.get_user_by_id(user_id)
+        db_user = await self.get_user_by_id(user_id)
         if not db_user:
             return None
         
@@ -62,46 +101,55 @@ class UserService:
             setattr(db_user, field, value)
         
         try:
-            self.db.commit()
-            self.db.refresh(db_user)
+            await self.db.commit()
+            await self.db.refresh(db_user)
             return db_user
         except IntegrityError:
-            self.db.rollback()
+            await self.db.rollback()
             raise ValueError("更新用户信息失败：数据冲突")
     
-    def delete_user(self, user_id: int) -> bool:
+    async def delete_user(self, user_id: int) -> bool:
         """删除用户（软删除 - 设置为非活跃状态）"""
-        db_user = self.get_user_by_id(user_id)
+        db_user = await self.get_user_by_id(user_id)
         if not db_user:
             return False
         
         db_user.is_active = False
-        self.db.commit()
+        await self.db.commit()
         return True
     
-    def get_active_users(self, skip: int = 0, limit: int = 100) -> List[User]:
+    async def get_active_users(self, skip: int = 0, limit: int = 100) -> List[User]:
         """获取活跃用户列表"""
-        return self.db.query(User).filter(User.is_active == True).offset(skip).limit(limit).all()
+        result = await self.db.execute(
+            select(User).where(User.is_active == True).offset(skip).limit(limit)
+        )
+        return result.scalars().all()
     
-    def search_by_username(self, username: str) -> List[User]:
-        """根据用户名搜索用户"""
-        return self.db.query(User).filter(
-            User.username.ilike(f"%{username}%"),
-            User.is_active == True
-        ).all()
+    async def search_by_username(self, username: str) -> List[User]:
+        """根据GitHub用户名搜索用户"""
+        result = await self.db.execute(
+            select(User).where(
+                User.github_username.ilike(f"%{username}%"),
+                User.is_active == True
+            )
+        )
+        return result.scalars().all()
 
-    # 保留静态方法版本用于向后兼容
+    # 静态方法版本（兼容旧代码）
     @staticmethod
-    def get_by_id(db: Session, user_id: int) -> Optional[User]:
+    async def get_by_id(db: AsyncSession, user_id: int) -> Optional[User]:
         """根据ID获取用户（静态方法版本）"""
-        return db.query(User).filter(User.id == user_id).first()
+        result = await db.execute(select(User).where(User.id == user_id))
+        return result.scalar_one_or_none()
     
     @staticmethod
-    def get_by_auth0_id(db: Session, auth0_user_id: str) -> Optional[User]:
-        """根据Auth0 ID获取用户（静态方法版本）"""
-        return db.query(User).filter(User.auth0_user_id == auth0_user_id).first()
+    async def get_by_github_id(db: AsyncSession, github_user_id: int) -> Optional[User]:
+        """根据GitHub用户ID获取用户（静态方法版本）"""
+        result = await db.execute(select(User).where(User.github_user_id == github_user_id))
+        return result.scalar_one_or_none()
     
     @staticmethod
-    def get_by_email(db: Session, email: str) -> Optional[User]:
+    async def get_by_email(db: AsyncSession, email: str) -> Optional[User]:
         """根据邮箱获取用户（静态方法版本）"""
-        return db.query(User).filter(User.email == email).first()
+        result = await db.execute(select(User).where(User.email == email))
+        return result.scalar_one_or_none()

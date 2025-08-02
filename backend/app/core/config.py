@@ -66,10 +66,15 @@ class Settings(BaseSettings):
         else:
             return []
     
-    # Auth0 配置
-    AUTH0_DOMAIN: str = ""
-    AUTH0_AUDIENCE: str = ""
-    AUTH0_ALGORITHM: str = "RS256"
+    # GitHub OAuth 配置
+    GITHUB_CLIENT_ID: str = ""
+    GITHUB_CLIENT_SECRET: str = ""
+    GITHUB_REDIRECT_URI: str = "http://localhost:8000/api/v1/auth/github/callback"
+    
+    # JWT 配置
+    JWT_SECRET_KEY: str = secrets.token_urlsafe(32)
+    JWT_ALGORITHM: str = "HS256"
+    JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24  # 24小时
     
     # 环境配置
     ENVIRONMENT: str = "development"

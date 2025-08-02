@@ -1,13 +1,15 @@
-# Auth0认证功能用户测试指南
+# GitHub OAuth认证功能用户测试指南
+
+⚠️ **重要更新**: 本指南已从Auth0迁移到GitHub OAuth认证系统
 
 ## 测试准备
 
-### 1. Auth0应用配置
+### 1. GitHub OAuth应用配置
 
-1. **创建Auth0账户和应用**：
-   - 访问 [Auth0.com](https://auth0.com) 注册账户
-   - 创建新的Single Page Application类型应用
-   - 记录Domain、Client ID、和Audience信息
+1. **创建GitHub OAuth应用**：
+   - 访问 GitHub Settings → Developer settings → OAuth Apps
+   - 创建新的OAuth应用："LiVin Matrix Authentication"
+   - 记录Client ID和Client Secret信息
 
 2. **配置应用设置**：
    ```
@@ -31,7 +33,7 @@ VITE_API_BASE_URL=http://localhost:8000
 
 **后端环境变量** (backend/.env)：
 ```bash
-DATABASE_URL=postgresql://postgres:devpassword123@localhost:5432/livin_matrix_dev
+DATABASE_URL=postgresql://postgres:your_secure_password@localhost:5432/livin_matrix_dev
 AUTH0_DOMAIN=your-domain.auth0.com
 AUTH0_AUDIENCE=your-api-identifier
 AUTH0_ALGORITHM=RS256

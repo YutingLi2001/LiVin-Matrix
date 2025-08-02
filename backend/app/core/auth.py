@@ -1,146 +1,128 @@
 """
-Auth0 JWT验证中间件
+JWT认证中间件 - 基于GitHub OAuth
 """
 from typing import Optional, Dict, Any
 from datetime import datetime, timezone
-import httpx
 from jose import jwt, JWTError
 from fastapi import HTTPException, status, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
-from app.core.security import get_auth0_well_known_url, get_auth0_issuer
+from app.core.database import get_db
+from app.models.token_blacklist import TokenBlacklist
+from app.models.user import User
 
 security = HTTPBearer()
 
 
-class Auth0JWTBearer:
-    """Auth0 JWT Bearer认证"""
+class JWTBearer:
+    """JWT Bearer认证处理器"""
 
-    def __init__(self):
-        self.jwks_client = None
-        self.jwks_cache = {}
-        self.jwks_cache_time = None
-
-    async def get_jwks(self) -> Dict[str, Any]:
-        """获取Auth0的JWKS（JSON Web Key Set）"""
-        # 缓存JWKS 1小时
-        now = datetime.now(timezone.utc)
-        if (
-            self.jwks_cache_time
-            and (now - self.jwks_cache_time).total_seconds() < 3600
-            and self.jwks_cache
-        ):
-            return self.jwks_cache
-
-        try:
-            jwks_url = get_auth0_well_known_url(settings.AUTH0_DOMAIN)
-            async with httpx.AsyncClient() as client:
-                response = await client.get(jwks_url)
-                response.raise_for_status()
-                jwks = response.json()
-
-            self.jwks_cache = jwks
-            self.jwks_cache_time = now
-            return jwks
-
-        except Exception as e:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"无法获取Auth0公钥: {str(e)}"
-            )
-
-    def get_rsa_key(self, token: str, jwks: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-        """从JWKS中获取用于验证token的RSA公钥"""
-        try:
-            unverified_header = jwt.get_unverified_header(token)
-        except JWTError:
-            return None
-
-        rsa_key = {}
-        for key in jwks["keys"]:
-            if key["kid"] == unverified_header["kid"]:
-                rsa_key = {
-                    "kty": key["kty"],
-                    "kid": key["kid"],
-                    "use": key["use"],
-                    "n": key["n"],
-                    "e": key["e"],
-                }
-                break
-        return rsa_key if rsa_key else None
-
-    async def verify_token(self, token: str) -> Dict[str, Any]:
+    async def verify_token(self, token: str, db: AsyncSession) -> Dict[str, Any]:
         """验证JWT token并返回payload"""
         try:
-            # 获取JWKS
-            jwks = await self.get_jwks()
-
-            # 获取用于验证的RSA公钥
-            rsa_key = self.get_rsa_key(token, jwks)
-            if not rsa_key:
-                raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED, detail="无效的token：找不到匹配的公钥"
-                )
-
-            # 验证token
+            # 解码JWT token
             payload = jwt.decode(
                 token,
-                rsa_key,
-                algorithms=[settings.AUTH0_ALGORITHM],
-                audience=settings.AUTH0_AUDIENCE,
-                issuer=get_auth0_issuer(settings.AUTH0_DOMAIN),
-                options={"verify_exp": True},
+                settings.JWT_SECRET_KEY,
+                algorithms=[settings.JWT_ALGORITHM],
+                options={"verify_exp": True}
             )
-
+            
+            # 检查必要字段
+            user_id = payload.get("user_id")
+            jti = payload.get("jti")
+            
+            if not user_id or not jti:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Token格式无效：缺少必要字段"
+                )
+            
+            # 检查token是否在黑名单中
+            from sqlalchemy import select
+            result = await db.execute(select(TokenBlacklist).where(TokenBlacklist.jti == jti))
+            blacklisted_token = result.scalar_one_or_none()
+            if blacklisted_token:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Token已被撤销"
+                )
+            
             return payload
 
         except jwt.ExpiredSignatureError:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token已过期")
-        except jwt.JWTClaimsError:
             raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED, detail="Token声明无效（audience或issuer不匹配）"
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Token已过期"
             )
         except JWTError as e:
             raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED, detail=f"Token验证失败: {str(e)}"
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail=f"Token验证失败: {str(e)}"
             )
         except Exception as e:
             raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"认证服务错误: {str(e)}"
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"认证服务错误: {str(e)}"
             )
 
     async def __call__(
-        self, credentials: HTTPAuthorizationCredentials = Depends(security)
+        self, 
+        credentials: HTTPAuthorizationCredentials = Depends(security),
+        db: AsyncSession = Depends(get_db)
     ) -> Dict[str, Any]:
         """FastAPI依赖注入方法"""
         token = credentials.credentials
-        return await self.verify_token(token)
+        return await self.verify_token(token, db)
 
 
 # 创建全局认证实例
-auth_handler = Auth0JWTBearer()
+auth_handler = JWTBearer()
 
 
-async def get_current_user(token_payload: Dict[str, Any] = Depends(auth_handler)) -> Dict[str, Any]:
-    """获取当前用户信息（从token中提取）"""
+async def get_current_user(
+    token_payload: Dict[str, Any] = Depends(auth_handler),
+    db: AsyncSession = Depends(get_db)
+) -> User:
+    """获取当前用户信息"""
     try:
-        user_info = {
-            "auth0_user_id": token_payload.get("sub"),
-            "email": token_payload.get("email"),
-            "email_verified": token_payload.get("email_verified", False),
-            "name": token_payload.get("name"),
-            "nickname": token_payload.get("nickname"),
-            "picture": token_payload.get("picture"),
-            "updated_at": token_payload.get("updated_at"),
-        }
-
-        # 确保至少有用户ID
-        if not user_info["auth0_user_id"]:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token中缺少用户ID")
-
-        return user_info
+        user_id = token_payload.get("user_id")
+        
+        # 从数据库获取用户信息
+        user = await db.get(User, user_id)
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="用户不存在"
+            )
+        
+        if not user.is_active:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="用户账户已被禁用"
+            )
+        
+        return user
 
     except KeyError as e:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail=f"Token中缺少必要信息: {str(e)}"
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=f"Token中缺少必要信息: {str(e)}"
         )
+
+
+async def get_optional_current_user(
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(HTTPBearer(auto_error=False)),
+    db: AsyncSession = Depends(get_db)
+) -> Optional[User]:
+    """获取当前用户信息（可选，用于需要支持匿名访问的端点）"""
+    if not credentials:
+        return None
+    
+    try:
+        token_payload = await auth_handler.verify_token(credentials.credentials, db)
+        return await get_current_user(token_payload, db)
+    except HTTPException:
+        return None

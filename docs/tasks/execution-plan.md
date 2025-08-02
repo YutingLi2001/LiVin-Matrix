@@ -88,7 +88,7 @@
 
 ### 技术资源
 - AWS免费tier账户
-- Auth0免费账户
+- GitHub OAuth应用配置
 - GitHub仓库
 - 开发工具和IDE
 

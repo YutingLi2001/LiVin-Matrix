@@ -25,7 +25,7 @@
 - [ ] 配置 Pydantic 数据验证
 - [ ] 集成 SQLAlchemy 2.0 ORM
 - [ ] 设置 Alembic 数据库迁移
-- [ ] 配置 Auth0 JWT 认证
+- [ ] 配置 GitHub OAuth + JWT 认证
 - [ ] 实现基础API路由结构
 - [ ] 设置后端测试环境（pytest）
 

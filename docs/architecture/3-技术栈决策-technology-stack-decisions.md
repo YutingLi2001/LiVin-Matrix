@@ -31,7 +31,7 @@
   "framework": "FastAPI",             # 现代Python web框架，自动API文档
   "orm": "SQLAlchemy",                # 成熟的ORM，支持数据迁移
   "validation": "Pydantic",           # 类型安全，自动验证
-  "auth": "Auth0",                    # 避免自建认证系统复杂性
+  "auth": "GitHub OAuth + JWT",       # 免费OAuth方案，零月费成本
   "database": "PostgreSQL 13+",      # 关系型数据，支持JSON字段
   "migration": "Alembic"              # 版本控制数据库schema变更
 }
@@ -40,7 +40,7 @@
 **选择理由：**
 - **FastAPI性能优秀**：异步支持，自动API文档生成
 - **SQLAlchemy成熟稳定**：丰富的ORM功能，支持复杂查询
-- **Auth0专业认证**：避免自建认证的安全风险
+- **GitHub OAuth零成本**：100%免费认证方案，节省$35/月，保持企业级安全标准
 - **PostgreSQL功能强大**：支持JSON字段，满足灵活数据模型需求
 
 ## 3.3 基础设施技术栈
