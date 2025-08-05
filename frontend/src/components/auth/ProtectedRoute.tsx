@@ -77,12 +77,8 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
                 d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
               />
             </svg>
-            <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-              认证错误
-            </h2>
-            <p className="mt-2 text-center text-sm text-gray-600">
-              {state.error}
-            </p>
+            <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">认证错误</h2>
+            <p className="mt-2 text-center text-sm text-gray-600">{state.error}</p>
             {showLoginButton && (
               <div className="mt-6">
                 <LoginButton className="w-full" />
@@ -120,12 +116,8 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
                 d="M12 15v2m-6 0h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
               />
             </svg>
-            <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-              需要登录
-            </h2>
-            <p className="mt-2 text-center text-sm text-gray-600">
-              请先登录以访问此页面
-            </p>
+            <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">需要登录</h2>
+            <p className="mt-2 text-center text-sm text-gray-600">请先登录以访问此页面</p>
             {showLoginButton && (
               <div className="mt-6">
                 <LoginButton className="w-full" />

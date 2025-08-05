@@ -1,8 +1,13 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
+import ResetPasswordPage from './pages/ResetPasswordPage';
+import VerifyEmailPage from './pages/VerifyEmailPage';
 import DashboardPage from './pages/DashboardPage';
 import DataEntryPage from './pages/DataEntryPage';
+import AuthCallback from './components/auth/AuthCallback';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 
 function App() {
@@ -14,8 +19,23 @@ function App() {
             {/* 默认路由重定向到仪表盘 */}
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
 
-            {/* 登录页面 */}
+            {/* 认证相关页面 */}
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
+            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
+            <Route path="/verify-email" element={<VerifyEmailPage />} />
+
+            {/* GitHub OAuth回调处理 */}
+            <Route
+              path="/auth/callback"
+              element={
+                <AuthCallback
+                  onSuccess={() => (window.location.href = '/dashboard')}
+                  onError={() => (window.location.href = '/login')}
+                />
+              }
+            />
 
             {/* 受保护的仪表盘 */}
             <Route

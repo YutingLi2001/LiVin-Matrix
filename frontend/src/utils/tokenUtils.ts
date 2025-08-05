@@ -17,7 +17,7 @@ export class TokenUtils {
 
       const payload = parts[1];
       const decoded = JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/')));
-      
+
       return decoded as TokenInfo;
     } catch (error) {
       console.error('Failed to decode token:', error);
@@ -49,7 +49,7 @@ export class TokenUtils {
 
     const currentTime = Math.floor(Date.now() / 1000);
     const remainingTime = decoded.exp - currentTime;
-    
+
     return Math.max(0, remainingTime);
   }
 
@@ -59,7 +59,7 @@ export class TokenUtils {
   static shouldRefreshToken(token: string): boolean {
     const remainingTime = this.getTokenRemainingTime(token);
     const fiveMinutes = 5 * 60; // 5分钟
-    
+
     return remainingTime > 0 && remainingTime < fiveMinutes;
   }
 
@@ -77,7 +77,7 @@ export class TokenUtils {
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return null;
     }
-    
+
     return authHeader.substring(7);
   }
 

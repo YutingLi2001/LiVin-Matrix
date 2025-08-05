@@ -36,7 +36,7 @@ export default defineConfig({
   
   // 开发服务器配置
   server: {
-    port: 3000,
+    port: 5173,
     host: true,
     proxy: {
       '/api': {
@@ -49,7 +49,7 @@ export default defineConfig({
   
   // 预览服务器配置
   preview: {
-    port: 3000,
+    port: 5173,
     host: true,
   },
   

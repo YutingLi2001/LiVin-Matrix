@@ -3,7 +3,7 @@
 # ================================
 # 阶段 1: 基础依赖镜像
 # ================================
-FROM node:18-alpine AS base
+FROM node:20-alpine AS base
 
 # 设置工作目录
 WORKDIR /app
@@ -23,7 +23,7 @@ COPY package*.json ./
 FROM base AS development
 
 # 安装开发依赖
-RUN npm ci --include=dev
+RUN if [ -f package-lock.json ]; then npm ci --include=dev; else npm install; fi
 
 # 复制源代码
 COPY . .

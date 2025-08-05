@@ -45,8 +45,8 @@ export default tseslint.config([
       '@typescript-eslint/explicit-module-boundary-types': 'off',
       '@typescript-eslint/no-explicit-any': 'warn',
       
-      // 通用规则
-      'no-console': 'warn',
+      // 通用规则  
+      'no-console': process.env.NODE_ENV === 'production' ? 'error' : 'off',
       'no-debugger': 'error',
       'prefer-const': 'error',
       'no-var': 'error',

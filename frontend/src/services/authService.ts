@@ -2,12 +2,19 @@
  * GitHub OAuth认证服务
  */
 
-import { 
-  AuthResponse, 
-  GitHubAuthURLResponse, 
-  GitHubCallbackData, 
+import {
+  AuthResponse,
+  GitHubAuthURLResponse,
+  GitHubCallbackData,
   User,
-  AuthError 
+  AuthError,
+  EmailLoginRequest,
+  EmailRegisterRequest,
+  ForgotPasswordRequest,
+  ResetPasswordRequest,
+  VerifyEmailRequest,
+  ChangePasswordRequest,
+  EmailAuthResponse,
 } from '../types/auth';
 import { apiClient } from './apiClient';
 import { Storage } from '../utils/storage';
@@ -23,10 +30,10 @@ export class AuthService {
         'GET',
         '/auth/github/login'
       );
-      
+
       // 将state保存到sessionStorage
       Storage.setOAuthState(response.data.state);
-      
+
       return response.data;
     } catch (error) {
       console.error('Failed to get GitHub auth URL:', error);
@@ -57,7 +64,7 @@ export class AuthService {
 
       // 保存认证信息
       this.saveAuthData(response.data);
-      
+
       // 清除OAuth state
       Storage.removeOAuthState();
 
@@ -75,10 +82,10 @@ export class AuthService {
   async refreshToken(): Promise<AuthResponse> {
     try {
       const response = await apiClient.post<AuthResponse>('/auth/refresh', {});
-      
+
       // 更新保存的认证信息
       this.saveAuthData(response.data);
-      
+
       return response.data;
     } catch (error) {
       console.error('Token refresh failed:', error);
@@ -94,10 +101,10 @@ export class AuthService {
   async getCurrentUser(): Promise<User> {
     try {
       const response = await apiClient.get<User>('/auth/profile');
-      
+
       // 更新本地用户信息
       Storage.setUserInfo(response.data);
-      
+
       return response.data;
     } catch (error) {
       console.error('Failed to get current user:', error);
@@ -125,7 +132,7 @@ export class AuthService {
    */
   isAuthenticated(): boolean {
     const token = Storage.getAccessToken();
-    
+
     if (!token || !TokenUtils.isValidTokenFormat(token)) {
       return false;
     }
@@ -151,7 +158,7 @@ export class AuthService {
    */
   getLocalToken(): string | null {
     const token = Storage.getAccessToken();
-    
+
     if (!token || !TokenUtils.isValidTokenFormat(token)) {
       return null;
     }
@@ -169,7 +176,7 @@ export class AuthService {
    */
   shouldRefreshToken(): boolean {
     const token = Storage.getAccessToken();
-    
+
     if (!token || !TokenUtils.isValidTokenFormat(token)) {
       return false;
     }
@@ -183,7 +190,7 @@ export class AuthService {
   async initiateGitHubLogin(): Promise<void> {
     try {
       const authData = await this.getGitHubAuthURL();
-      
+
       // 重定向到GitHub OAuth页面
       window.location.href = authData.auth_url;
     } catch (error) {
@@ -217,7 +224,7 @@ export class AuthService {
     const url = new URL(window.location.href);
     url.searchParams.delete('code');
     url.searchParams.delete('state');
-    
+
     window.history.replaceState({}, document.title, url.toString());
   }
 
@@ -227,6 +234,118 @@ export class AuthService {
   private saveAuthData(authData: AuthResponse): void {
     Storage.setAccessToken(authData.access_token);
     Storage.setUserInfo(authData.user);
+  }
+
+  // 邮箱认证方法
+
+  /**
+   * 邮箱注册
+   */
+  async emailRegister(registerData: EmailRegisterRequest): Promise<EmailAuthResponse> {
+    try {
+      const response = await apiClient.publicRequest<EmailAuthResponse>(
+        'POST',
+        '/auth/email/register',
+        registerData
+      );
+
+      return response.data;
+    } catch (error) {
+      console.error('Email registration failed:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * 邮箱登录
+   */
+  async emailLogin(loginData: EmailLoginRequest): Promise<AuthResponse> {
+    try {
+      const response = await apiClient.publicRequest<AuthResponse>(
+        'POST',
+        '/auth/email/login',
+        loginData
+      );
+
+      // 保存认证信息
+      this.saveAuthData(response.data);
+
+      return response.data;
+    } catch (error) {
+      console.error('Email login failed:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * 验证邮箱
+   */
+  async verifyEmail(verifyData: VerifyEmailRequest): Promise<EmailAuthResponse> {
+    try {
+      const response = await apiClient.publicRequest<EmailAuthResponse>(
+        'POST',
+        '/auth/email/verify',
+        verifyData
+      );
+
+      return response.data;
+    } catch (error) {
+      console.error('Email verification failed:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * 申请密码重置
+   */
+  async forgotPassword(forgotData: ForgotPasswordRequest): Promise<EmailAuthResponse> {
+    try {
+      const response = await apiClient.publicRequest<EmailAuthResponse>(
+        'POST',
+        '/auth/email/forgot-password',
+        forgotData
+      );
+
+      return response.data;
+    } catch (error) {
+      console.error('Forgot password request failed:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * 重置密码
+   */
+  async resetPassword(resetData: ResetPasswordRequest): Promise<EmailAuthResponse> {
+    try {
+      const response = await apiClient.publicRequest<EmailAuthResponse>(
+        'POST',
+        '/auth/email/reset-password',
+        resetData
+      );
+
+      return response.data;
+    } catch (error) {
+      console.error('Password reset failed:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * 修改密码
+   */
+  async changePassword(changeData: ChangePasswordRequest): Promise<EmailAuthResponse> {
+    try {
+      const response = await apiClient.post<EmailAuthResponse>(
+        '/auth/email/change-password',
+        changeData
+      );
+
+      return response.data;
+    } catch (error) {
+      console.error('Change password failed:', error);
+      throw error;
+    }
   }
 }
 

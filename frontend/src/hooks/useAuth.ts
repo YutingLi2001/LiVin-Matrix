@@ -11,11 +11,11 @@ import { AuthState, User } from '../types/auth';
  */
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  
+
   if (!context) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
-  
+
   return context;
 };
 
@@ -64,7 +64,7 @@ export const useAuthError = (): string | null => {
  */
 export const useAuthActions = () => {
   const { login, logout, refreshToken, clearError, checkAuthStatus } = useAuth();
-  
+
   return {
     login,
     logout,

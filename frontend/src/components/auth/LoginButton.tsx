@@ -11,6 +11,8 @@ interface LoginButtonProps {
   variant?: 'primary' | 'secondary' | 'github';
   size?: 'small' | 'medium' | 'large';
   showIcon?: boolean;
+  onClick?: () => void | Promise<void>;
+  disabled?: boolean;
 }
 
 const LoginButton: React.FC<LoginButtonProps> = ({
@@ -19,20 +21,27 @@ const LoginButton: React.FC<LoginButtonProps> = ({
   variant = 'github',
   size = 'medium',
   showIcon = true,
+  onClick,
+  disabled,
 }) => {
   const { state, login } = useAuth();
 
   const handleLogin = async () => {
     try {
-      await login();
+      if (onClick) {
+        await onClick();
+      } else {
+        await login();
+      }
     } catch (error) {
       console.error('Login failed:', error);
     }
   };
 
   // 默认样式
-  const baseStyles = 'inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed';
-  
+  const baseStyles =
+    'inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed';
+
   // 尺寸样式
   const sizeStyles = {
     small: 'px-3 py-2 text-sm',
@@ -47,7 +56,8 @@ const LoginButton: React.FC<LoginButtonProps> = ({
     github: 'bg-gray-900 text-white hover:bg-gray-800 focus:ring-gray-500',
   };
 
-  const buttonClassName = className || `${baseStyles} ${sizeStyles[size]} ${variantStyles[variant]}`;
+  const buttonClassName =
+    className || `${baseStyles} ${sizeStyles[size]} ${variantStyles[variant]}`;
 
   // GitHub图标
   const GitHubIcon = () => (
@@ -63,7 +73,7 @@ const LoginButton: React.FC<LoginButtonProps> = ({
   return (
     <button
       onClick={handleLogin}
-      disabled={state.isLoading}
+      disabled={disabled || state.isLoading}
       className={buttonClassName}
       type="button"
     >

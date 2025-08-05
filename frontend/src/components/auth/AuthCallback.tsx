@@ -55,9 +55,7 @@ const AuthCallback: React.FC<AuthCallbackProps> = ({ onSuccess, onError }) => {
                 />
               </svg>
             </div>
-            <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-              正在登录...
-            </h2>
+            <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">正在登录...</h2>
             <p className="mt-2 text-center text-sm text-gray-600">
               正在处理GitHub OAuth认证，请稍候
             </p>
@@ -89,15 +87,11 @@ const AuthCallback: React.FC<AuthCallbackProps> = ({ onSuccess, onError }) => {
                 />
               </svg>
             </div>
-            <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-              登录失败
-            </h2>
-            <p className="mt-2 text-center text-sm text-gray-600">
-              {state.error}
-            </p>
+            <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">登录失败</h2>
+            <p className="mt-2 text-center text-sm text-gray-600">{state.error}</p>
             <div className="mt-6">
               <button
-                onClick={() => window.location.href = '/'}
+                onClick={() => (window.location.href = '/')}
                 className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
               >
                 返回首页
@@ -131,15 +125,11 @@ const AuthCallback: React.FC<AuthCallbackProps> = ({ onSuccess, onError }) => {
                 />
               </svg>
             </div>
-            <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-              登录成功
-            </h2>
+            <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">登录成功</h2>
             <p className="mt-2 text-center text-sm text-gray-600">
               欢迎回来，{state.user.name || state.user.github_username}！
             </p>
-            <p className="mt-1 text-center text-xs text-gray-500">
-              正在跳转...
-            </p>
+            <p className="mt-1 text-center text-xs text-gray-500">正在跳转...</p>
           </div>
         </div>
       </div>

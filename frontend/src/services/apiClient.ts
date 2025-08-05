@@ -29,7 +29,7 @@ export class ApiClient {
     this.baseURL = `${API_BASE_URL}/api/${API_VERSION}`;
     this.defaultHeaders = {
       'Content-Type': 'application/json',
-      'Accept': 'application/json',
+      Accept: 'application/json',
     };
   }
 
@@ -38,12 +38,12 @@ export class ApiClient {
    */
   private getHeaders(customHeaders?: Record<string, string>): Record<string, string> {
     const headers = { ...this.defaultHeaders, ...customHeaders };
-    
+
     const token = Storage.getAccessToken();
     if (token && TokenUtils.isValidTokenFormat(token)) {
       headers['Authorization'] = TokenUtils.formatAuthorizationHeader(token);
     }
-    
+
     return headers;
   }
 
@@ -82,7 +82,7 @@ export class ApiClient {
    */
   async get<T>(endpoint: string, headers?: Record<string, string>): Promise<ApiResponse<T>> {
     const url = `${this.baseURL}${endpoint}`;
-    
+
     try {
       const response = await fetch(url, {
         method: 'GET',
@@ -111,7 +111,7 @@ export class ApiClient {
     headers?: Record<string, string>
   ): Promise<ApiResponse<T>> {
     const url = `${this.baseURL}${endpoint}`;
-    
+
     try {
       const response = await fetch(url, {
         method: 'POST',
@@ -141,7 +141,7 @@ export class ApiClient {
     headers?: Record<string, string>
   ): Promise<ApiResponse<T>> {
     const url = `${this.baseURL}${endpoint}`;
-    
+
     try {
       const response = await fetch(url, {
         method: 'PUT',
@@ -167,7 +167,7 @@ export class ApiClient {
    */
   async delete<T>(endpoint: string, headers?: Record<string, string>): Promise<ApiResponse<T>> {
     const url = `${this.baseURL}${endpoint}`;
-    
+
     try {
       const response = await fetch(url, {
         method: 'DELETE',
@@ -198,7 +198,7 @@ export class ApiClient {
   ): Promise<ApiResponse<T>> {
     const url = `${this.baseURL}${endpoint}`;
     const requestHeaders = { ...this.defaultHeaders, ...headers };
-    
+
     try {
       const response = await fetch(url, {
         method,
