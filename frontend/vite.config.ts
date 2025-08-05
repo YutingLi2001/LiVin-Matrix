@@ -25,13 +25,7 @@ export default defineConfig({
       },
     },
     // 生产环境压缩
-    minify: process.env.NODE_ENV === 'production' ? 'terser' : false,
-    terserOptions: {
-      compress: {
-        drop_console: process.env.NODE_ENV === 'production',
-        drop_debugger: true,
-      },
-    },
+    minify: process.env.NODE_ENV === 'production' ? 'esbuild' : false,
   },
   
   // 开发服务器配置

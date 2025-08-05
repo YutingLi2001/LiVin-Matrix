@@ -5,7 +5,8 @@ import LogoutButton from '../components/auth/LogoutButton';
 
 const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { state } = useAuth();
+  const { user } = state;
   return (
     <div className="min-h-screen bg-bg-primary cyber-grid-bg">
       <div className="container mx-auto px-4 py-8">

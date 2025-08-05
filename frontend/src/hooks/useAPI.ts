@@ -14,7 +14,8 @@ interface APIResponse<T> {
 }
 
 export const useAPI = () => {
-  const { getAccessTokenSilently, isAuthenticated } = useAuth();
+  const { state } = useAuth();
+  const { isAuthenticated } = state;
 
   const callAPI = useCallback(
     async <T>(endpoint: string, options: RequestInit = {}): Promise<APIResponse<T>> => {
@@ -24,9 +25,8 @@ export const useAPI = () => {
           ...options.headers,
         };
 
-        if (isAuthenticated) {
-          const token = await getAccessTokenSilently();
-          headers.Authorization = `Bearer ${token}`;
+        if (isAuthenticated && state.token) {
+          (headers as Record<string, string>).Authorization = `Bearer ${state.token}`;
         }
 
         const response = await fetch(`${API_BASE_URL}${endpoint}`, {
@@ -63,7 +63,7 @@ export const useAPI = () => {
         };
       }
     },
-    [getAccessTokenSilently, isAuthenticated]
+    [isAuthenticated, state.token]
   );
 
   return { callAPI };
