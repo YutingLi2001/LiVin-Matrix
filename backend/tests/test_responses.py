@@ -56,13 +56,9 @@ class TestAPIError:
 
     def test_api_error_creation(self):
         """测试错误响应创建"""
-        error_detail = ErrorDetail(
-            code=ErrorCodes.VALIDATION_ERROR, message="Invalid input"
-        )
+        error_detail = ErrorDetail(code=ErrorCodes.VALIDATION_ERROR, message="Invalid input")
 
-        error_response = APIError(
-            message="Validation failed", error=error_detail
-        )
+        error_response = APIError(message="Validation failed", error=error_detail)
 
         assert error_response.success is False
         assert error_response.data is None
@@ -82,9 +78,7 @@ class TestPaginatedResponse:
         )
 
         response = PaginatedResponse[dict](
-            data=[{"id": 1}, {"id": 2}],
-            pagination=pagination,
-            message="Data retrieved"
+            data=[{"id": 1}, {"id": 2}], pagination=pagination, message="Data retrieved"
         )
 
         assert response.success is True
@@ -134,12 +128,7 @@ class TestResponseHelpers:
         data = [{"id": i} for i in range(1, 11)]
 
         response = create_paginated_response(
-            data=data,
-            page=2,
-            size=10,
-            total=45,
-            message="Users retrieved",
-            request_id="req-789"
+            data=data, page=2, size=10, total=45, message="Users retrieved", request_id="req-789"
         )
 
         assert response["success"] is True
@@ -156,9 +145,7 @@ class TestResponseHelpers:
     def test_create_paginated_response_edge_cases(self):
         """测试分页响应边界情况"""
         # 测试空数据
-        response = create_paginated_response(
-            data=[], page=1, size=10, total=0
-        )
+        response = create_paginated_response(data=[], page=1, size=10, total=0)
 
         assert response["pagination"]["pages"] == 0
         assert response["pagination"]["has_next"] is False
