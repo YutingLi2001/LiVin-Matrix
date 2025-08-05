@@ -1,0 +1,158 @@
+name: Main CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:  # 允许手动触发
+
+# 防止并发运行
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # 确定变更范围
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      frontend: ${{ steps.changes.outputs.frontend }}
+      backend: ${{ steps.changes.outputs.backend }}
+      
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: 检测文件变更
+      uses: dorny/paths-filter@v2
+      id: changes
+      with:
+        filters: |
+          frontend:
+            - 'frontend/**'
+            - '.github/workflows/frontend-ci.yml'
+            - '.github/workflows/deploy-frontend.yml'
+          backend:
+            - 'backend/**'
+            - '.github/workflows/backend-ci.yml'
+            - 'docker-compose*.yml'
+            
+  # 调用前端CI工作流
+  frontend-ci:
+    needs: changes
+    if: ${{ needs.changes.outputs.frontend == 'true' }}
+    uses: ./.github/workflows/frontend-ci.yml
+    secrets: inherit
+    
+  # 调用后端CI工作流  
+  backend-ci:
+    needs: changes
+    if: ${{ needs.changes.outputs.backend == 'true' }}
+    uses: ./.github/workflows/backend-ci.yml
+    secrets: inherit
+    
+  # 集成测试（如果前后端都有变更）
+  integration-test:
+    runs-on: ubuntu-latest
+    needs: [changes, frontend-ci, backend-ci]
+    if: |
+      always() && 
+      needs.changes.outputs.frontend == 'true' && 
+      needs.changes.outputs.backend == 'true' &&
+      needs.frontend-ci.result == 'success' &&
+      needs.backend-ci.result == 'success'
+      
+    services:
+      postgres:
+        image: postgres:14
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_DB: livin_matrix_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+          
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: 启动后端服务
+      run: |
+        cd backend
+        pip install -r requirements.txt
+        python -m alembic upgrade head &
+        uvicorn app.main:app --host 0.0.0.0 --port 8000 &
+        sleep 10
+      env:
+        DATABASE_URL: postgresql://postgres:${{ secrets.POSTGRES_PASSWORD }}@localhost:5432/livin_matrix_test
+        FASTAPI_SECRET_KEY: ${{ secrets.FASTAPI_SECRET_KEY }}
+        JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
+        
+    - name: 设置Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        
+    - name: 构建前端
+      run: |
+        cd frontend
+        npm ci
+        npm run build
+      env:
+        VITE_GITHUB_CLIENT_ID: ${{ secrets.GH_OAUTH_CLIENT_ID }}
+        VITE_API_BASE_URL: http://localhost:8000
+        
+    - name: 运行端到端测试
+      run: |
+        # 测试后端健康检查
+        curl -f http://localhost:8000/health || exit 1
+        
+        # 测试前端构建
+        if [ -d "frontend/dist" ]; then
+          echo "✅ 前端构建成功"
+        else
+          echo "❌ 前端构建失败"
+          exit 1
+        fi
+        
+        echo "✅ 集成测试通过"
+        
+  # 部署状态总结
+  deployment-summary:
+    runs-on: ubuntu-latest
+    needs: [changes, frontend-ci, backend-ci, integration-test]
+    if: always()
+    
+    steps:
+    - name: 部署状态总结
+      run: |
+        echo "## 🚀 CI/CD Pipeline Status Report"
+        echo "| Component | Status | Changes |"
+        echo "|-----------|--------|---------|"
+        echo "| Frontend | ${{ needs.frontend-ci.result || 'skipped' }} | ${{ needs.changes.outputs.frontend || 'false' }} |"
+        echo "| Backend | ${{ needs.backend-ci.result || 'skipped' }} | ${{ needs.changes.outputs.backend || 'false' }} |"
+        echo "| Integration | ${{ needs.integration-test.result || 'skipped' }} | ${{ (needs.changes.outputs.frontend == 'true' && needs.changes.outputs.backend == 'true') || 'false' }} |"
+        echo ""
+        echo "### 🔗 Quick Links"
+        echo "- 📊 [Action Run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})"
+        echo "- 🔍 [Commit Details](${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }})"
+        echo "- 🌐 [Repository](${{ github.server_url }}/${{ github.repository }})"
+        
+        # 检查整体状态
+        OVERALL_STATUS="success"
+        if [[ "${{ needs.frontend-ci.result }}" == "failure" ]] || [[ "${{ needs.backend-ci.result }}" == "failure" ]] || [[ "${{ needs.integration-test.result }}" == "failure" ]]; then
+          OVERALL_STATUS="failure"
+        fi
+        
+        echo ""
+        if [[ "$OVERALL_STATUS" == "success" ]]; then
+          echo "🎉 **全部测试通过！可以安全合并或部署**"
+        else
+          echo "❌ **有测试失败，请检查日志并修复问题**"
+        fi
