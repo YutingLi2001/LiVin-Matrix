@@ -6,17 +6,17 @@ from unittest.mock import Mock, patch, AsyncMock
 from jose import jwt
 from datetime import datetime, timezone, timedelta
 
-from app.core.auth import Auth0JWTBearer
+from app.core.auth import JWTBearer
 from app.core.config import settings
 from app.services.auth_service import AuthService
 
 
-class TestAuth0JWTBearer:
-    """Auth0 JWT Bearer认证测试"""
+class TestJWTBearer:
+    """JWT Bearer认证测试 - 基于GitHub OAuth"""
     
     @pytest.fixture
     def auth_handler(self):
-        return Auth0JWTBearer()
+        return JWTBearer()
     
     @pytest.fixture
     def mock_jwks(self):
