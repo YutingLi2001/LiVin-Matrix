@@ -87,6 +87,12 @@ web_modules/
 .env.production.local
 .env.production
 
+# LIVIN-MATRIX 特定的敏感文件
+.env.local
+.env.secrets
+scripts/.env
+scripts/.env.local
+
 # Secrets and sensitive files
 backend/.env
 frontend/.env
@@ -281,3 +287,6 @@ htmlcov/
 .bmad-core/temp/
 *.tmp.DS_Store
 Thumbs.db
+
+# Docker Compose 开发环境配置（包含敏感信息）
+docker-compose.dev.yml
