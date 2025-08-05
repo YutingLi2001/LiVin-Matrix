@@ -2,10 +2,11 @@
 数据库连接配置模块
 """
 
-from typing import Optional, Generator
-from sqlalchemy import create_engine, Engine
+from typing import AsyncGenerator, Optional
+
+from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engine
 from sqlalchemy.orm import declarative_base
-from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.pool import QueuePool
 
 from .config import settings
@@ -14,83 +15,87 @@ from .config import settings
 Base = declarative_base()
 
 # 全局引擎和会话工厂变量
-_engine: Optional[Engine] = None
-_SessionLocal: Optional[sessionmaker] = None
+_async_engine: Optional[AsyncEngine] = None
 
 
-def get_engine() -> Engine:
-    """获取或创建数据库引擎"""
-    global _engine
-    if _engine is None:
+def get_async_engine() -> AsyncEngine:
+    """获取或创建异步数据库引擎"""
+    global _async_engine
+    if _async_engine is None:
         if not settings.DATABASE_URL:
             # 为测试环境提供默认的SQLite内存数据库
-            database_url = "sqlite:///:memory:"
+            database_url = "sqlite+aiosqlite:///:memory:"
         else:
             database_url = settings.DATABASE_URL
-            
-        _engine = create_engine(
+            # 转换为异步数据库URL
+            if database_url.startswith("postgresql://"):
+                database_url = database_url.replace("postgresql://", "postgresql+asyncpg://")
+            elif database_url.startswith("sqlite://"):
+                database_url = database_url.replace("sqlite://", "sqlite+aiosqlite://")
+
+        _async_engine = create_async_engine(
             database_url,
             poolclass=QueuePool if not database_url.startswith("sqlite") else None,
             pool_size=settings.DB_POOL_SIZE if not database_url.startswith("sqlite") else None,
-            max_overflow=settings.DB_MAX_OVERFLOW if not database_url.startswith("sqlite") else None,
-            pool_recycle=settings.DB_POOL_RECYCLE if not database_url.startswith("sqlite") else None,
-            pool_pre_ping=settings.DB_POOL_PRE_PING if not database_url.startswith("sqlite") else None,
+            max_overflow=settings.DB_MAX_OVERFLOW
+            if not database_url.startswith("sqlite")
+            else None,
+            pool_recycle=settings.DB_POOL_RECYCLE
+            if not database_url.startswith("sqlite")
+            else None,
+            pool_pre_ping=settings.DB_POOL_PRE_PING
+            if not database_url.startswith("sqlite")
+            else None,
             echo=settings.DEBUG,
-            # 安全配置
-            isolation_level="READ_COMMITTED" if not database_url.startswith("sqlite") else None,
             # 连接超时配置
-            connect_args={"connect_timeout": 10} if "postgresql" in database_url else {},
+            connect_args={"server_settings": {"jit": "off"}}
+            if "postgresql" in database_url
+            else {},
         )
-    return _engine
+    return _async_engine
 
 
-def get_session_local() -> sessionmaker:
-    """获取会话工厂"""
-    global _SessionLocal
-    if _SessionLocal is None:
-        _SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=get_engine())
-    return _SessionLocal
-
-
-def get_db():
+async def get_db() -> AsyncGenerator[AsyncSession, None]:
     """
     获取数据库会话依赖
-    
+
     Yields:
-        Session: SQLAlchemy数据库会话
-        
+        AsyncSession: SQLAlchemy异步数据库会话
+
     Raises:
         DatabaseError: 数据库连接失败时抛出
     """
-    SessionLocal = get_session_local()
-    db = SessionLocal()
-    try:
-        # 测试连接
-        db.execute("SELECT 1")
-        yield db
-    except Exception as e:
-        db.rollback()
-        raise e
-    finally:
-        db.close()
+    async_engine = get_async_engine()
+    async with AsyncSession(async_engine) as session:
+        try:
+            # 测试连接
+            await session.execute(text("SELECT 1"))
+            yield session
+        except Exception as e:
+            await session.rollback()
+            raise e
+        finally:
+            await session.close()
 
 
-def create_tables():
+async def create_tables():
     """
     创建所有数据库表
-    
+
     用于开发和测试环境的表创建
     生产环境应使用Alembic迁移
     """
-    engine = get_engine()
-    Base.metadata.create_all(bind=engine)
+    async_engine = get_async_engine()
+    async with async_engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
 
 
-def drop_tables():
+async def drop_tables():
     """
     删除所有数据库表
-    
+
     仅用于测试环境
     """
-    engine = get_engine()
-    Base.metadata.drop_all(bind=engine)
+    async_engine = get_async_engine()
+    async with async_engine.begin() as conn:
+        await conn.run_sync(Base.metadata.drop_all)

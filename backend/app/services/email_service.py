@@ -3,8 +3,8 @@
 """
 
 import logging
-from typing import Optional, Dict, Any
 from datetime import datetime
+from typing import Any, Dict, Optional
 
 try:
     import resend
@@ -13,177 +13,167 @@ except ImportError:
 
 from app.core.config import settings
 
-
 logger = logging.getLogger(__name__)
 
 
 class EmailService:
     """邮件发送服务类 - 使用Resend HTTP API"""
-    
+
     def __init__(self):
         """初始化邮件服务"""
         self.is_configured = self._check_configuration()
-        
+
         if self.is_configured and resend:
             resend.api_key = settings.RESEND_API_KEY
-    
+
     def _check_configuration(self) -> bool:
         """检查邮件服务配置是否完整"""
-        required_settings = [
-            'RESEND_API_KEY',
-            'EMAIL_FROM_ADDRESS',
-            'EMAIL_FROM_NAME'
-        ]
-        
+        required_settings = ["RESEND_API_KEY", "EMAIL_FROM_ADDRESS", "EMAIL_FROM_NAME"]
+
         for setting in required_settings:
             if not hasattr(settings, setting) or not getattr(settings, setting):
                 logger.warning(f"邮件服务配置缺失: {setting}")
                 return False
-        
+
         if not resend:
             logger.warning("Resend SDK未安装，邮件功能不可用")
             return False
-        
+
         return True
-    
-    async def send_verification_email(self, to_email: str, verification_token: str, user_name: Optional[str] = None) -> bool:
+
+    async def send_verification_email(
+        self, to_email: str, verification_token: str, user_name: Optional[str] = None
+    ) -> bool:
         """
         发送邮箱验证邮件
-        
+
         Args:
             to_email: 收件人邮箱
             verification_token: 验证令牌
             user_name: 用户名（可选）
-            
+
         Returns:
             发送是否成功
         """
         if not self.is_configured:
             logger.error("邮件服务未配置，无法发送验证邮件")
             return False
-        
+
         verification_url = f"{settings.FRONTEND_URL}/verify-email?token={verification_token}"
         display_name = user_name or to_email.split("@")[0]
-        
+
         subject = "验证您的LiVin Matrix账户"
         html_content = self._get_verification_email_template(display_name, verification_url)
-        
-        return await self._send_email(
-            to_email=to_email,
-            subject=subject,
-            html_content=html_content
-        )
-    
-    async def send_password_reset_email(self, to_email: str, reset_token: str, user_name: Optional[str] = None) -> bool:
+
+        return await self._send_email(to_email=to_email, subject=subject, html_content=html_content)
+
+    async def send_password_reset_email(
+        self, to_email: str, reset_token: str, user_name: Optional[str] = None
+    ) -> bool:
         """
         发送密码重置邮件
-        
+
         Args:
             to_email: 收件人邮箱
             reset_token: 重置令牌
             user_name: 用户名（可选）
-            
+
         Returns:
             发送是否成功
         """
         if not self.is_configured:
             logger.error("邮件服务未配置，无法发送重置邮件")
             return False
-        
+
         reset_url = f"{settings.FRONTEND_URL}/reset-password?token={reset_token}"
         display_name = user_name or to_email.split("@")[0]
-        
+
         subject = "重置您的LiVin Matrix密码"
         html_content = self._get_password_reset_email_template(display_name, reset_url)
-        
-        return await self._send_email(
-            to_email=to_email,
-            subject=subject,
-            html_content=html_content
-        )
-    
+
+        return await self._send_email(to_email=to_email, subject=subject, html_content=html_content)
+
     async def send_welcome_email(self, to_email: str, user_name: Optional[str] = None) -> bool:
         """
         发送欢迎邮件
-        
+
         Args:
             to_email: 收件人邮箱
             user_name: 用户名（可选）
-            
+
         Returns:
             发送是否成功
         """
         if not self.is_configured:
             logger.error("邮件服务未配置，无法发送欢迎邮件")
             return False
-        
+
         display_name = user_name or to_email.split("@")[0]
-        
+
         subject = "欢迎加入LiVin Matrix!"
         html_content = self._get_welcome_email_template(display_name)
-        
-        return await self._send_email(
-            to_email=to_email,
-            subject=subject,
-            html_content=html_content
-        )
-    
+
+        return await self._send_email(to_email=to_email, subject=subject, html_content=html_content)
+
     async def send_test_email(self, to_email: str) -> bool:
         """
         发送测试邮件
-        
+
         Args:
             to_email: 收件人邮箱
-            
+
         Returns:
             发送是否成功
         """
         if not self.is_configured:
             logger.error("邮件服务未配置，无法发送测试邮件")
             return False
-        
+
         subject = "LiVin Matrix - 邮件服务测试"
         html_content = self._get_test_email_template()
-        
-        return await self._send_email(
-            to_email=to_email,
-            subject=subject,
-            html_content=html_content
-        )
-    
+
+        return await self._send_email(to_email=to_email, subject=subject, html_content=html_content)
+
     async def _send_email(self, to_email: str, subject: str, html_content: str) -> bool:
         """
         发送邮件的通用方法
-        
+
         Args:
             to_email: 收件人邮箱
             subject: 邮件主题
             html_content: HTML内容
-            
+
         Returns:
             发送是否成功
         """
         try:
             # 使用Resend API发送邮件
-            email_response = resend.Emails.send({
-                "from": f"{settings.EMAIL_FROM_NAME} <{settings.EMAIL_FROM_ADDRESS}>",
-                "to": [to_email],
-                "subject": subject,
-                "html": html_content
-            })
-            
-            if email_response and (hasattr(email_response, 'id') or (isinstance(email_response, dict) and 'id' in email_response)):
-                response_id = email_response.id if hasattr(email_response, 'id') else email_response.get('id')
+            email_response = resend.Emails.send(
+                {
+                    "from": f"{settings.EMAIL_FROM_NAME} <{settings.EMAIL_FROM_ADDRESS}>",
+                    "to": [to_email],
+                    "subject": subject,
+                    "html": html_content,
+                }
+            )
+
+            if email_response and (
+                hasattr(email_response, "id")
+                or (isinstance(email_response, dict) and "id" in email_response)
+            ):
+                response_id = (
+                    email_response.id if hasattr(email_response, "id") else email_response.get("id")
+                )
                 logger.info(f"邮件发送成功: {response_id} -> {to_email}")
                 return True
             else:
                 logger.error(f"邮件发送失败，无响应ID -> {to_email}")
                 return False
-                
+
         except Exception as e:
             logger.error(f"邮件发送异常 -> {to_email}: {str(e)}")
             return False
-    
+
     def _get_verification_email_template(self, user_name: str, verification_url: str) -> str:
         """获取邮箱验证邮件模板"""
         return f"""
@@ -234,7 +224,7 @@ class EmailService:
         </body>
         </html>
         """
-    
+
     def _get_password_reset_email_template(self, user_name: str, reset_url: str) -> str:
         """获取密码重置邮件模板"""
         return f"""
@@ -286,7 +276,7 @@ class EmailService:
         </body>
         </html>
         """
-    
+
     def _get_welcome_email_template(self, user_name: str) -> str:
         """获取欢迎邮件模板"""
         return f"""
@@ -335,7 +325,7 @@ class EmailService:
         </body>
         </html>
         """
-    
+
     def _get_test_email_template(self) -> str:
         """获取测试邮件模板"""
         return f"""

@@ -31,7 +31,7 @@ async def database_health():
         content={
             "status": "healthy",
             "component": "database",
-            "message": "Database connection is healthy"
+            "message": "Database connection is healthy",
         }
     )
 
@@ -44,6 +44,6 @@ async def redis_health():
         content={
             "status": "healthy",
             "component": "redis",
-            "message": "Redis connection is healthy"
+            "message": "Redis connection is healthy",
         }
     )

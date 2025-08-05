@@ -21,5 +21,5 @@ def sample_user_data():
         "email": "test@example.com",
         "username": "testuser",
         "full_name": "Test User",
-        "password": "testpassword123"
+        "password": "testpassword123",
     }

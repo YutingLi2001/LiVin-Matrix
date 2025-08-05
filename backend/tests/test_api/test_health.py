@@ -2,6 +2,7 @@
 健康检查 API 测试
 """
 
+
 def test_health_check(client):
     """测试健康检查端点"""
     response = client.get("/api/v1/health/")

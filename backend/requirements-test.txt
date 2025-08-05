@@ -5,6 +5,12 @@ pytest-cov==4.1.0
 pytest-mock==3.12.0
 httpx==0.25.2  # 用于FastAPI测试客户端
 
+# 测试增强依赖
+pytest-benchmark==4.0.0  # 性能基准测试
+pytest-postgresql==5.0.0  # PostgreSQL测试数据库
+faker==20.1.0  # 生成测试数据
+testcontainers==3.7.1  # 容器化测试环境
+
 # 代码质量和格式化
 black==23.11.0
 isort==5.12.0

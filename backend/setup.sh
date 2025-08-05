@@ -35,32 +35,32 @@ pip install -r requirements.txt
 echo "🛠️  安装开发依赖..."
 pip install -r requirements-dev.txt
 
-# 创建 .env 文件（如果不存在）
-if [ ! -f ".env" ]; then
-    echo "📝 创建 .env 配置文件..."
-    cat > .env << EOF
-# 环境配置
-ENVIRONMENT=development
-DEBUG=true
+# 检查必要的环境变量
+echo "🔍 检查环境变量配置..."
+missing_vars=()
 
-# 数据库配置
-DATABASE_URL=postgresql://postgres:devpassword123@localhost:5432/livin_matrix_dev
+# 检查必要的环境变量
+if [ -z "${DATABASE_URL:-}" ]; then
+    missing_vars+=("DATABASE_URL")
+fi
 
-# Redis 配置
-REDIS_URL=redis://localhost:6379
+if [ -z "${SECRET_KEY:-}" ]; then
+    missing_vars+=("SECRET_KEY")
+fi
 
-# 安全配置
-SECRET_KEY=your-secret-key-here-change-in-production
-
-# CORS 配置
-BACKEND_CORS_ORIGINS=http://localhost:5173,http://localhost:3000
-
-# 日志配置
-LOG_LEVEL=INFO
-EOF
-    echo "✅ .env 文件创建成功"
+if [ ${#missing_vars[@]} -gt 0 ]; then
+    echo "⚠️  缺少以下环境变量："
+    for var in "${missing_vars[@]}"; do
+        echo "   - $var"
+    done
+    echo ""
+    echo "请通过以下方式之一设置环境变量："
+    echo "1. 使用 docker-compose.dev.yml 启动开发环境"
+    echo "2. 手动设置环境变量，例如："
+    echo "   export DATABASE_URL=postgresql://postgres:devpassword123@localhost:5432/livin_matrix_dev"
+    echo "   export SECRET_KEY=your-secret-key-here"
 else
-    echo "ℹ️  .env 文件已存在，跳过创建"
+    echo "✅ 环境变量配置完整"
 fi
 
 echo ""

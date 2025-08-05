@@ -6,24 +6,25 @@ LiVin Matrix Backend API
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.sessions import SessionMiddleware
 
-from app.core.config import settings
 from app.api.api_v1.api import api_router
+from app.core.config import settings
 from app.middleware.error_handler import (
-    setup_exception_handlers,
-    RequestIDMiddleware,
     APIVersionMiddleware,
-    setup_logging
+    RequestIDMiddleware,
+    setup_exception_handlers,
+    setup_logging,
 )
 from app.schemas.responses import create_success_response
 
 
 def create_application() -> FastAPI:
     """创建 FastAPI 应用实例"""
-    
+
     # 配置日志
     setup_logging()
-    
+
     application = FastAPI(
         title=settings.PROJECT_NAME,
         description="生活数据相关性分析平台 API",
@@ -34,13 +35,16 @@ def create_application() -> FastAPI:
     )
 
     # 添加中间件（按添加顺序执行）
-    # 1. 请求ID中间件
+    # 1. Session中间件（用于OAuth state管理）
+    application.add_middleware(SessionMiddleware, secret_key=settings.SECRET_KEY)
+
+    # 2. 请求ID中间件
     application.add_middleware(RequestIDMiddleware)
-    
-    # 2. API版本中间件
+
+    # 3. API版本中间件
     application.add_middleware(APIVersionMiddleware, version="v1")
-    
-    # 3. CORS中间件
+
+    # 4. CORS中间件
     application.add_middleware(
         CORSMiddleware,
         allow_origins=settings.get_cors_origins(),
@@ -70,5 +74,5 @@ async def health_check():
             "service": "livin-matrix-backend",
             "version": settings.VERSION,
         },
-        message="Service is running normally"
+        message="Service is running normally",
     )

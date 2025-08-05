@@ -4,7 +4,7 @@ API v1 路由聚合
 
 from fastapi import APIRouter
 
-from app.api.api_v1.endpoints import health, users, auth
+from app.api.api_v1.endpoints import auth, health, users
 
 api_router = APIRouter()
 

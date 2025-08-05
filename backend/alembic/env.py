@@ -4,13 +4,16 @@ Alembic 环境配置
 
 import asyncio
 import os
-from logging.config import fileConfig
-from sqlalchemy import engine_from_config, pool
-from sqlalchemy.ext.asyncio import AsyncEngine
-from alembic import context
 
 # 添加应用程序路径到 sys.path
 import sys
+from logging.config import fileConfig
+
+from sqlalchemy import engine_from_config, pool
+from sqlalchemy.ext.asyncio import AsyncEngine
+
+from alembic import context
+
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 # 导入应用程序配置和模型
@@ -103,7 +106,7 @@ async def run_async_migrations():
     """
     configuration = config.get_section(config.config_ini_section)
     configuration["sqlalchemy.url"] = get_database_url()
-    
+
     connectable = AsyncEngine(
         engine_from_config(
             configuration,
@@ -134,7 +137,7 @@ def run_migrations_online() -> None:
         # 回退到同步模式
         configuration = config.get_section(config.config_ini_section)
         configuration["sqlalchemy.url"] = get_database_url()
-        
+
         connectable = engine_from_config(
             configuration,
             prefix="sqlalchemy.",

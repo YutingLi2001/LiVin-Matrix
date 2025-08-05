@@ -2,6 +2,7 @@
 主应用测试
 """
 
+
 def test_read_main_health(client):
     """测试主健康检查端点"""
     response = client.get("/health")
