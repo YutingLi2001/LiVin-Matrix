@@ -123,7 +123,7 @@ class UserService:
         result = await self.db.execute(
             select(User).where(User.is_active == True).offset(skip).limit(limit)
         )
-        return result.scalars().all()
+        return list(result.scalars().all())
     
     async def search_by_username(self, username: str) -> List[User]:
         """根据GitHub用户名搜索用户"""
@@ -133,7 +133,7 @@ class UserService:
                 User.is_active == True
             )
         )
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     # 静态方法版本（兼容旧代码）
     @staticmethod
