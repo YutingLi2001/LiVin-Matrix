@@ -12,9 +12,13 @@ python -c "
 import time
 import sys
 import psycopg2
+from app.services.secrets_service import get_secret
 
 max_retries = 15
 retry_count = 0
+
+# 从secrets读取数据库密码
+password = get_secret('POSTGRES_PASSWORD', 'POSTGRES_PASSWORD', 'default_password')
 
 while retry_count < max_retries:
     try:
@@ -22,7 +26,7 @@ while retry_count < max_retries:
             host='postgres',
             database='livin_matrix_dev', 
             user='postgres',
-            password='Ji9Cof39rWMTPxwyaCzmGGIwROGwVuFk'
+            password=password
         )
         conn.close()
         print('✅ Database is ready!')
@@ -38,6 +42,13 @@ while retry_count < max_retries:
 
 # 运行数据库迁移
 echo "🔄 Running database migrations..."
+# 从secrets生成正确的DATABASE_URL并导出
+export DATABASE_URL=$(python -c "
+from app.core.config import create_settings
+settings = create_settings()
+print(settings.DATABASE_URL)
+")
+echo "Using DATABASE_URL: ${DATABASE_URL:0:30}..."
 python -m alembic upgrade head
 echo "✅ Database migrations completed"
 

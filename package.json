@@ -8,13 +8,11 @@
     "backend"
   ],
   "scripts": {
-    "dev": "docker-compose up -d",
-    "dev:frontend": "cd frontend && npm start",
-    "dev:backend": "cd backend && uvicorn app.main:app --reload --host 0.0.0.0 --port 8000",
+    "start": "echo '请使用 scripts/services/start-all.command 启动服务'",
     "build": "npm run build --workspaces",
     "test": "npm run test --workspaces",
     "lint": "npm run lint --workspaces",
-    "clean": "docker-compose down && docker system prune -f",
+    "clean": "docker-compose -f docker-compose.yml -f docker-compose.secrets.yml down && docker system prune -f",
     "install:all": "npm install && npm install --workspaces"
   },
   "devDependencies": {

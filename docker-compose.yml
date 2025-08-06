@@ -54,10 +54,8 @@ services:
       - ./backend:/app
       - backend_venv:/app/.venv
     depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
+      - postgres
+      - redis
     networks:
       - livin-matrix-network
     healthcheck:
@@ -128,8 +126,8 @@ services:
     networks:
       - livin-matrix-network
     restart: unless-stopped
-    profiles:
-      - production
+    deploy:
+      replicas: 0  # 默认不启动nginx，仅在生产环境需要时启动
 
 volumes:
   postgres_data:
@@ -145,14 +143,3 @@ networks:
   livin-matrix-network:
     driver: bridge
 
-# Docker Secrets 配置 (生产环境使用)
-# 使用: docker-compose -f docker-compose.yml -f docker-compose.secrets.yml up
-secrets:
-  fastapi_github_oauth_client_secret:
-    external: true
-  fastapi_jwt_signing_key:
-    external: true
-  postgres_db_password:
-    external: true
-  fastapi_session_secret_key:
-    external: true

@@ -22,6 +22,7 @@ class SecretsService:
     """Docker Secrets 密钥管理服务"""
 
     SECRETS_DIR = "/run/secrets"
+    SECRETS_DIR_FALLBACK = "/var/secrets"
 
     def __init__(self):
         """初始化密钥服务"""
@@ -89,24 +90,33 @@ class SecretsService:
         Returns:
             密钥值或None
         """
-        secret_path = Path(self.SECRETS_DIR) / secret_name
+        # 尝试多个路径：标准Docker secrets路径和fallback路径
+        paths_to_try = [
+            Path(self.SECRETS_DIR) / secret_name,
+            Path(self.SECRETS_DIR_FALLBACK) / secret_name
+        ]
+        
+        for secret_path in paths_to_try:
+            try:
+                if secret_path.exists() and secret_path.is_file():
+                    with open(secret_path, "r", encoding="utf-8") as f:
+                        content = f.read().strip()
+                        if content:
+                            logger.debug(f"Successfully read secret from: {secret_path}")
+                            return content
+                        else:
+                            logger.warning(f"Secret file is empty: {secret_path}")
+                            continue
+                else:
+                    logger.debug(f"Secret file not found: {secret_path}")
+                    continue
 
-        try:
-            if secret_path.exists() and secret_path.is_file():
-                with open(secret_path, "r", encoding="utf-8") as f:
-                    content = f.read().strip()
-                    if content:
-                        return content
-                    else:
-                        logger.warning(f"Docker secret file is empty: {secret_path}")
-                        return None
-            else:
-                logger.debug(f"Docker secret file not found: {secret_path}")
-                return None
-
-        except Exception as e:
-            logger.error(f"Error reading Docker secret file '{secret_path}': {str(e)}")
-            return None
+            except Exception as e:
+                logger.error(f"Error reading secret file '{secret_path}': {str(e)}")
+                continue
+        
+        logger.warning(f"Secret '{secret_name}' not found in any location")
+        return None
 
     def validate_secrets(self) -> dict:
         """
@@ -116,10 +126,13 @@ class SecretsService:
             验证结果字典
         """
         required_secrets = {
-            "fastapi_github_oauth_client_secret": "GITHUB_CLIENT_SECRET",
-            "fastapi_jwt_signing_key": "JWT_SECRET_KEY",
-            "postgres_db_password": "POSTGRES_PASSWORD",
-            "fastapi_session_secret_key": "SECRET_KEY",
+            "GITHUB_CLIENT_SECRET": "GITHUB_CLIENT_SECRET",
+            "JWT_SECRET_KEY": "JWT_SECRET_KEY", 
+            "POSTGRES_PASSWORD": "POSTGRES_PASSWORD",
+            "SESSION_SECRET_KEY": "SESSION_SECRET_KEY",
+            "RESEND_API_KEY": "RESEND_API_KEY",
+            "GITHUB_CLIENT_ID": "GITHUB_CLIENT_ID",
+            "GITHUB_REDIRECT_URI": "GITHUB_REDIRECT_URI",
         }
 
         results = {}

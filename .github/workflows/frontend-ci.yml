@@ -23,6 +23,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
           
       - name: Install dependencies
         run: |
@@ -90,6 +92,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
           
       - name: Install dependencies and build
         run: |
@@ -97,7 +101,7 @@ jobs:
           npm ci
           npm run build
         env:
-          VITE_GITHUB_CLIENT_ID: ${{ secrets.GH_OAUTH_CLIENT_ID }}
+          VITE_GITHUB_CLIENT_ID: ${{ secrets.GITHUB_CLIENT_ID }}
           
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3

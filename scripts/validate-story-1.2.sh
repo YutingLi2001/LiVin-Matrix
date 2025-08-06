@@ -109,17 +109,13 @@ echo
 
 # 设置环境变量
 echo "4. 配置环境变量..."
-if [[ ! -f ".env" ]]; then
-    echo "正在从.env.example创建.env文件..."
-    cp .env.example .env
-    echo "✅ .env文件已创建"
-else
-    echo "✅ .env文件已存在"
-fi
-
-# 导出环境变量
+# 不再依赖.env文件，直接设置必要的环境变量
 export DATABASE_URL="postgresql://postgres:devpassword123@localhost:5432/livin_matrix_dev"
-echo "✅ 环境变量已设置"
+export SECRET_KEY="test-secret-key-for-validation"
+export ENVIRONMENT="development"
+export DEBUG="true"
+
+echo "✅ 环境变量已设置（不依赖.env文件）"
 
 echo
 

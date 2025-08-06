@@ -74,7 +74,7 @@ class Settings(BaseSettings):
     GITHUB_REDIRECT_URI: str = "http://localhost:3000/auth/callback"
 
     # 邮件服务配置 (Resend)
-    RESEND_API_KEY: str = "re_Ax8gF7Ds_FjVx8o5bDfzUfVdeFmotCp1z"
+    RESEND_API_KEY: str = ""
     EMAIL_FROM_ADDRESS: str = "onboarding@resend.dev"
     EMAIL_FROM_NAME: str = "LiVin Matrix Team"
     FRONTEND_URL: str = "http://localhost:3000"
@@ -118,35 +118,45 @@ def create_settings() -> Settings:
         try:
             # GitHub OAuth密钥
             base_settings.GITHUB_CLIENT_SECRET = get_secret(
-                "fastapi_github_oauth_client_secret",
+                "GITHUB_CLIENT_SECRET",
                 "GITHUB_CLIENT_SECRET",
                 base_settings.GITHUB_CLIENT_SECRET,
             )
 
             # JWT签名密钥
             base_settings.JWT_SECRET_KEY = get_secret(
-                "fastapi_jwt_signing_key", "JWT_SECRET_KEY", base_settings.JWT_SECRET_KEY
+                "JWT_SECRET_KEY", "JWT_SECRET_KEY", base_settings.JWT_SECRET_KEY
             )
 
             # FastAPI应用密钥
             base_settings.SECRET_KEY = get_secret(
-                "fastapi_session_secret_key", "SECRET_KEY", base_settings.SECRET_KEY
+                "SESSION_SECRET_KEY", "SECRET_KEY", base_settings.SECRET_KEY
             )
 
             # 邮件服务密钥
             base_settings.RESEND_API_KEY = get_secret(
-                "resend_api_key", "RESEND_API_KEY", base_settings.RESEND_API_KEY
+                "RESEND_API_KEY", "RESEND_API_KEY", base_settings.RESEND_API_KEY
+            )
+
+            # GitHub OAuth Client ID
+            base_settings.GITHUB_CLIENT_ID = get_secret(
+                "GITHUB_CLIENT_ID", "GITHUB_CLIENT_ID", base_settings.GITHUB_CLIENT_ID
+            )
+
+            # GitHub OAuth Redirect URI
+            base_settings.GITHUB_REDIRECT_URI = get_secret(
+                "GITHUB_REDIRECT_URI", "GITHUB_REDIRECT_URI", base_settings.GITHUB_REDIRECT_URI
             )
 
             # 数据库密码（如果DATABASE_URL中包含密码占位符，需要替换）
-            if base_settings.DATABASE_URL and "postgres@postgres:" in base_settings.DATABASE_URL:
+            if base_settings.DATABASE_URL and "postgres@postgres" in base_settings.DATABASE_URL:
                 try:
                     postgres_password = get_secret(
-                        "postgres_db_password", "POSTGRES_PASSWORD", "your_secure_password_here"
+                        "POSTGRES_PASSWORD", "POSTGRES_PASSWORD", "your_secure_password_here"
                     )
-                    # 替换URL中的密码占位符
+                    # 替换URL中的密码占位符  
                     base_settings.DATABASE_URL = base_settings.DATABASE_URL.replace(
-                        "postgres@postgres:", f"postgres:{postgres_password}@postgres:"
+                        "postgres@postgres", f"postgres:{postgres_password}@postgres"
                     )
                     logger.info("Database URL updated with secret password")
                 except Exception as e:
@@ -163,4 +173,29 @@ def create_settings() -> Settings:
     return base_settings
 
 
-settings = create_settings()
+# 懒加载设置，避免模块导入时就固化配置
+_settings_instance: Optional[Settings] = None
+
+def get_settings() -> Settings:
+    """获取配置实例（懒加载）"""
+    global _settings_instance
+    if _settings_instance is None:
+        _settings_instance = create_settings()
+    return _settings_instance
+
+def reload_settings() -> Settings:
+    """强制重新加载配置"""
+    global _settings_instance
+    _settings_instance = None
+    return get_settings()
+
+# 使用属性访问器实现懒加载
+class SettingsProxy:
+    def __getattr__(self, name):
+        return getattr(get_settings(), name)
+    
+    def reload(self):
+        """重新加载配置"""
+        return reload_settings()
+
+settings = SettingsProxy()

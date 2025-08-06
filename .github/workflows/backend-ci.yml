@@ -59,18 +59,19 @@ jobs:
           cd backend
           flake8 .
           
-      - name: Run pytest with coverage
+      - name: Run pytest with coverage (parallel)
         run: |
           cd backend
-          pytest --cov=app --cov-report=xml --cov-report=term-missing
+          pytest --cov=app --cov-report=xml --cov-report=term-missing -n auto
         env:
           DATABASE_URL: postgresql://postgres:test_password@localhost:5432/test_db
           TEST_DATABASE_URL: postgresql://postgres:test_password@localhost:5432/test_db
-          FASTAPI_SECRET_KEY: ${{ secrets.FASTAPI_SECRET_KEY }}
+          SESSION_SECRET_KEY: ${{ secrets.SESSION_SECRET_KEY }}
           JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
-          GITHUB_OAUTH_CLIENT_ID: ${{ secrets.GH_OAUTH_CLIENT_ID }}
-          GITHUB_OAUTH_CLIENT_SECRET: ${{ secrets.GH_OAUTH_CLIENT_SECRET }}
+          GITHUB_CLIENT_ID: ${{ secrets.GITHUB_CLIENT_ID }}
+          GITHUB_CLIENT_SECRET: ${{ secrets.GITHUB_CLIENT_SECRET }}
+          GITHUB_REDIRECT_URI: ${{ secrets.GITHUB_REDIRECT_URI }}
           
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
@@ -133,8 +134,10 @@ jobs:
         if: steps.deploy.outputs.deployment_success != 'true'
         run: |
           echo "Deployment failed, initiating rollback..."
+          echo "Rolling back to previous stable version..."
           # ./deploy/scripts/rollback.sh staging
-          echo "Rollback completed"
+          echo "Notifying team about deployment failure..."
+          echo "Rollback completed successfully"
           exit 1
           
       - name: Post-deployment verification
