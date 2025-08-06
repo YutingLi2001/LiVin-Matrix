@@ -2,16 +2,16 @@
 
 ## 项目概述
 
-**项目名称**: LiVin Matrix  
-**认证方案**: GitHub OAuth + 自制JWT认证系统  
-**替代方案**: 从Auth0 ($35/月) 迁移到完全免费的GitHub OAuth解决方案  
-**更新日期**: 2025-08-02  
+**项目名称**: LiVin Matrix
+**认证方案**: GitHub OAuth + 自制JWT认证系统
+**替代方案**: 从Auth0 ($35/月) 迁移到完全免费的GitHub OAuth解决方案
+**更新日期**: 2025-08-02
 
 ## 高层架构
 
 ### 技术概要
 - **前端**: React + TypeScript + Vite
-- **后端**: FastAPI + Python 3.11 + SQLAlchemy  
+- **后端**: FastAPI + Python 3.11 + SQLAlchemy
 - **数据库**: PostgreSQL
 - **认证流程**: GitHub OAuth 2.0 → JWT Token → 数据库用户同步
 - **部署**: Docker容器化 + 免费云服务
@@ -25,7 +25,7 @@ sequenceDiagram
     participant Backend as FastAPI后端
     participant GitHub as GitHub OAuth
     participant DB as PostgreSQL数据库
-    
+
     User->>Frontend: 点击"GitHub登录"
     Frontend->>GitHub: 重定向到GitHub OAuth
     GitHub->>User: 显示授权页面
@@ -109,7 +109,7 @@ CREATE TABLE users (
     is_active BOOLEAN DEFAULT true,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    
+
     -- 索引优化
     INDEX idx_users_github_id (github_user_id),
     INDEX idx_users_email (email),
@@ -123,7 +123,7 @@ CREATE TABLE token_blacklist (
     user_id INTEGER NOT NULL REFERENCES users(id),
     expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    
+
     INDEX idx_blacklist_jti (jti),
     INDEX idx_blacklist_expires (expires_at)
 );
@@ -240,7 +240,7 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
-  
+
   schemas:
     User:
       type: object
@@ -312,7 +312,7 @@ interface AuthContextType {
   refreshToken: () => Promise<void>;
 }
 
-// src/services/authService.ts  
+// src/services/authService.ts
 class AuthService {
   async getGithubAuthUrl(): Promise<{auth_url: string, state: string}>;
   async handleGithubCallback(code: string, state: string): Promise<AuthResponse>;
@@ -355,7 +355,7 @@ class GitHubOAuthService:
     async def exchange_code_for_token(self, code: str) -> str;
     async def get_user_info(self, access_token: str) -> dict;
 
-# app/services/jwt_service.py  
+# app/services/jwt_service.py
 class JWTService:
     def create_access_token(self, data: dict) -> str;
     def verify_token(self, token: str) -> dict;
@@ -372,7 +372,7 @@ class JWTService:
 VITE_GITHUB_CLIENT_ID=your_github_client_id
 VITE_GITHUB_REDIRECT_URI=http://localhost:3000/auth/callback
 
-# API配置  
+# API配置
 VITE_API_BASE_URL=http://localhost:8000
 VITE_APP_ENVIRONMENT=development
 ```
@@ -401,7 +401,7 @@ REDIS_URL=redis://localhost:6379/0
 
 ### JWT令牌安全
 - **算法**: HS256 (对称加密)
-- **过期时间**: 24小时  
+- **过期时间**: 24小时
 - **刷新机制**: 静默刷新
 - **存储方式**: localStorage (开发环境) / httpOnly Cookie (生产环境)
 - **黑名单机制**: Redis存储已撤销令牌
@@ -428,9 +428,9 @@ describe('AuthService', () => {
     // 模拟GitHub OAuth回调
     const mockCode = 'test_code';
     const mockState = 'test_state';
-    
+
     const result = await authService.handleGithubCallback(mockCode, mockState);
-    
+
     expect(result.access_token).toBeDefined();
     expect(result.user).toBeDefined();
   });
@@ -444,7 +444,7 @@ describe('AuthContext', () => {
         <TestComponent />
       </AuthProvider>
     );
-    
+
     // 测试登录、登出状态变化
   });
 });
@@ -461,7 +461,7 @@ async def test_github_oauth_callback(test_client, mock_github_response):
         "/api/v1/auth/github/callback",
         json={"code": "test_code", "state": "test_state"}
     )
-    
+
     assert response.status_code == 200
     data = response.json()
     assert "access_token" in data
@@ -471,10 +471,10 @@ async def test_github_oauth_callback(test_client, mock_github_response):
 def test_jwt_token_verification():
     """测试JWT令牌生成和验证"""
     user_data = {"github_user_id": 123, "email": "test@example.com"}
-    
+
     token = jwt_service.create_access_token(user_data)
     payload = jwt_service.verify_token(token)
-    
+
     assert payload["github_user_id"] == 123
     assert payload["email"] == "test@example.com"
 ```
@@ -483,7 +483,7 @@ def test_jwt_token_verification():
 
 ### 开发环境
 - **前端**: Vite开发服务器 (localhost:3000)
-- **后端**: FastAPI + Uvicorn (localhost:8000)  
+- **后端**: FastAPI + Uvicorn (localhost:8000)
 - **数据库**: Docker PostgreSQL (localhost:5432)
 - **缓存**: Docker Redis (localhost:6379)
 
@@ -506,7 +506,7 @@ def test_jwt_token_verification():
    - [ ] 设置新的环境变量
    - [ ] 更新数据库schema
 
-2. **第二阶段 - 后端重构**  
+2. **第二阶段 - 后端重构**
    - [ ] 重写认证中间件 (`app/core/auth.py`)
    - [ ] 实现GitHub OAuth服务
    - [ ] 创建新的认证端点
@@ -520,7 +520,7 @@ def test_jwt_token_verification():
 
 4. **第四阶段 - 测试验证**
    - [ ] 单元测试
-   - [ ] 集成测试  
+   - [ ] 集成测试
    - [ ] 端到端测试
    - [ ] 性能测试
 

@@ -55,7 +55,7 @@ describe('MatrixHeatmap', () => {
   it('renders correlation data correctly', () => {
     const mockData = createMockCorrelationData();
     render(<MatrixHeatmap data={mockData} onCellClick={jest.fn()} />);
-    
+
     expect(screen.getByRole('grid')).toBeInTheDocument();
     expect(screen.getAllByRole('gridcell')).toHaveLength(36);
   });
@@ -63,9 +63,9 @@ describe('MatrixHeatmap', () => {
   it('handles cell click interactions', () => {
     const mockOnClick = jest.fn();
     const mockData = createMockCorrelationData();
-    
+
     render(<MatrixHeatmap data={mockData} onCellClick={mockOnClick} />);
-    
+
     fireEvent.click(screen.getAllByRole('gridcell')[0]);
     expect(mockOnClick).toHaveBeenCalledWith(0, 0, expect.any(Number));
   });

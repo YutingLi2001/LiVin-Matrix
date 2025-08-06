@@ -35,10 +35,10 @@ TESTS_FAILED=0
 run_test() {
     local test_name="$1"
     local test_command="$2"
-    
+
     TESTS_TOTAL=$((TESTS_TOTAL + 1))
     log_test "Running test: $test_name"
-    
+
     if eval "$test_command"; then
         log_info "✅ PASSED: $test_name"
         TESTS_PASSED=$((TESTS_PASSED + 1))
@@ -53,7 +53,7 @@ run_test() {
 # 检查必要工具
 check_prerequisites() {
     log_info "Checking prerequisites..."
-    
+
     run_test "Docker is installed" "command -v docker >/dev/null 2>&1"
     run_test "Docker daemon is running" "docker info >/dev/null 2>&1"
     run_test "Node.js is installed" "command -v node >/dev/null 2>&1"
@@ -65,42 +65,42 @@ check_prerequisites() {
 # 测试前端构建
 test_frontend_build() {
     log_info "Testing frontend build process..."
-    
+
     cd frontend
-    
+
     run_test "Frontend dependencies install" "npm ci"
     run_test "Frontend linting" "npm run lint"
     run_test "Frontend type checking" "npm run typecheck"
     run_test "Frontend tests" "npm run test:coverage"
     run_test "Frontend build" "npm run build"
-    
+
     cd ..
 }
 
 # 测试后端构建
 test_backend_build() {
     log_info "Testing backend build process..."
-    
+
     cd backend
-    
+
     run_test "Backend dependencies install" "pip install -r requirements.txt && pip install -r requirements-test.txt"
     run_test "Backend code formatting check" "black --check . --diff"
     run_test "Backend linting" "flake8 ."
     run_test "Backend tests" "python -m pytest --cov=app --cov-report=term-missing"
-    
+
     cd ..
 }
 
 # 测试Docker镜像构建
 test_docker_build() {
     log_info "Testing Docker image builds..."
-    
+
     run_test "Frontend Docker build" "docker build -f deploy/docker/frontend.Dockerfile -t test-frontend:latest ."
     run_test "Backend Docker build" "docker build -f deploy/docker/backend.Dockerfile -t test-backend:latest ."
-    
+
     # 测试镜像运行
     log_info "Testing Docker image execution..."
-    
+
     # 测试前端镜像
     run_test "Frontend container starts" "
         docker run -d --name test-frontend-container -p 3001:80 test-frontend:latest &&
@@ -109,7 +109,7 @@ test_docker_build() {
         docker stop test-frontend-container &&
         docker rm test-frontend-container
     "
-    
+
     # 测试后端镜像
     run_test "Backend container starts" "
         docker run -d --name test-backend-container -p 8001:8000 \
@@ -125,10 +125,10 @@ test_docker_build() {
 # 测试GitHub Actions配置
 test_github_actions() {
     log_info "Testing GitHub Actions configuration..."
-    
+
     run_test "Frontend workflow file exists" "test -f .github/workflows/frontend-ci.yml"
     run_test "Backend workflow file exists" "test -f .github/workflows/backend-ci.yml"
-    
+
     # 验证workflow文件语法
     if command -v act >/dev/null 2>&1; then
         run_test "Frontend workflow syntax" "act --list -W .github/workflows/frontend-ci.yml >/dev/null"
@@ -141,7 +141,7 @@ test_github_actions() {
 # 测试Kubernetes配置
 test_kubernetes_config() {
     log_info "Testing Kubernetes configuration..."
-    
+
     run_test "Namespace config exists" "test -f deploy/kubernetes/namespace.yaml"
     run_test "ConfigMap config exists" "test -f deploy/kubernetes/configmap.yaml"
     run_test "Secret config exists" "test -f deploy/kubernetes/secret.yaml"
@@ -149,7 +149,7 @@ test_kubernetes_config() {
     run_test "Backend deployment exists" "test -f deploy/kubernetes/backend-deployment.yaml"
     run_test "Frontend deployment exists" "test -f deploy/kubernetes/frontend-deployment.yaml"
     run_test "Ingress config exists" "test -f deploy/kubernetes/ingress.yaml"
-    
+
     # 验证YAML语法
     if command -v kubectl >/dev/null 2>&1; then
         run_test "Kubernetes configs are valid" "
@@ -163,11 +163,11 @@ test_kubernetes_config() {
 # 测试部署脚本
 test_deployment_scripts() {
     log_info "Testing deployment scripts..."
-    
+
     run_test "Deploy script exists and is executable" "test -x deploy/scripts/deploy.sh"
     run_test "Rollback script exists and is executable" "test -x deploy/scripts/rollback.sh"
     run_test "DB rollback script exists and is executable" "test -x deploy/scripts/db-rollback.sh"
-    
+
     # 测试脚本语法
     run_test "Deploy script syntax" "bash -n deploy/scripts/deploy.sh"
     run_test "Rollback script syntax" "bash -n deploy/scripts/rollback.sh"
@@ -177,7 +177,7 @@ test_deployment_scripts() {
 # 性能测试
 test_performance() {
     log_info "Testing CI/CD performance requirements..."
-    
+
     # 前端构建时间测试
     log_test "Frontend build time test"
     cd frontend
@@ -203,14 +203,14 @@ test_performance() {
 # 清理函数
 cleanup() {
     log_info "Cleaning up test artifacts..."
-    
+
     # 停止并删除测试容器
     docker stop test-frontend-container test-backend-container 2>/dev/null || true
     docker rm test-frontend-container test-backend-container 2>/dev/null || true
-    
+
     # 删除测试镜像
     docker rmi test-frontend:latest test-backend:latest 2>/dev/null || true
-    
+
     log_info "Cleanup completed"
 }
 
@@ -218,10 +218,10 @@ cleanup() {
 main() {
     log_info "Starting CI/CD Integration Tests"
     log_info "=================================="
-    
+
     # 设置清理陷阱
     trap cleanup EXIT
-    
+
     # 运行测试套件
     check_prerequisites
     test_github_actions
@@ -231,7 +231,7 @@ main() {
     test_backend_build
     test_docker_build
     test_performance
-    
+
     # 显示测试结果
     log_info "=================================="
     log_info "Test Results Summary"
@@ -239,7 +239,7 @@ main() {
     log_info "Total Tests: $TESTS_TOTAL"
     log_info "Passed: $TESTS_PASSED"
     log_info "Failed: $TESTS_FAILED"
-    
+
     if [ $TESTS_FAILED -eq 0 ]; then
         log_info "🎉 All tests passed! CI/CD pipeline is ready."
         exit 0

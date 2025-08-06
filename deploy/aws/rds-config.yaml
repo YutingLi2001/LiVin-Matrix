@@ -11,20 +11,20 @@ spec:
   dbName: "livin_matrix"
   engine: "postgres"
   engineVersion: "15.4"  # 使用支持的最新版本
-  
+
   # 免费层实例配置
   dbInstanceClass: "db.t3.micro"  # 免费层实例类型
   allocatedStorage: 20            # 免费层存储限制
   storageType: "gp2"              # 通用SSD存储
   storageEncrypted: true          # 启用加密
-  
+
   # 网络和安全配置
   vpcSecurityGroupIds:
     - !Ref LivinMatrixRDSSG
   dbSubnetGroupName: !Ref LivinMatrixDBSubnetGroup
   publiclyAccessible: false       # 私有访问
   port: 5432
-  
+
   # 凭据管理
   masterUsername: "livin_admin"
   manageMasterUserPassword: true  # 使用AWS Secrets Manager
@@ -32,29 +32,29 @@ spec:
     description: "LiVin Matrix database master password"
     kmsKeyId: "alias/aws/rds"
     secretArn: !Ref LivinMatrixDBSecret
-  
+
   # 备份配置
   backupRetentionPeriod: 7        # 7天备份保留
   preferredBackupWindow: "03:00-04:00"  # UTC时间
   preferredMaintenanceWindow: "Sun:04:00-Sun:05:00"
   deleteAutomatedBackups: true
   deletionProtection: false       # 开发环境可删除
-  
+
   # 多可用区配置（成本考虑设为false）
   multiAZ: false
   availabilityZone: "us-east-1a"
-  
+
   # 性能配置
   maxAllocatedStorage: 100        # 自动扩展上限
   monitoringInterval: 0           # 禁用增强监控（避免成本）
   performanceInsightsEnabled: false  # 禁用性能洞察（避免成本）
-  
+
   # 数据库参数组
   dbParameterGroupName: !Ref LivinMatrixDBParameterGroup
-  
+
   # 网络配置
   networkType: "IPV4"
-  
+
   # 标签
   tags:
     - key: "Name"
@@ -100,25 +100,25 @@ spec:
     # 连接配置
     max_connections: "100"          # 适合小型应用
     shared_preload_libraries: "pg_stat_statements"
-    
+
     # 内存配置（适合t3.micro 1GB内存）
     shared_buffers: "128MB"
     effective_cache_size: "512MB"
     maintenance_work_mem: "64MB"
     checkpoint_completion_target: "0.9"
     wal_buffers: "16MB"
-    
+
     # 日志配置
     log_destination: "csvlog"
     log_statement: "mod"            # 记录修改语句
     log_min_duration_statement: "1000"  # 记录慢查询
     log_connections: "1"
     log_disconnections: "1"
-    
+
     # 性能配置
     random_page_cost: "1.1"         # SSD优化
     effective_io_concurrency: "200"
-    
+
     # 安全配置
     ssl: "1"                        # 强制SSL
     log_lock_waits: "1"
@@ -193,7 +193,7 @@ spec:
   threshold: 80
   comparisonOperator: "GreaterThanThreshold"
   dimensions:
-    - name: "DBInstanceIdentifier"  
+    - name: "DBInstanceIdentifier"
       value: "livin-matrix-db"
   alarmActions:
     - !Ref LivinMatrixSNSTopic

@@ -2,11 +2,11 @@
 
 ## 任务概述
 
-**任务ID**: E3S2  
-**任务标题**: 6x6矩阵热力图可视化  
-**所属Epic**: Epic 3 - 矩阵分析与可视化  
-**预估时间**: 4天  
-**优先级**: 高  
+**任务ID**: E3S2
+**任务标题**: 6x6矩阵热力图可视化
+**所属Epic**: Epic 3 - 矩阵分析与可视化
+**预估时间**: 4天
+**优先级**: 高
 
 ## 任务目标
 
@@ -105,11 +105,11 @@ const CorrelationMatrix: React.FC<CorrelationMatrixProps> = ({
       <div className="matrix-header">
         <h3>维度相关性矩阵</h3>
         <div className="matrix-info">
-          样本数：{correlationData.sample_size} | 
+          样本数：{correlationData.sample_size} |
           时间窗口：{correlationData.time_window}天
         </div>
       </div>
-      
+
       <div className="matrix-container">
         <div className="matrix-grid">
           {/* 行标签 */}
@@ -120,10 +120,10 @@ const CorrelationMatrix: React.FC<CorrelationMatrixProps> = ({
               </div>
             ))}
           </div>
-          
+
           {/* 矩阵单元格 */}
           <div className="matrix-cells">
-            {dimensions.map((rowDim, i) => 
+            {dimensions.map((rowDim, i) =>
               dimensions.map((colDim, j) => (
                 <CorrelationCell
                   key={`${rowDim.key}-${colDim.key}`}
@@ -139,7 +139,7 @@ const CorrelationMatrix: React.FC<CorrelationMatrixProps> = ({
               ))
             )}
           </div>
-          
+
           {/* 列标签 */}
           <div className="col-labels">
             {dimensions.map(dim => (
@@ -149,7 +149,7 @@ const CorrelationMatrix: React.FC<CorrelationMatrixProps> = ({
             ))}
           </div>
         </div>
-        
+
         <ColorLegend />
       </div>
     </div>
@@ -175,14 +175,14 @@ const CorrelationCell: React.FC<CorrelationCellProps> = ({
   value, pValue, rowDimension, colDimension, color, onClick
 }) => {
   const [isHovered, setIsHovered] = useState(false);
-  
+
   const getSignificanceSymbol = (p: number): string => {
     if (p < 0.001) return '***';
     if (p < 0.01) return '**';
     if (p < 0.05) return '*';
     return '';
   };
-  
+
   const getCorrelationStrength = (r: number): string => {
     const abs_r = Math.abs(r);
     if (abs_r >= 0.7) return '强';
@@ -205,7 +205,7 @@ const CorrelationCell: React.FC<CorrelationCellProps> = ({
       <div className="cell-significance">
         {getSignificanceSymbol(pValue)}
       </div>
-      
+
       {isHovered && (
         <div className="cell-tooltip">
           <div className="tooltip-content">
@@ -234,7 +234,7 @@ const CorrelationCell: React.FC<CorrelationCellProps> = ({
 // components/Analysis/ColorLegend.tsx
 const ColorLegend: React.FC = () => {
   const legendSteps = [-1, -0.7, -0.3, 0, 0.3, 0.7, 1];
-  
+
   return (
     <div className="color-legend">
       <div className="legend-title">相关性强度</div>
@@ -264,7 +264,7 @@ const ColorLegend: React.FC = () => {
 
 ## 依赖关系
 
-**前置依赖**: E3S1 (相关性算法实现) - 需要相关性计算API  
+**前置依赖**: E3S1 (相关性算法实现) - 需要相关性计算API
 **后续任务**: E3S3 (矩阵交互和数据钻取) - 需要基础热力图组件
 
 ## 预估时间分解
@@ -313,6 +313,6 @@ const ColorLegend: React.FC = () => {
 
 ---
 
-**任务负责人**: [待分配]  
-**创建时间**: 2024年  
+**任务负责人**: [待分配]
+**创建时间**: 2024年
 **最后更新**: 2024年

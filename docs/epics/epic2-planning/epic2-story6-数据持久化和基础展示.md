@@ -2,11 +2,11 @@
 
 ## 任务概述
 
-**任务ID**: E2S6  
-**任务标题**: 数据持久化和基础展示  
-**所属Epic**: Epic 2 - 数据管理核心  
-**预估时间**: 2天  
-**优先级**: 高  
+**任务ID**: E2S6
+**任务标题**: 数据持久化和基础展示
+**所属Epic**: Epic 2 - 数据管理核心
+**预估时间**: 2天
+**优先级**: 高
 
 ## 任务目标
 
@@ -109,29 +109,29 @@ from typing import Optional, List
 
 class DailyRecordBase(BaseModel):
     record_date: date
-    
+
     # 睡眠维度
     sleep_start_time: Optional[time]
-    sleep_end_time: Optional[time] 
+    sleep_end_time: Optional[time]
     sleep_quality: Optional[int]
     wake_clarity: Optional[int]
-    
+
     # 饮食维度
     calories: Optional[int]
     protein: Optional[int]
     fat: Optional[int]
     carbohydrates: Optional[int]
-    
+
     # 运动维度
     total_workout_duration: Optional[int]
     daily_steps: Optional[float]
-    
+
     # 情绪维度
     overall_mood: Optional[int]
     stress_level: Optional[int]
     anxiety_level: Optional[int]
     energy_level: Optional[int]
-    
+
     # 工作效率维度
     deep_work_hours: Optional[float]
     active_breaks: Optional[int]
@@ -139,15 +139,15 @@ class DailyRecordBase(BaseModel):
     task_completion: Optional[int]
     work_satisfaction: Optional[int]
     work_environment: Optional[str]
-    
+
     # 社交维度
     initiated_social: Optional[int]
     responded_social: Optional[int]
     interpersonal_satisfaction: Optional[int]
     solitude_satisfaction: Optional[int]
 
-    @validator('sleep_quality', 'wake_clarity', 'overall_mood', 'stress_level', 
-              'anxiety_level', 'energy_level', 'focus_quality', 'task_completion', 
+    @validator('sleep_quality', 'wake_clarity', 'overall_mood', 'stress_level',
+              'anxiety_level', 'energy_level', 'focus_quality', 'task_completion',
               'work_satisfaction', 'interpersonal_satisfaction', 'solitude_satisfaction')
     def validate_rating_range(cls, v):
         if v is not None and (v < 1 or v > 10):
@@ -165,7 +165,7 @@ class DailyRecordResponse(DailyRecordBase):
     user_id: int
     created_at: datetime
     updated_at: datetime
-    
+
     class Config:
         from_attributes = True
 ```
@@ -200,7 +200,7 @@ const HistoryPage: React.FC = () => {
         <h1>历史记录</h1>
         <WeeklyStatsCard stats={stats} />
       </div>
-      
+
       <div className="records-list">
         {records.map(record => (
           <HistoryRecordCard
@@ -211,7 +211,7 @@ const HistoryPage: React.FC = () => {
           />
         ))}
       </div>
-      
+
       {loading && <LoadingSpinner />}
     </div>
   );
@@ -220,7 +220,7 @@ const HistoryPage: React.FC = () => {
 
 ## 依赖关系
 
-**前置依赖**: E2S2-E2S5 (各维度数据录入) - 需要完整的数据结构  
+**前置依赖**: E2S2-E2S5 (各维度数据录入) - 需要完整的数据结构
 **后续任务**: Epic 3 - 矩阵分析功能需要历史数据
 
 ## 完成标准
@@ -235,6 +235,6 @@ const HistoryPage: React.FC = () => {
 
 ---
 
-**任务负责人**: [待分配]  
-**创建时间**: 2024年  
+**任务负责人**: [待分配]
+**创建时间**: 2024年
 **最后更新**: 2024年

@@ -29,23 +29,23 @@ export default tseslint.config([
     rules: {
       // React Hooks 规则
       ...reactHooks.configs.recommended.rules,
-      
+
       // React Refresh 规则
       'react-refresh/only-export-components': [
         'warn',
         { allowConstantExport: true },
       ],
-      
+
       // Prettier 规则
       'prettier/prettier': 'error',
-      
+
       // TypeScript 规则
       '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
       '@typescript-eslint/explicit-function-return-type': 'off',
       '@typescript-eslint/explicit-module-boundary-types': 'off',
       '@typescript-eslint/no-explicit-any': 'warn',
-      
-      // 通用规则  
+
+      // 通用规则
       'no-console': process.env.NODE_ENV === 'production' ? 'error' : 'off',
       'no-debugger': 'error',
       'prefer-const': 'error',

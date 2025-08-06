@@ -86,15 +86,15 @@ fi
 # 执行回滚
 if kubectl exec -n $NAMESPACE $BACKEND_POD -- alembic downgrade $TARGET_REVISION; then
     log_info "Database rollback completed successfully"
-    
+
     # 验证回滚
     log_info "Current migration status after rollback:"
     kubectl exec -n $NAMESPACE $BACKEND_POD -- alembic current
-    
+
     # 记录回滚操作
     TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S')
     echo "[$TIMESTAMP] Database rollback completed for $ENVIRONMENT environment to revision $TARGET_REVISION" >> deploy/rollback.log
-    
+
     log_info "Database rollback completed successfully!"
     log_info "Backup available at: deploy/backups/$BACKUP_FILE"
 else

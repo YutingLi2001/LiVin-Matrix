@@ -15,13 +15,13 @@ sections:
   - id: initial-setup
     instruction: |
       Initial Setup
-      
+
       1. Replace {{project_name}} with the actual project name throughout the document
       2. Gather and review required inputs:
          - Product Requirements Document (PRD) - Required for business needs and scale requirements
          - Main System Architecture - Required for infrastructure dependencies
          - Technical Preferences/Tech Stack Document - Required for technology choices
-      
+
       Output file location: `docs/infrastructure-architecture.md`
 
   - id: infrastructure-overview
@@ -43,14 +43,14 @@ sections:
       - Repository Structure
       - State Management
       - Dependency Management
-      
+
       <critical_rule>All infrastructure must be defined as code. No manual resource creation in production environments.</critical_rule>
 
   - id: network-architecture
     title: Network Architecture
     instruction: |
       Design network topology considering security zones, traffic patterns, and compliance requirements. Reference main architecture for service communication patterns.
-      
+
       Create diagram showing:
       - VPC/Network structure
       - Security zones and boundaries
@@ -71,7 +71,7 @@ sections:
       - Data Encryption
       - Compliance Controls
       - Security Scanning & Monitoring
-      
+
       <critical_rule>Apply principle of least privilege for all access controls. Document all security exceptions with business justification.</critical_rule>
 
   - id: monitoring-observability
@@ -92,14 +92,14 @@ sections:
       - Recovery Procedures
       - RTO & RPO Targets
       - DR Testing Approach
-      
+
       <critical_rule>DR procedures must be tested at least quarterly. Document test results and improvement actions.</critical_rule>
 
   - id: final-review
     instruction: Final Review - Ensure all sections are complete and consistent. Apply final validation against infrastructure checklist.
     content: |
       ---
-      
+
       _Document Version: 1.0_
       _Last Updated: {{current_date}}_
       _Next Review: {{review_date}}_

@@ -12,14 +12,14 @@ graph TB
         MATRIX[矩阵可视化]
         DASHBOARD[仪表板]
     end
-    
+
     subgraph "API Gateway Layer"
         GATEWAY[AWS API Gateway]
         AUTH[JWT认证中间件]
         RATE[限流控制]
         CORS[跨域处理]
     end
-    
+
     subgraph "Application Layer"
         API[FastAPI应用]
         VALIDATE[数据验证服务]
@@ -27,38 +27,38 @@ graph TB
         ANALYTICS[分析计算服务]
         CACHE[Redis缓存]
     end
-    
+
     subgraph "Data Layer"
         PG[(PostgreSQL主库)]
         S3[(AWS S3存储)]
         BACKUP[(备份存储)]
     end
-    
+
     subgraph "External Services"
         AUTH0[Auth0认证服务]
         MONITOR[CloudWatch监控]
     end
-    
+
     UI --> GATEWAY
     FORM --> GATEWAY
     MATRIX --> GATEWAY
     DASHBOARD --> GATEWAY
-    
+
     GATEWAY --> AUTH
     AUTH --> RATE
     RATE --> CORS
     CORS --> API
-    
+
     API --> VALIDATE
     VALIDATE --> BUSINESS
     BUSINESS --> ANALYTICS
     ANALYTICS --> CACHE
-    
+
     BUSINESS --> PG
     ANALYTICS --> PG
     API --> S3
     PG --> BACKUP
-    
+
     AUTH --> AUTH0
     API --> MONITOR
 ```
@@ -84,16 +84,16 @@ class DataPipeline {
     if (!validationResult.isValid) {
       throw new ValidationError(validationResult.errors);
     }
-    
+
     // 2. 数据转换阶段
     const transformedData = await this.transformData(input, validationResult);
-    
+
     // 3. 数据存储阶段
     const storedRecord = await this.storeData(transformedData);
-    
+
     // 4. 触发分析更新
     await this.triggerAnalyticsUpdate(storedRecord);
-    
+
     // 5. 返回处理结果
     return {
       record: storedRecord,

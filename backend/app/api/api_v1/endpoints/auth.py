@@ -1,6 +1,7 @@
 """
 GitHub OAuth认证相关API端点
 """
+
 from datetime import timedelta
 from typing import Any, Dict
 
@@ -81,7 +82,8 @@ async def github_oauth_callback(
         except Exception as e:
             await db.rollback()
             raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"用户创建或更新失败: {str(e)}"
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"用户创建或更新失败: {str(e)}",
             )
 
         # 生成JWT令牌
@@ -295,11 +297,13 @@ async def email_register(register_data: EmailRegisterRequest, db: AsyncSession =
             if not email_sent:
                 # 邮件发送失败，但用户已创建，返回警告
                 return SuccessResponse(
-                    message="注册成功，但验证邮件发送失败，请稍后重试验证", data={"user_id": user.id, "email_sent": False}
+                    message="注册成功，但验证邮件发送失败，请稍后重试验证",
+                    data={"user_id": user.id, "email_sent": False},
                 )
 
         return SuccessResponse(
-            message="注册成功！请检查邮箱并点击验证链接完成注册", data={"user_id": user.id, "email_sent": True}
+            message="注册成功！请检查邮箱并点击验证链接完成注册",
+            data={"user_id": user.id, "email_sent": True},
         )
 
     except ValueError as e:
@@ -326,7 +330,9 @@ async def email_login(login_data: EmailLoginRequest, db: AsyncSession = Depends(
         )
 
         if not user:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="邮箱或密码错误，或邮箱未验证")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED, detail="邮箱或密码错误，或邮箱未验证"
+            )
 
         # 生成JWT令牌
         token_data = {"user_id": user.id, "email": user.email, "auth_provider": user.auth_provider}
@@ -384,7 +390,9 @@ async def verify_email(
         success = await email_auth_service.verify_email(verification_data.token)
 
         if not success:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="验证令牌无效或已过期")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, detail="验证令牌无效或已过期"
+            )
 
         # 获取已验证的用户发送欢迎邮件
         user = await email_auth_service.get_user_by_verification_token(verification_data.token)
@@ -436,7 +444,8 @@ async def forgot_password(forgot_data: ForgotPasswordRequest, db: AsyncSession =
 
         if not email_sent:
             raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="重置邮件发送失败，请稍后重试"
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="重置邮件发送失败，请稍后重试",
             )
 
         return SuccessResponse(message="密码重置邮件已发送，请检查您的邮箱")
@@ -465,7 +474,9 @@ async def reset_password(reset_data: ResetPasswordRequest, db: AsyncSession = De
         )
 
         if not success:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="重置令牌无效或已过期")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, detail="重置令牌无效或已过期"
+            )
 
         return SuccessResponse(message="密码重置成功！现在可以使用新密码登录")
 
@@ -501,7 +512,9 @@ async def change_password(
         )
 
         if not success:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="当前密码错误或用户不支持密码认证")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, detail="当前密码错误或用户不支持密码认证"
+            )
 
         return SuccessResponse(message="密码修改成功！")
 
@@ -530,7 +543,8 @@ async def test_email(test_data: TestEmailRequest, db: AsyncSession = Depends(get
 
         if not email_sent:
             raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="测试邮件发送失败，请检查邮件服务配置"
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="测试邮件发送失败，请检查邮件服务配置",
             )
 
         return SuccessResponse(message="测试邮件发送成功！请检查收件箱")

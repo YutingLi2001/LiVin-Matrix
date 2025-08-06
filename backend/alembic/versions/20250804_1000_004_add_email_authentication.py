@@ -6,6 +6,7 @@ Create Date: 2025-08-04 10:00:00.000000
 
 此迁移添加邮箱认证所需的字段，同时保持GitHub OAuth兼容性
 """
+
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 

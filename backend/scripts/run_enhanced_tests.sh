@@ -31,10 +31,10 @@ run_test_suite() {
     local test_type=$1
     local test_files=$2
     local description=$3
-    
+
     echo "🏃 运行 $description..."
     echo "----------------------------------------"
-    
+
     if pytest $test_files -m "$test_type" --tb=short -v; then
         echo "✅ $description 通过"
     else
@@ -50,48 +50,48 @@ case "${1:-all}" in
         echo "🔄 仅运行迁移测试..."
         pytest tests/test_migrations.py -v
         ;;
-    
+
     "performance"|"perf")
         echo "⚡ 仅运行性能测试..."
         pytest tests/test_performance.py::TestDatabasePerformance -v --benchmark-enable
         ;;
-    
+
     "concurrency"|"concurrent")
         echo "🔄 仅运行并发测试..."
         pytest tests/test_concurrency.py -v
         ;;
-    
+
     "benchmark"|"bench")
         echo "📊 运行基准测试..."
         pytest tests/test_performance.py -v --benchmark-enable --benchmark-only
         ;;
-    
+
     "quick"|"fast")
         echo "⚡ 快速测试（跳过慢速测试）..."
         pytest tests/ -v -m "not slow" --benchmark-disable
         ;;
-    
+
     "all"|*)
         echo "🎯 运行完整测试套件..."
-        
+
         # 1. 迁移集成测试
         echo "1️⃣ 迁移集成测试"
         pytest tests/test_migrations.py -v
-        
+
         echo ""
-        
+
         # 2. 性能基准测试
         echo "2️⃣ 性能基准测试"
         pytest tests/test_performance.py -v --benchmark-disable
-        
+
         echo ""
-        
+
         # 3. 并发访问测试
         echo "3️⃣ 并发访问测试"
         pytest tests/test_concurrency.py -v
-        
+
         echo ""
-        
+
         # 4. 其他现有测试（如果存在）
         if ls tests/test_*.py 2>/dev/null | grep -v -E "(migrations|performance|concurrency)" > /dev/null; then
             echo "4️⃣ 其他集成测试"
@@ -105,7 +105,7 @@ echo "📈 测试完成！"
 echo ""
 echo "💡 其他测试选项:"
 echo "  $0 migration     - 仅迁移测试"
-echo "  $0 performance   - 仅性能测试" 
+echo "  $0 performance   - 仅性能测试"
 echo "  $0 concurrency   - 仅并发测试"
 echo "  $0 benchmark     - 仅基准测试"
 echo "  $0 quick         - 快速测试"

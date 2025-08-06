@@ -56,10 +56,10 @@ interface ComponentProps {
 }
 
 // 2. 组件合成模式
-const DimensionCard: React.FC<DimensionCardProps> = ({ 
-  dimension, 
-  data, 
-  onUpdate 
+const DimensionCard: React.FC<DimensionCardProps> = ({
+  dimension,
+  data,
+  onUpdate
 }) => {
   return (
     <Card className="dimension-card">
@@ -120,7 +120,7 @@ interface AppState {
 }
 
 // 状态更新Actions
-type AppAction = 
+type AppAction =
   | { type: 'SET_USER'; payload: UserProfile }
   | { type: 'UPDATE_DIMENSION_DATA'; payload: { dimensionId: string; data: DimensionData[] } }
   | { type: 'SET_MATRIX_DATA'; payload: MatrixData }
@@ -132,7 +132,7 @@ const appReducer = (state: AppState, action: AppAction): AppState => {
   switch (action.type) {
     case 'SET_USER':
       return { ...state, user: action.payload };
-    
+
     case 'UPDATE_DIMENSION_DATA':
       return {
         ...state,
@@ -141,10 +141,10 @@ const appReducer = (state: AppState, action: AppAction): AppState => {
           [action.payload.dimensionId]: action.payload.data
         }
       };
-    
+
     case 'SET_MATRIX_DATA':
       return { ...state, matrix: action.payload };
-    
+
     case 'SET_LOADING':
       return {
         ...state,
@@ -153,7 +153,7 @@ const appReducer = (state: AppState, action: AppAction): AppState => {
           loading: { ...state.ui.loading, [action.payload.key]: action.payload.loading }
         }
       };
-    
+
     case 'SET_ERROR':
       return {
         ...state,
@@ -162,7 +162,7 @@ const appReducer = (state: AppState, action: AppAction): AppState => {
           errors: { ...state.ui.errors, [action.payload.key]: action.payload.error }
         }
       };
-    
+
     default:
       return state;
   }
@@ -171,16 +171,16 @@ const appReducer = (state: AppState, action: AppAction): AppState => {
 // Context Provider封装
 const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, dispatch] = useReducer(appReducer, initialState);
-  
+
   const actions = useMemo(() => ({
     setUser: (user: UserProfile) => dispatch({ type: 'SET_USER', payload: user }),
-    updateDimensionData: (dimensionId: string, data: DimensionData[]) => 
+    updateDimensionData: (dimensionId: string, data: DimensionData[]) =>
       dispatch({ type: 'UPDATE_DIMENSION_DATA', payload: { dimensionId, data } }),
-    setMatrixData: (matrix: MatrixData) => 
+    setMatrixData: (matrix: MatrixData) =>
       dispatch({ type: 'SET_MATRIX_DATA', payload: matrix }),
-    setLoading: (key: string, loading: boolean) => 
+    setLoading: (key: string, loading: boolean) =>
       dispatch({ type: 'SET_LOADING', payload: { key, loading } }),
-    setError: (key: string, error: string | null) => 
+    setError: (key: string, error: string | null) =>
       dispatch({ type: 'SET_ERROR', payload: { key, error } })
   }), []);
 
@@ -222,11 +222,11 @@ const useLocalStorage = <T>(key: string, initialValue: T) => {
 // 缓存管理Hook
 const useDataCache = () => {
   const [cache, setCache] = useLocalStorage<Record<string, CacheEntry>>('dataCache', {});
-  
+
   const getCachedData = useCallback((key: string) => {
     const entry = cache[key];
     if (!entry) return null;
-    
+
     const isExpired = Date.now() > entry.expiresAt;
     if (isExpired) {
       const newCache = { ...cache };
@@ -234,7 +234,7 @@ const useDataCache = () => {
       setCache(newCache);
       return null;
     }
-    
+
     return entry.data;
   }, [cache, setCache]);
 
@@ -301,7 +301,7 @@ const cyberpunkTheme = {
     },
     sizes: {
       xs: '0.75rem',
-      sm: '0.875rem', 
+      sm: '0.875rem',
       base: '1rem',
       lg: '1.125rem',
       xl: '1.25rem',
@@ -318,7 +318,7 @@ const CyberpunkCard = styled.div<{ glowColor?: string }>`
   padding: 1.5rem;
   position: relative;
   overflow: hidden;
-  
+
   &::before {
     content: '';
     position: absolute;
@@ -329,7 +329,7 @@ const CyberpunkCard = styled.div<{ glowColor?: string }>`
     background: ${props => props.theme.effects.dataStream.background};
     animation: ${props => props.theme.effects.dataStream.animation};
   }
-  
+
   &:hover {
     border-color: ${props => props.glowColor || props.theme.colors.primary.neon};
     box-shadow: ${props => `0 0 20px ${props.glowColor || props.theme.colors.primary.neon}33`};
@@ -344,7 +344,7 @@ const animations = css`
     0% { left: -100%; }
     100% { left: 100%; }
   }
-  
+
   @keyframes glitch {
     0% { transform: translate(0); }
     20% { transform: translate(-2px, 2px); }
@@ -353,7 +353,7 @@ const animations = css`
     80% { transform: translate(2px, -2px); }
     100% { transform: translate(0); }
   }
-  
+
   @keyframes neonPulse {
     0%, 100% { opacity: 1; }
     50% { opacity: 0.7; }
@@ -364,10 +364,10 @@ const animations = css`
 **矩阵可视化组件：**
 ```typescript
 // 6维度矩阵网格组件
-const MatrixGrid: React.FC<MatrixGridProps> = ({ 
-  dimensions, 
-  correlationData, 
-  onCellClick 
+const MatrixGrid: React.FC<MatrixGridProps> = ({
+  dimensions,
+  correlationData,
+  onCellClick
 }) => {
   return (
     <div className="matrix-grid">
@@ -375,7 +375,7 @@ const MatrixGrid: React.FC<MatrixGridProps> = ({
         <h2 className="matrix-title">Life Matrix - 生活矩阵</h2>
         <div className="matrix-subtitle">Cross-dimensional correlation analysis</div>
       </div>
-      
+
       <div className="grid-container">
         {/* 维度标签行 */}
         <div className="dimension-labels-row">
@@ -386,7 +386,7 @@ const MatrixGrid: React.FC<MatrixGridProps> = ({
             </div>
           ))}
         </div>
-        
+
         {/* 矩阵单元格 */}
         <div className="matrix-cells">
           {dimensions.map((rowDim, rowIndex) => (
@@ -395,11 +395,11 @@ const MatrixGrid: React.FC<MatrixGridProps> = ({
                 <DimensionIcon type={rowDim.type} />
                 <span>{rowDim.displayName}</span>
               </div>
-              
+
               {dimensions.map((colDim, colIndex) => {
                 const correlation = getCorrelation(rowDim.id, colDim.id, correlationData);
                 const isActive = rowIndex !== colIndex;
-                
+
                 return (
                   <MatrixCell
                     key={`${rowDim.id}-${colDim.id}`}
@@ -419,10 +419,10 @@ const MatrixGrid: React.FC<MatrixGridProps> = ({
 };
 
 // 相关性单元格组件
-const MatrixCell: React.FC<MatrixCellProps> = ({ 
-  correlation, 
-  isActive, 
-  onClick 
+const MatrixCell: React.FC<MatrixCellProps> = ({
+  correlation,
+  isActive,
+  onClick
 }) => {
   const getCorrelationColor = (value: number | null) => {
     if (value === null) return '#333333';
@@ -452,7 +452,7 @@ const MatrixCell: React.FC<MatrixCellProps> = ({
       <span className="correlation-value">{getCellContent()}</span>
       {isActive && correlation !== null && (
         <div className="correlation-strength">
-          {Math.abs(correlation) > 0.7 ? 'Strong' : 
+          {Math.abs(correlation) > 0.7 ? 'Strong' :
            Math.abs(correlation) > 0.4 ? 'Moderate' : 'Weak'}
         </div>
       )}
@@ -479,7 +479,7 @@ class APIClient {
   }
 
   private async request<T>(
-    endpoint: string, 
+    endpoint: string,
     options: RequestInit = {}
   ): Promise<T> {
     const url = `${this.baseURL}${endpoint}`;
@@ -491,7 +491,7 @@ class APIClient {
 
     try {
       const response = await fetch(url, { ...options, headers });
-      
+
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         throw new APIError(response.status, errorData.detail || 'Request failed');
@@ -506,8 +506,8 @@ class APIClient {
 
   // 维度数据API
   async getDimensionData(
-    dimensionId: string, 
-    startDate: string, 
+    dimensionId: string,
+    startDate: string,
     endDate: string
   ): Promise<DimensionRecord[]> {
     return this.request<DimensionRecord[]>(
@@ -516,7 +516,7 @@ class APIClient {
   }
 
   async createDimensionRecord(
-    dimensionId: string, 
+    dimensionId: string,
     data: CreateDimensionRecordRequest
   ): Promise<DimensionRecord> {
     return this.request<DimensionRecord>(
@@ -535,8 +535,8 @@ class APIClient {
   }
 
   async getCorrelationAnalysis(
-    dimensionA: string, 
-    dimensionB: string, 
+    dimensionA: string,
+    dimensionB: string,
     timePeriod: string = 'month'
   ): Promise<CorrelationResult> {
     return this.request<CorrelationResult>(
@@ -573,7 +573,7 @@ class WebSocketManager {
   connect(url: string, token: string) {
     try {
       this.ws = new WebSocket(`${url}?token=${token}`);
-      
+
       this.ws.onopen = () => {
         console.log('WebSocket connected');
         this.reconnectAttempts = 0;
@@ -664,10 +664,10 @@ const useWebSocket = () => {
 **组件渲染优化：**
 ```typescript
 // React.memo优化重渲染
-const DimensionCard = React.memo<DimensionCardProps>(({ 
-  dimension, 
-  data, 
-  onUpdate 
+const DimensionCard = React.memo<DimensionCardProps>(({
+  dimension,
+  data,
+  onUpdate
 }) => {
   return (
     <Card>
@@ -752,7 +752,7 @@ const AppRouter: React.FC = () => {
 };
 
 // 动态导入优化
-const ChartComponent = React.lazy(() => 
+const ChartComponent = React.lazy(() =>
   import('recharts').then(module => ({
     default: module.LineChart
   }))
@@ -789,15 +789,15 @@ const useDataPreloader = () => {
   const preloadDimensionData = useCallback(async (dimensionIds: string[]) => {
     const today = new Date();
     const lastWeek = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
-    
+
     const preloadPromises = dimensionIds.map(async (dimensionId) => {
       const cacheKey = `dimension-${dimensionId}-week`;
       const cached = getCachedData(cacheKey);
-      
+
       if (!cached) {
         try {
           const data = await api.getDimensionData(
-            dimensionId, 
+            dimensionId,
             lastWeek.toISOString().split('T')[0],
             today.toISOString().split('T')[0]
           );
@@ -823,19 +823,19 @@ const VirtualizedDataList: React.FC<DataListProps> = ({ items }) => {
   const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
     const scrollTop = e.currentTarget.scrollTop;
     const containerHeight = e.currentTarget.clientHeight;
-    
+
     const start = Math.floor(scrollTop / itemHeight);
     const end = Math.min(start + Math.ceil(containerHeight / itemHeight) + 1, items.length);
-    
+
     setVisibleRange({ start, end });
   }, [items.length]);
 
   const visibleItems = items.slice(visibleRange.start, visibleRange.end);
 
   return (
-    <div 
+    <div
       ref={containerRef}
-      className="virtual-list-container" 
+      className="virtual-list-container"
       style={{ height: '400px', overflow: 'auto' }}
       onScroll={handleScroll}
     >

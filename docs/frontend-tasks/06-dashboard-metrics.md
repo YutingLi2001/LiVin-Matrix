@@ -107,7 +107,7 @@ const MetricCard: React.FC<MetricCardProps> = ({
           </div>
         )}
       </div>
-      
+
       {trend && (
         <div className="flex items-center mt-2 space-x-2">
           <TrendIndicator trend={trend} value={trendValue} />

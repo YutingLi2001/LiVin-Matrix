@@ -189,26 +189,26 @@ class EmailService:
                 <h1 style="color: #2563eb; margin-bottom: 10px;">LiVin Matrix</h1>
                 <p style="color: #666; margin: 0;">个人生活管理平台</p>
             </div>
-            
+
             <div style="background-color: #f8fafc; padding: 30px; border-radius: 8px; margin-bottom: 20px;">
                 <h2 style="color: #1e293b; margin-top: 0;">您好，{user_name}！</h2>
                 <p style="margin-bottom: 25px;">感谢您注册LiVin Matrix账户。请点击下面的按钮验证您的邮箱地址：</p>
-                
+
                 <div style="text-align: center; margin: 30px 0;">
-                    <a href="{verification_url}" 
-                       style="background-color: #2563eb; color: white; padding: 12px 30px; 
+                    <a href="{verification_url}"
+                       style="background-color: #2563eb; color: white; padding: 12px 30px;
                               text-decoration: none; border-radius: 6px; display: inline-block;
                               font-weight: bold; font-size: 16px;">
                         验证邮箱地址
                     </a>
                 </div>
-                
+
                 <p style="margin-top: 25px; color: #666; font-size: 14px;">
                     如果按钮无法点击，请复制以下链接到浏览器地址栏：<br>
                     <a href="{verification_url}" style="color: #2563eb; word-break: break-all;">{verification_url}</a>
                 </p>
             </div>
-            
+
             <div style="border-top: 1px solid #e2e8f0; padding-top: 20px; color: #666; font-size: 12px;">
                 <p><strong>重要提醒：</strong></p>
                 <ul style="margin: 10px 0; padding-left: 20px;">
@@ -216,7 +216,7 @@ class EmailService:
                     <li>如果您没有注册LiVin Matrix账户，请忽略此邮件</li>
                     <li>请勿回复此邮件，该邮箱不接收回复</li>
                 </ul>
-                
+
                 <p style="margin-top: 20px; text-align: center;">
                     © 2025 LiVin Matrix. 保留所有权利。
                 </p>
@@ -240,26 +240,26 @@ class EmailService:
                 <h1 style="color: #dc2626; margin-bottom: 10px;">LiVin Matrix</h1>
                 <p style="color: #666; margin: 0;">密码重置请求</p>
             </div>
-            
+
             <div style="background-color: #fef2f2; border: 1px solid #fecaca; padding: 30px; border-radius: 8px; margin-bottom: 20px;">
                 <h2 style="color: #991b1b; margin-top: 0;">您好，{user_name}！</h2>
                 <p style="margin-bottom: 25px;">我们收到了您的密码重置请求。点击下面的按钮设置新密码：</p>
-                
+
                 <div style="text-align: center; margin: 30px 0;">
-                    <a href="{reset_url}" 
-                       style="background-color: #dc2626; color: white; padding: 12px 30px; 
+                    <a href="{reset_url}"
+                       style="background-color: #dc2626; color: white; padding: 12px 30px;
                               text-decoration: none; border-radius: 6px; display: inline-block;
                               font-weight: bold; font-size: 16px;">
                         重置密码
                     </a>
                 </div>
-                
+
                 <p style="margin-top: 25px; color: #666; font-size: 14px;">
                     如果按钮无法点击，请复制以下链接到浏览器地址栏：<br>
                     <a href="{reset_url}" style="color: #dc2626; word-break: break-all;">{reset_url}</a>
                 </p>
             </div>
-            
+
             <div style="border-top: 1px solid #e2e8f0; padding-top: 20px; color: #666; font-size: 12px;">
                 <p><strong>安全提醒：</strong></p>
                 <ul style="margin: 10px 0; padding-left: 20px;">
@@ -268,7 +268,7 @@ class EmailService:
                     <li>为了账户安全，请使用强密码</li>
                     <li>请勿与他人分享此链接</li>
                 </ul>
-                
+
                 <p style="margin-top: 20px; text-align: center;">
                     © 2025 LiVin Matrix. 保留所有权利。
                 </p>
@@ -292,11 +292,11 @@ class EmailService:
                 <h1 style="color: #059669; margin-bottom: 10px;">🎉 欢迎加入LiVin Matrix！</h1>
                 <p style="color: #666; margin: 0;">您的个人生活管理之旅从这里开始</p>
             </div>
-            
+
             <div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; padding: 30px; border-radius: 8px; margin-bottom: 20px;">
                 <h2 style="color: #065f46; margin-top: 0;">您好，{user_name}！</h2>
                 <p style="margin-bottom: 20px;">恭喜您成功注册LiVin Matrix账户！我们很高兴您选择我们的平台来管理您的日常生活。</p>
-                
+
                 <h3 style="color: #065f46; margin-top: 25px;">接下来您可以：</h3>
                 <ul style="margin: 15px 0; padding-left: 20px;">
                     <li style="margin-bottom: 8px;">📝 记录每日生活点滴</li>
@@ -304,20 +304,20 @@ class EmailService:
                     <li style="margin-bottom: 8px;">🎯 设定和追踪个人目标</li>
                     <li style="margin-bottom: 8px;">💡 获得个性化生活建议</li>
                 </ul>
-                
+
                 <div style="text-align: center; margin: 30px 0;">
-                    <a href="{settings.FRONTEND_URL}/login" 
-                       style="background-color: #059669; color: white; padding: 12px 30px; 
+                    <a href="{settings.FRONTEND_URL}/login"
+                       style="background-color: #059669; color: white; padding: 12px 30px;
                               text-decoration: none; border-radius: 6px; display: inline-block;
                               font-weight: bold; font-size: 16px;">
                         开始使用
                     </a>
                 </div>
             </div>
-            
+
             <div style="border-top: 1px solid #e2e8f0; padding-top: 20px; color: #666; font-size: 12px;">
                 <p style="margin-bottom: 15px;">如果您在使用过程中遇到任何问题，欢迎联系我们的支持团队。</p>
-                
+
                 <p style="margin-top: 20px; text-align: center;">
                     © 2025 LiVin Matrix. 保留所有权利。
                 </p>
@@ -341,11 +341,11 @@ class EmailService:
                 <h1 style="color: #6366f1; margin-bottom: 10px;">LiVin Matrix</h1>
                 <p style="color: #666; margin: 0;">邮件服务测试</p>
             </div>
-            
+
             <div style="background-color: #f1f5f9; padding: 30px; border-radius: 8px; margin-bottom: 20px;">
                 <h2 style="color: #334155; margin-top: 0;">🧪 邮件服务测试</h2>
                 <p style="margin-bottom: 20px;">如果您收到此邮件，说明Resend邮件服务配置成功！</p>
-                
+
                 <div style="background-color: #fff; padding: 20px; border-radius: 6px; border-left: 4px solid #6366f1;">
                     <h3 style="color: #4338ca; margin-top: 0;">测试信息：</h3>
                     <ul style="margin: 10px 0; padding-left: 20px;">
@@ -355,7 +355,7 @@ class EmailService:
                     </ul>
                 </div>
             </div>
-            
+
             <div style="border-top: 1px solid #e2e8f0; padding-top: 20px; color: #666; font-size: 12px; text-align: center;">
                 <p>此邮件由LiVin Matrix系统自动发送，请勿回复。</p>
                 <p style="margin-top: 10px;">© 2025 LiVin Matrix. 保留所有权利。</p>

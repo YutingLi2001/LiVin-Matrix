@@ -7,11 +7,11 @@ data:
   # 数据库配置
   POSTGRES_DB: "livin_matrix_staging"
   POSTGRES_USER: "postgres"
-  
+
   # 后端配置
   ENVIRONMENT: "staging"
   API_V1_STR: "/api/v1"
   PROJECT_NAME: "LiVin Matrix API (Staging)"
-  
+
   # CORS配置
   ALLOWED_ORIGINS: "http://localhost:3000,https://staging.livin-matrix.com"

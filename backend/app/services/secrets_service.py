@@ -142,9 +142,11 @@ class SecretsService:
                 value = self.read_secret(secret_name, env_name)
                 results[secret_name] = {
                     "available": True,
-                    "source": "docker_secrets"
-                    if self.use_docker_secrets and self._read_docker_secret(secret_name)
-                    else "environment",
+                    "source": (
+                        "docker_secrets"
+                        if self.use_docker_secrets and self._read_docker_secret(secret_name)
+                        else "environment"
+                    ),
                     "length": len(value) if value else 0,
                 }
             except Exception as e:

@@ -67,7 +67,7 @@ const DataEntryPage: React.FC = () => {
         <h1 className="text-3xl font-bold text-primary font-display mb-4">
           今日数据录入
         </h1>
-        <ProgressIndicator 
+        <ProgressIndicator
           completed={completedDimensions.length}
           total={6}
           estimatedTimeRemaining={getEstimatedTime(completedDimensions)}
@@ -84,7 +84,7 @@ const DataEntryPage: React.FC = () => {
           isExpanded={currentExpanded === 'sleep'}
           onToggle={() => toggleCard('sleep')}
         >
-          <SleepForm 
+          <SleepForm
             data={formData.sleep}
             onChange={(data) => updateFormData('sleep', data)}
             onComplete={() => markCompleted('sleep')}
@@ -96,7 +96,7 @@ const DataEntryPage: React.FC = () => {
 
       <div className="flex justify-between mt-8">
         <Button variant="secondary">保存草稿</Button>
-        <Button 
+        <Button
           variant="primary"
           disabled={completedDimensions.length < 6}
         >
@@ -132,8 +132,8 @@ const DimensionCard: React.FC<DimensionCardProps> = ({
   children
 }) => {
   return (
-    <Card 
-      variant="outlined" 
+    <Card
+      variant="outlined"
       padding="md"
       className={cn(
         'transition-all duration-300',
@@ -141,7 +141,7 @@ const DimensionCard: React.FC<DimensionCardProps> = ({
         isExpanded && 'border-neon-purple shadow-neon-glow'
       )}
     >
-      <div 
+      <div
         className="flex items-center justify-between cursor-pointer"
         onClick={onToggle}
       >
@@ -157,12 +157,12 @@ const DimensionCard: React.FC<DimensionCardProps> = ({
             <p className="text-sm text-secondary">预计用时: {estimatedTime}</p>
           </div>
         </div>
-        
+
         <div className="flex items-center space-x-2">
           {isCompleted && (
             <Badge variant="success">已完成</Badge>
           )}
-          <ChevronDownIcon 
+          <ChevronDownIcon
             className={cn(
               'w-5 h-5 text-secondary transition-transform',
               isExpanded && 'rotate-180'
@@ -212,7 +212,7 @@ const SleepForm: React.FC<SleepFormProps> = ({ data, onChange, onComplete }) => 
             className="font-mono"
           />
         </div>
-        
+
         <div>
           <label className="block text-sm font-medium text-secondary mb-2">
             起床时间
@@ -261,7 +261,7 @@ const SleepForm: React.FC<SleepFormProps> = ({ data, onChange, onComplete }) => 
       </div>
 
       <div className="flex justify-end">
-        <Button 
+        <Button
           variant="primary"
           onClick={onComplete}
           disabled={!isFormValid(data)}
@@ -315,7 +315,7 @@ const RatingInput: React.FC<RatingInputProps> = ({
           onClick={() => onChange(index + 1)}
           className={cn(
             'transition-all duration-200 hover:scale-110',
-            index < value 
+            index < value
               ? `text-${color} drop-shadow-glow`
               : 'text-gray-400 hover:text-gray-300'
           )}

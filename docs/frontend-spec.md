@@ -6,7 +6,7 @@
 
 ### ⚠️ 紧急修复项目：
 1. **字体样式统一** - 禁止白色泛光文字，建立严格的视觉层级
-2. **滑块组件完善** - 添加缺失的轨道设计，提升交互可用性  
+2. **滑块组件完善** - 添加缺失的轨道设计，提升交互可用性
 3. **视觉一致性** - 统一/login、/dashboard、/data-entry页面的设计标准
 
 **实施优先级**：Epic 1 Story 2 必须实施
@@ -345,7 +345,7 @@ interface SliderInputProps {
   background: radial-gradient(circle, #8b5cf6, #7c3aed);
   border: 2px solid #ffffff;
   border-radius: 50%;
-  box-shadow: 
+  box-shadow:
     0 0 10px rgba(139, 92, 246, 0.8),
     0 2px 8px rgba(0, 0, 0, 0.3);
   cursor: pointer;
@@ -354,7 +354,7 @@ interface SliderInputProps {
 
 .slider-thumb:hover {
   transform: scale(1.1);
-  box-shadow: 
+  box-shadow:
     0 0 15px rgba(139, 92, 246, 1),
     0 4px 12px rgba(0, 0, 0, 0.4);
 }
@@ -470,7 +470,7 @@ interface RatingInputProps {
 
 #### 键盘优化
 - **Tab导航：** 所有交互元素支持Tab键遍历
-- **快捷键：** 
+- **快捷键：**
   - `Ctrl+S`: 保存数据
   - `Escape`: 关闭模态框
   - `Enter`: 提交表单
@@ -490,7 +490,7 @@ interface RatingInputProps {
   transition: box-shadow 0.3s ease, border-color 0.3s ease;
 }
 .neon-glow:hover {
-  box-shadow: 
+  box-shadow:
     0 0 20px rgba(139, 92, 246, 0.6),
     0 0 40px rgba(139, 92, 246, 0.3),
     inset 0 0 20px rgba(139, 92, 246, 0.1);
@@ -499,7 +499,7 @@ interface RatingInputProps {
 
 /* 页面切换 - 赛博朋克风格 */
 .cyber-transition {
-  transition: 
+  transition:
     opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1),
     transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
     filter 0.3s ease;
@@ -536,7 +536,7 @@ interface RatingInputProps {
 
 @keyframes flicker {
   0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% {
-    text-shadow: 
+    text-shadow:
       0 0 5px var(--neon-purple),
       0 0 10px var(--neon-purple),
       0 0 15px var(--neon-purple);
@@ -556,7 +556,7 @@ interface RatingInputProps {
    - 发光强度根据重要性分级
 
 2. **玻璃质感效果**
-   - 卡片组件使用 backdrop-filter: blur() 
+   - 卡片组件使用 backdrop-filter: blur()
    - 半透明背景配合发光边框
    - 创造悬浮科技感
 
@@ -736,7 +736,7 @@ interface AnalysisState {
 
 1. **字体样式统一修复**
    - [ ] 更新 `/dashboard` 页面所有文本使用新的字体层级规范
-   - [ ] 更新 `/data-entry` 页面所有文本使用新的字体层级规范  
+   - [ ] 更新 `/data-entry` 页面所有文本使用新的字体层级规范
    - [ ] 移除所有白色文字的发光效果
    - [ ] 确保标题层级(H1-H3)使用指定的紫色发光
    - [ ] 验证文本对比度符合WCAG AA标准
@@ -796,7 +796,7 @@ interface AnalysisState {
 |------|------|----------|--------|------------|
 | 2025-07-31 | 1.1 | 整合Epic 1 Story 2 UX改进需求 | Sarah (PO) | Epic 1 Story 2 |
 | - | - | 添加严格的字体发光约束规范 | - | - |
-| - | - | 新增详细的滑块组件设计规范 | - | - |  
+| - | - | 新增详细的滑块组件设计规范 | - | - |
 | - | - | 明确视觉一致性实施要求 | - | - |
 | - | - | 整合Sally (UX Expert)的设计建议 | - | - |
 

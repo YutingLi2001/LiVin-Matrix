@@ -15,15 +15,15 @@ metadata:
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/target-type: ip
     alb.ingress.kubernetes.io/load-balancer-name: livin-matrix-alb
-    
+
     # HTTP到HTTPS重定向
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
     alb.ingress.kubernetes.io/ssl-redirect: '443'
-    
+
     # SSL配置
     alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:us-east-1:ACCOUNT_ID:certificate/CERTIFICATE_ID
     alb.ingress.kubernetes.io/ssl-policy: ELBSecurityPolicy-TLS-1-2-2017-01
-    
+
     # 健康检查配置
     alb.ingress.kubernetes.io/healthcheck-protocol: HTTP
     alb.ingress.kubernetes.io/healthcheck-port: traffic-port
@@ -32,7 +32,7 @@ metadata:
     alb.ingress.kubernetes.io/healthcheck-interval-seconds: '30'
     alb.ingress.kubernetes.io/healthy-threshold-count: '2'
     alb.ingress.kubernetes.io/unhealthy-threshold-count: '3'
-    
+
     # 负载均衡器属性
     alb.ingress.kubernetes.io/load-balancer-attributes: |
       idle_timeout.timeout_seconds=60,
@@ -41,17 +41,17 @@ metadata:
       access_logs.s3.enabled=true,
       access_logs.s3.bucket=livin-matrix-alb-logs,
       access_logs.s3.prefix=alb-logs
-    
+
     # 子网配置（公有子网用于internet-facing ALB）
     alb.ingress.kubernetes.io/subnets: subnet-12345678,subnet-87654321  # 将由部署脚本替换
-    
+
     # 安全组配置
     alb.ingress.kubernetes.io/security-groups: sg-12345678  # 将由部署脚本替换
-    
+
     # 其他配置
     alb.ingress.kubernetes.io/group.name: livin-matrix
     alb.ingress.kubernetes.io/group.order: '1'
-    
+
     # 标签配置
     alb.ingress.kubernetes.io/tags: |
       Name=livin-matrix-alb,
@@ -61,14 +61,14 @@ metadata:
 
 spec:
   ingressClassName: alb
-  
+
   # TLS配置
   tls:
   - hosts:
     - api.livin-matrix.example.com  # 替换为实际域名
     - livin-matrix.example.com
     secretName: livin-matrix-tls-cert
-  
+
   rules:
   # 主域名规则
   - host: api.livin-matrix.example.com  # 替换为实际域名
@@ -82,7 +82,7 @@ spec:
             name: livin-matrix-backend-service
             port:
               number: 8000
-      
+
       # 健康检查路由
       - path: /health
         pathType: Exact
@@ -91,7 +91,7 @@ spec:
             name: livin-matrix-backend-service
             port:
               number: 8000
-      
+
       # API文档路由
       - path: /docs
         pathType: Exact
@@ -100,7 +100,7 @@ spec:
             name: livin-matrix-backend-service
             port:
               number: 8000
-      
+
       - path: /redoc
         pathType: Exact
         backend:
@@ -108,7 +108,7 @@ spec:
             name: livin-matrix-backend-service
             port:
               number: 8000
-      
+
       # OpenAPI规范
       - path: /openapi.json
         pathType: Exact
@@ -117,7 +117,7 @@ spec:
             name: livin-matrix-backend-service
             port:
               number: 8000
-      
+
       # 监控端点（仅内部访问）
       - path: /metrics
         pathType: Exact
@@ -126,7 +126,7 @@ spec:
             name: livin-matrix-backend-service
             port:
               number: 9090
-      
+
       # 默认路由 - 重定向到前端
       - path: /
         pathType: Prefix
@@ -215,33 +215,33 @@ data:
     worker_processes 1;
     error_log /var/log/nginx/error.log warn;
     pid /tmp/nginx.pid;
-    
+
     events {
         worker_connections 1024;
     }
-    
+
     http {
         include /etc/nginx/mime.types;
         default_type application/octet-stream;
-        
+
         # 临时文件目录配置
         client_body_temp_path /tmp/client_body;
         proxy_temp_path /tmp/proxy;
         fastcgi_temp_path /tmp/fastcgi;
         uwsgi_temp_path /tmp/uwsgi;
         scgi_temp_path /tmp/scgi;
-        
+
         server {
             listen 8080;
             server_name _;
-            
+
             # 健康检查
             location /health {
                 access_log off;
                 return 200 "healthy\n";
                 add_header Content-Type text/plain;
             }
-            
+
             # 重定向所有请求到GitHub Pages
             location / {
                 return 301 https://livin-matrix.github.io$request_uri;

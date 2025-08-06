@@ -2,11 +2,11 @@
 
 ## 任务概述
 
-**任务ID**: E3S1  
-**任务标题**: 相关性算法实现  
-**所属Epic**: Epic 3 - 矩阵分析与可视化  
-**预估时间**: 4天  
-**优先级**: 高  
+**任务ID**: E3S1
+**任务标题**: 相关性算法实现
+**所属Epic**: Epic 3 - 矩阵分析与可视化
+**预估时间**: 4天
+**优先级**: 高
 
 ## 任务目标
 
@@ -65,7 +65,7 @@ from typing import Dict, List, Tuple, Optional
 from datetime import datetime, timedelta
 
 class CorrelationService:
-    
+
     def calculate_pearson_correlation(self, x: List[float], y: List[float]) -> Tuple[float, float]:
         """
         计算皮尔逊相关系数和p值
@@ -73,18 +73,18 @@ class CorrelationService:
         """
         # 移除缺失值对
         valid_pairs = [(xi, yi) for xi, yi in zip(x, y) if xi is not None and yi is not None]
-        
+
         if len(valid_pairs) < 10:  # 最小样本量要求
             return 0.0, 1.0
-            
+
         x_clean, y_clean = zip(*valid_pairs)
-        
+
         # 计算皮尔逊相关系数
         correlation, p_value = stats.pearsonr(x_clean, y_clean)
-        
+
         return correlation, p_value
-    
-    def calculate_correlation_matrix(self, 
+
+    def calculate_correlation_matrix(self,
                                    user_data: List[Dict],
                                    time_window: int = 30) -> Dict:
         """
@@ -94,24 +94,24 @@ class CorrelationService:
             'sleep_quality', 'calories', 'total_workout_duration',
             'overall_mood', 'deep_work_hours', 'interpersonal_satisfaction'
         ]
-        
+
         # 构建数据矩阵
         data_matrix = {}
         for dim in dimensions:
             data_matrix[dim] = [record.get(dim) for record in user_data]
-        
+
         # 计算相关性矩阵
         correlation_matrix = {}
         p_value_matrix = {}
-        
+
         for i, dim1 in enumerate(dimensions):
             correlation_matrix[dim1] = {}
             p_value_matrix[dim1] = {}
-            
+
             for j, dim2 in enumerate(dimensions):
                 if i <= j:  # 只计算上三角矩阵
                     corr, p_val = self.calculate_pearson_correlation(
-                        data_matrix[dim1], 
+                        data_matrix[dim1],
                         data_matrix[dim2]
                     )
                     correlation_matrix[dim1][dim2] = round(corr, 3)
@@ -120,7 +120,7 @@ class CorrelationService:
                     # 对称矩阵
                     correlation_matrix[dim1][dim2] = correlation_matrix[dim2][dim1]
                     p_value_matrix[dim1][dim2] = p_value_matrix[dim2][dim1]
-        
+
         return {
             'correlations': correlation_matrix,
             'p_values': p_value_matrix,
@@ -150,30 +150,30 @@ async def calculate_correlation(
         # 获取用户数据
         end_date = datetime.now().date()
         start_date = end_date - timedelta(days=time_window)
-        
+
         user_records = await record_service.get_user_records(
             user_id=current_user.id,
             start_date=start_date,
             end_date=end_date
         )
-        
+
         if len(user_records) < 10:
             raise HTTPException(
-                status_code=400, 
+                status_code=400,
                 detail=f"数据量不足，需要至少10天的记录，当前只有{len(user_records)}天"
             )
-        
+
         # 计算相关性矩阵
         correlation_result = correlation_service.calculate_correlation_matrix(
             user_records, time_window
         )
-        
+
         return APIResponse(
             success=True,
             data=correlation_result,
             message="相关性分析完成"
         )
-        
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"分析计算失败: {str(e)}")
 ```
@@ -193,9 +193,9 @@ def preprocess_correlation_data(raw_data: List[Dict]) -> Dict[str, List[float]]:
         'productivity': ['deep_work_hours', 'focus_quality'],
         'social': ['interpersonal_satisfaction', 'solitude_satisfaction']
     }
-    
+
     processed_data = {}
-    
+
     for category, fields in dimension_mapping.items():
         # 复合维度计算平均值
         category_values = []
@@ -205,15 +205,15 @@ def preprocess_correlation_data(raw_data: List[Dict]) -> Dict[str, List[float]]:
                 category_values.append(sum(values) / len(values))
             else:
                 category_values.append(None)
-        
+
         processed_data[category] = category_values
-    
+
     return processed_data
 ```
 
 ## 依赖关系
 
-**前置依赖**: Epic 2完成 - 需要完整的历史数据API  
+**前置依赖**: Epic 2完成 - 需要完整的历史数据API
 **后续任务**: E3S2 (矩阵可视化) - 需要相关性计算结果
 
 ## 预估时间分解
@@ -261,6 +261,6 @@ def preprocess_correlation_data(raw_data: List[Dict]) -> Dict[str, List[float]]:
 
 ---
 
-**任务负责人**: [待分配]  
-**创建时间**: 2024年  
+**任务负责人**: [待分配]
+**创建时间**: 2024年
 **最后更新**: 2024年

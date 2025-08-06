@@ -35,13 +35,13 @@ check_docker() {
 show_service_status() {
     echo "📊 Docker Compose 服务状态："
     echo "======================================================"
-    
+
     if docker-compose -f docker-compose.yml -f docker-compose.secrets.yml ps | grep -q "Up\|Exited"; then
         docker-compose -f docker-compose.yml -f docker-compose.secrets.yml ps
     else
         echo "   没有运行的 LIVIN-MATRIX 服务"
     fi
-    
+
     echo ""
 }
 
@@ -49,9 +49,9 @@ show_service_status() {
 detailed_health_check() {
     echo "🏥 详细健康检查："
     echo "======================================================"
-    
+
     local overall_health=true
-    
+
     # 检查PostgreSQL
     echo "🗄️  PostgreSQL 数据库:"
     local postgres_container=$(docker ps --filter "name=livin-matrix_postgres" --format "{{.Names}}" | head -1)
@@ -69,7 +69,7 @@ detailed_health_check() {
         overall_health=false
     fi
     echo ""
-    
+
     # 检查Redis
     echo "🔴 Redis 缓存:"
     local redis_container=$(docker ps --filter "name=livin-matrix_redis" --format "{{.Names}}" | head -1)
@@ -86,7 +86,7 @@ detailed_health_check() {
         overall_health=false
     fi
     echo ""
-    
+
     # 检查后端API
     echo "🚀 后端 FastAPI:"
     if docker ps | grep -q "livin-matrix-backend"; then
@@ -105,7 +105,7 @@ detailed_health_check() {
         overall_health=false
     fi
     echo ""
-    
+
     # 检查前端
     echo "🎨 前端 React:"
     if docker ps | grep -q "livin-matrix-frontend"; then
@@ -123,7 +123,7 @@ detailed_health_check() {
         overall_health=false
     fi
     echo ""
-    
+
     # 总体状态
     echo "🎯 总体状态:"
     if [ "$overall_health" = true ]; then
@@ -138,14 +138,14 @@ detailed_health_check() {
 check_port_usage() {
     echo "🔌 端口占用检查："
     echo "======================================================"
-    
+
     local ports=(5432 6379 8000 3000)
     local port_names=("PostgreSQL" "Redis" "Backend API" "Frontend")
-    
+
     for i in "${!ports[@]}"; do
         local port=${ports[$i]}
         local name=${port_names[$i]}
-        
+
         if lsof -Pi :$port -sTCP:LISTEN -t >/dev/null 2>&1; then
             local process=$(lsof -Pi :$port -sTCP:LISTEN | tail -n +2 | head -1)
             echo "   ✅ 端口 $port ($name) - 已占用"
@@ -161,7 +161,7 @@ check_port_usage() {
 show_resource_usage() {
     echo "📈 资源使用情况："
     echo "======================================================"
-    
+
     if docker ps | grep -q "livin-matrix"; then
         # 显示容器资源使用
         echo "💾 容器资源使用:"
@@ -169,7 +169,7 @@ show_resource_usage() {
             $(docker ps --filter "name=livin-matrix" --format "{{.Names}}" | tr '\n' ' ') 2>/dev/null || \
             echo "   无法获取资源统计信息"
         echo ""
-        
+
         # 显示存储卷使用
         echo "💿 存储卷使用:"
         docker system df -v | grep -E "(TYPE|livin.*matrix)" || echo "   无相关存储卷"
@@ -183,19 +183,19 @@ show_resource_usage() {
 quick_diagnosis() {
     echo "🔍 快速诊断："
     echo "======================================================"
-    
+
     local running_services=0
     local total_services=4  # postgres, redis, backend, frontend
-    
+
     # 计算运行中的服务数量
     if docker ps | grep -q "livin-matrix-postgres"; then ((running_services++)); fi
     if docker ps | grep -q "livin-matrix-redis"; then ((running_services++)); fi
     if docker ps | grep -q "livin-matrix-backend"; then ((running_services++)); fi
     if docker ps | grep -q "livin-matrix-frontend"; then ((running_services++)); fi
-    
+
     echo "📊 服务统计: $running_services/$total_services 个服务运行中"
     echo ""
-    
+
     # 诊断建议
     if [ $running_services -eq 0 ]; then
         echo "💡 诊断建议:"
@@ -240,7 +240,7 @@ show_management_commands() {
 main() {
     echo "🔍 检查 Docker 环境..."
     check_docker
-    
+
     # 显示各种状态信息
     show_service_status
     detailed_health_check
@@ -248,28 +248,28 @@ main() {
     show_resource_usage
     quick_diagnosis
     show_management_commands
-    
+
     echo "======================================================"
     echo "✅ 状态检查完成！"
     echo ""
     echo "💡 此窗口将保持打开，按任意键刷新状态或关闭"
-    
+
     # 提供刷新选项
     while true; do
         echo ""
         read -p "按 [R] 刷新状态, [Q] 退出: " choice
         case $choice in
-            [Rr]* ) 
+            [Rr]* )
                 clear
                 echo "🔄 刷新状态中..."
                 main
                 return
                 ;;
-            [Qq]* ) 
+            [Qq]* )
                 echo "👋 状态检查结束"
                 exit 0
                 ;;
-            * ) 
+            * )
                 echo "请输入 R (刷新) 或 Q (退出)"
                 ;;
         esac

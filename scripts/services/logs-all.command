@@ -108,10 +108,10 @@ view_error_logs() {
     echo "⚡ 查看最近错误日志..."
     echo "🔍 搜索包含 'error', 'Error', 'ERROR', 'exception' 等关键词的日志"
     echo ""
-    
+
     # 搜索错误关键词
     docker-compose -f docker-compose.yml -f docker-compose.secrets.yml logs --tail=100 | grep -i -E "(error|exception|fail|fatal|critical)" | tail -20
-    
+
     echo ""
     echo "📋 如需查看完整错误上下文，请选择具体服务查看详细日志"
     echo "按任意键返回菜单..."
@@ -123,27 +123,27 @@ view_startup_logs() {
     echo "📈 查看服务启动日志..."
     echo "🔍 显示各服务的启动过程"
     echo ""
-    
+
     echo "🗄️  PostgreSQL 启动日志："
     echo "----------------------------------------"
     docker-compose -f docker-compose.yml -f docker-compose.secrets.yml logs postgres | tail -10
     echo ""
-    
+
     echo "🔴 Redis 启动日志："
     echo "----------------------------------------"
     docker-compose -f docker-compose.yml -f docker-compose.secrets.yml logs redis | tail -10
     echo ""
-    
+
     echo "🚀 Backend 启动日志："
     echo "----------------------------------------"
     docker-compose -f docker-compose.yml -f docker-compose.secrets.yml logs backend | tail -10
     echo ""
-    
+
     echo "🎨 Frontend 启动日志："
     echo "----------------------------------------"
     docker-compose -f docker-compose.yml -f docker-compose.secrets.yml logs frontend | tail -10
     echo ""
-    
+
     echo "按任意键返回菜单..."
     read -n 1
 }
@@ -152,20 +152,20 @@ view_startup_logs() {
 search_logs() {
     echo ""
     read -p "🔍 输入要搜索的内容: " search_term
-    
+
     if [ -z "$search_term" ]; then
         echo "❌ 搜索内容不能为空"
         sleep 2
         return
     fi
-    
+
     echo ""
     echo "🔍 搜索结果 (包含: '$search_term'):"
     echo "================================================="
-    
+
     # 在所有日志中搜索
     local results=$(docker-compose -f docker-compose.yml -f docker-compose.secrets.yml logs | grep -i "$search_term")
-    
+
     if [ -n "$results" ]; then
         echo "$results" | tail -20
         echo ""
@@ -173,7 +173,7 @@ search_logs() {
     else
         echo "❌ 未找到包含 '$search_term' 的日志"
     fi
-    
+
     echo ""
     echo "💡 如需搜索更多结果，可使用: docker-compose -f docker-compose.yml -f docker-compose.secrets.yml logs | grep -i '$search_term'"
     echo "按任意键返回菜单..."
@@ -189,12 +189,12 @@ export_logs() {
     echo "3. 导出错误日志"
     echo ""
     read -p "选择导出类型 (1-3): " export_type
-    
+
     local timestamp=$(date +"%Y%m%d_%H%M%S")
     local export_dir="logs_export_$timestamp"
-    
+
     mkdir -p "$export_dir"
-    
+
     case $export_type in
         1)
             echo "📊 导出所有服务日志..."
@@ -211,7 +211,7 @@ export_logs() {
             echo "3. Backend"
             echo "4. Frontend"
             read -p "输入选择 (1-4): " service_choice
-            
+
             case $service_choice in
                 1) docker-compose -f docker-compose.yml -f docker-compose.secrets.yml logs postgres > "$export_dir/postgres.log" ;;
                 2) docker-compose -f docker-compose.yml -f docker-compose.secrets.yml logs redis > "$export_dir/redis.log" ;;
@@ -229,7 +229,7 @@ export_logs() {
             return
             ;;
     esac
-    
+
     echo "✅ 日志已导出到: $export_dir/"
     echo "📁 导出文件列表:"
     ls -la "$export_dir/"
@@ -243,12 +243,12 @@ main() {
     echo "🔍 检查 Docker 环境..."
     check_docker
     check_services
-    
+
     # 主菜单循环
     while true; do
         show_log_menu
         read -p "请选择操作 (0-9): " choice
-        
+
         case $choice in
             1)
                 view_all_logs

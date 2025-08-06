@@ -2,11 +2,11 @@
 
 ## 任务概述
 
-**任务ID**: E2S5  
-**任务标题**: 情绪、工作效率、社交维度录入  
-**所属Epic**: Epic 2 - 数据管理核心  
-**预估时间**: 3天  
-**优先级**: 高  
+**任务ID**: E2S5
+**任务标题**: 情绪、工作效率、社交维度录入
+**所属Epic**: Epic 2 - 数据管理核心
+**预估时间**: 3天
+**优先级**: 高
 
 ## 任务目标
 
@@ -124,7 +124,7 @@ const WorkEnvironmentSelector: React.FC<{
   value: string;
   onChange: (env: string) => void;
 }> = ({ value, onChange }) => {
-  
+
   const environments = [
     { id: 'home', label: '家中', icon: '🏠', description: '舒适自在的工作环境' },
     { id: 'office', label: '办公室', icon: '🏢', description: '专业正式的工作场所' },
@@ -155,7 +155,7 @@ const WorkEnvironmentSelector: React.FC<{
 
 ## 依赖关系
 
-**前置依赖**: E2S1 (数据录入界面架构) - 需要卡片组件和星级评分组件  
+**前置依赖**: E2S1 (数据录入界面架构) - 需要卡片组件和星级评分组件
 **后续任务**: E2S6 (数据持久化) - 需要完整的数据结构
 
 ## 完成标准
@@ -168,6 +168,6 @@ const WorkEnvironmentSelector: React.FC<{
 
 ---
 
-**任务负责人**: [待分配]  
-**创建时间**: 2024年  
+**任务负责人**: [待分配]
+**创建时间**: 2024年
 **最后更新**: 2024年

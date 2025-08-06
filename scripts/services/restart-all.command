@@ -22,7 +22,7 @@ cd "$PROJECT_ROOT"
 # 检查Docker Secrets环境
 check_secrets_environment() {
     echo "🔐 检查Docker Secrets环境..."
-    
+
     # 检查secrets目录是否存在
     if [ ! -d "secrets" ]; then
         echo "❌ 缺少 secrets/ 目录"
@@ -36,17 +36,17 @@ check_secrets_environment() {
         read -n 1
         exit 1
     fi
-    
+
     # 检查关键密钥文件
     local required_secrets=("POSTGRES_PASSWORD" "GITHUB_CLIENT_ID" "GITHUB_CLIENT_SECRET")
     local missing_secrets=()
-    
+
     for secret in "${required_secrets[@]}"; do
         if [ ! -f "secrets/$secret" ]; then
             missing_secrets+=("$secret")
         fi
     done
-    
+
     if [ ${#missing_secrets[@]} -gt 0 ]; then
         echo "❌ 缺少必需的密钥文件:"
         for secret in "${missing_secrets[@]}"; do
@@ -58,7 +58,7 @@ check_secrets_environment() {
         read -n 1
         exit 1
     fi
-    
+
     echo "✅ Docker Secrets环境检查通过"
 }
 
@@ -89,7 +89,7 @@ restart_options() {
     echo "5. 仅重启前端服务"
     echo ""
     read -p "请选择重启方式 (1-5): " restart_type
-    
+
     case $restart_type in
         1) graceful_restart ;;
         2) force_restart ;;
@@ -104,14 +104,14 @@ restart_options() {
 graceful_restart() {
     echo ""
     echo "🔄 执行优雅重启..."
-    
+
     # 先停止所有服务
     echo "🛑 停止所有服务..."
     docker-compose -f docker-compose.yml -f docker-compose.secrets.yml stop
-    
+
     echo "⏳ 等待服务完全停止..."
     sleep 5
-    
+
     # 重新启动
     echo "🚀 重新启动所有服务..."
     # 使用Docker Secrets配置
@@ -127,7 +127,7 @@ graceful_restart() {
 force_restart() {
     echo ""
     echo "⚡ 执行强制重启..."
-    
+
     if docker-compose -f docker-compose.yml -f docker-compose.secrets.yml restart; then
         echo "✅ 强制重启完成"
     else
@@ -141,17 +141,17 @@ rebuild_restart() {
     echo ""
     echo "🏗️  执行重建重启..."
     echo "⚠️  这将重新构建所有镜像，可能需要较长时间"
-    
+
     read -p "确认继续? (y/n): " confirm
     if [ "$confirm" != "y" ]; then
         echo "❌ 重建已取消"
         exit 1
     fi
-    
+
     # 停止并删除容器
     echo "🛑 停止并清理现有容器..."
     docker-compose -f docker-compose.yml -f docker-compose.secrets.yml down
-    
+
     # 重新构建并启动
     echo "🏗️  重新构建并启动服务..."
     if docker-compose -f docker-compose.yml -f docker-compose.secrets.yml up -d --build; then
@@ -166,7 +166,7 @@ rebuild_restart() {
 restart_backend_only() {
     echo ""
     echo "🔧 仅重启后端服务..."
-    
+
     # 重启后端及其依赖
     if docker-compose -f docker-compose.yml -f docker-compose.secrets.yml restart postgres redis backend; then
         echo "✅ 后端服务重启完成"
@@ -180,7 +180,7 @@ restart_backend_only() {
 restart_frontend_only() {
     echo ""
     echo "🎨 仅重启前端服务..."
-    
+
     if docker-compose -f docker-compose.yml -f docker-compose.secrets.yml restart frontend; then
         echo "✅ 前端服务重启完成"
     else
@@ -193,24 +193,24 @@ restart_frontend_only() {
 wait_for_services() {
     echo ""
     echo "⏳ 等待服务就绪..."
-    
+
     local max_attempts=30
     local attempt=1
-    
+
     while [ $attempt -le $max_attempts ]; do
         local healthy_count=$(docker-compose -f docker-compose.yml -f docker-compose.secrets.yml ps | grep -c "healthy\|Up")
         local total_services=$(docker-compose -f docker-compose.yml -f docker-compose.secrets.yml ps | grep -c "livin-matrix")
-        
+
         if [ "$healthy_count" -ge 3 ]; then  # 至少3个核心服务
             echo "✅ 主要服务已就绪"
             break
         fi
-        
+
         echo "   等待服务启动 $attempt/$max_attempts (已就绪: $healthy_count)"
         sleep 3
         attempt=$((attempt + 1))
     done
-    
+
     if [ $attempt -gt $max_attempts ]; then
         echo "⚠️  部分服务可能仍在启动中"
     fi
@@ -220,9 +220,9 @@ wait_for_services() {
 health_check() {
     echo ""
     echo "🏥 执行健康检查..."
-    
+
     local all_healthy=true
-    
+
     # 检查数据库
     if docker exec livin-matrix-postgres pg_isready -U postgres -d livin_matrix_dev > /dev/null 2>&1; then
         echo "✅ PostgreSQL 健康"
@@ -230,7 +230,7 @@ health_check() {
         echo "❌ PostgreSQL 不健康"
         all_healthy=false
     fi
-    
+
     # 检查Redis
     if docker exec livin-matrix-redis redis-cli ping | grep -q "PONG"; then
         echo "✅ Redis 健康"
@@ -238,7 +238,7 @@ health_check() {
         echo "❌ Redis 不健康"
         all_healthy=false
     fi
-    
+
     # 检查后端API
     if curl -f -s http://localhost:8000/health > /dev/null 2>&1; then
         echo "✅ 后端API 健康"
@@ -246,7 +246,7 @@ health_check() {
         echo "⚠️  后端API 可能仍在启动"
         all_healthy=false
     fi
-    
+
     # 检查前端
     if curl -f -s http://localhost:3000 > /dev/null 2>&1; then
         echo "✅ 前端服务 健康"
@@ -254,7 +254,7 @@ health_check() {
         echo "⚠️  前端服务 可能仍在构建"
         all_healthy=false
     fi
-    
+
     if [ "$all_healthy" = true ]; then
         echo "🎉 所有服务健康检查通过！"
     else
@@ -267,22 +267,22 @@ main() {
     echo "🔍 检查系统环境..."
     check_docker
     check_secrets_environment
-    
+
     show_current_status
-    
+
     # 显示重启选项
     restart_options
-    
+
     # 等待服务就绪
     wait_for_services
-    
+
     # 健康检查
     health_check
-    
+
     echo ""
     echo "📊 重启后服务状态："
     docker-compose -f docker-compose.yml -f docker-compose.secrets.yml ps
-    
+
     echo ""
     echo "🎉 服务重启完成！"
     echo ""

@@ -2,11 +2,11 @@
 
 ## 任务概述
 
-**任务ID**: E1S2  
-**任务标题**: 数据库设计与部署  
-**所属Epic**: Epic 1 - 基础架构与用户认证  
-**预估时间**: 4天  
-**优先级**: 高  
+**任务ID**: E1S2
+**任务标题**: 数据库设计与部署
+**所属Epic**: Epic 1 - 基础架构与用户认证
+**预估时间**: 4天
+**优先级**: 高
 
 ## 任务目标
 
@@ -37,7 +37,7 @@
 
 ### 4. 支持6个维度的所有数据字段（基于最终确定的数据结构）
 - [ ] **睡眠维度**: sleep_start_time, sleep_end_time, sleep_quality, wake_clarity
-- [ ] **饮食维度**: calories, protein, fat, carbohydrates  
+- [ ] **饮食维度**: calories, protein, fat, carbohydrates
 - [ ] **运动维度**: total_workout_duration, daily_steps
 - [ ] **情绪维度**: overall_mood, stress_level, anxiety_level, energy_level
 - [ ] **工作效率维度**: deep_work_hours, active_breaks, focus_quality, task_completion, work_satisfaction, work_environment
@@ -73,29 +73,29 @@ CREATE TABLE user_daily_records (
     id SERIAL PRIMARY KEY,
     user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
     record_date DATE NOT NULL,
-    
+
     -- 睡眠维度
     sleep_start_time TIME,
     sleep_end_time TIME,
     sleep_quality INTEGER CHECK (sleep_quality >= 1 AND sleep_quality <= 10),
     wake_clarity INTEGER CHECK (wake_clarity >= 1 AND wake_clarity <= 10),
-    
+
     -- 饮食维度
     calories INTEGER CHECK (calories >= 0 AND calories <= 5000),
     protein INTEGER CHECK (protein >= 0 AND protein <= 500),
     fat INTEGER CHECK (fat >= 0 AND fat <= 500),
     carbohydrates INTEGER CHECK (carbohydrates >= 0 AND carbohydrates <= 1000),
-    
+
     -- 运动维度
     total_workout_duration INTEGER DEFAULT 0, -- 分钟
     daily_steps DECIMAL(4,1) CHECK (daily_steps >= 0), -- 千步
-    
+
     -- 情绪维度
     overall_mood INTEGER CHECK (overall_mood >= 1 AND overall_mood <= 10),
     stress_level INTEGER CHECK (stress_level >= 1 AND stress_level <= 10),
     anxiety_level INTEGER CHECK (anxiety_level >= 1 AND anxiety_level <= 10),
     energy_level INTEGER CHECK (energy_level >= 1 AND energy_level <= 10),
-    
+
     -- 工作效率维度
     deep_work_hours DECIMAL(3,1) CHECK (deep_work_hours >= 0 AND deep_work_hours <= 24),
     active_breaks INTEGER CHECK (active_breaks >= 0),
@@ -103,16 +103,16 @@ CREATE TABLE user_daily_records (
     task_completion INTEGER CHECK (task_completion >= 1 AND task_completion <= 10),
     work_satisfaction INTEGER CHECK (work_satisfaction >= 1 AND work_satisfaction <= 10),
     work_environment VARCHAR(20) CHECK (work_environment IN ('home', 'office', 'cafe', 'mixed')),
-    
+
     -- 社交维度
     initiated_social INTEGER CHECK (initiated_social >= 0),
     responded_social INTEGER CHECK (responded_social >= 0),
     interpersonal_satisfaction INTEGER CHECK (interpersonal_satisfaction >= 1 AND interpersonal_satisfaction <= 10),
     solitude_satisfaction INTEGER CHECK (solitude_satisfaction >= 1 AND solitude_satisfaction <= 10),
-    
+
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    
+
     UNIQUE(user_id, record_date)
 );
 ```
@@ -146,8 +146,8 @@ CREATE TABLE workout_sessions (
 
 ## 依赖关系
 
-**前置依赖**: E1S1 (项目基础架构搭建)  
-**后续任务**: 
+**前置依赖**: E1S1 (项目基础架构搭建)
+**后续任务**:
 - E1S3 (Auth0用户认证集成) - 需要用户表结构
 - E1S4 (基础API框架建立) - 需要数据库连接配置
 
@@ -208,6 +208,6 @@ CREATE TABLE workout_sessions (
 
 ---
 
-**任务负责人**: [待分配]  
-**创建时间**: 2024年  
+**任务负责人**: [待分配]
+**创建时间**: 2024年
 **最后更新**: 2024年

@@ -33,7 +33,7 @@ check_docker() {
 check_port_conflict() {
     local port=$1
     local service=$2
-    
+
     if lsof -Pi :$port -sTCP:LISTEN -t >/dev/null 2>&1; then
         echo "⚠️  端口 $port 已被占用 ($service)，正在尝试清理..."
         case $port in
@@ -49,20 +49,20 @@ wait_for_service() {
     local service=$1
     local max_attempts=30
     local attempt=1
-    
+
     echo "🔄 等待 $service 服务启动..."
-    
+
     while [ $attempt -le $max_attempts ]; do
         if docker-compose -f docker-compose.yml -f docker-compose.secrets.yml ps $service | grep -q "healthy\|Up"; then
             echo "✅ $service 服务已启动"
             return 0
         fi
-        
+
         echo "   尝试 $attempt/$max_attempts..."
         sleep 2
         attempt=$((attempt + 1))
     done
-    
+
     echo "❌ $service 服务启动超时"
     return 1
 }
@@ -78,7 +78,7 @@ show_service_status() {
 # 检查数据库连接
 test_database_connection() {
     echo "🔍 测试数据库连接..."
-    
+
     # 测试PostgreSQL连接
     if docker exec livin-matrix-postgres pg_isready -U postgres -d livin_matrix_dev > /dev/null 2>&1; then
         echo "✅ PostgreSQL 连接正常"
@@ -86,7 +86,7 @@ test_database_connection() {
         echo "❌ PostgreSQL 连接失败"
         return 1
     fi
-    
+
     # 测试Redis连接
     if docker exec livin-matrix-redis redis-cli ping | grep -q "PONG"; then
         echo "✅ Redis 连接正常"
@@ -94,14 +94,14 @@ test_database_connection() {
         echo "❌ Redis 连接失败"
         return 1
     fi
-    
+
     return 0
 }
 
 # 检查Docker Secrets环境
 check_secrets_environment() {
     echo "🔐 检查Docker Secrets环境..."
-    
+
     # 检查secrets目录是否存在
     if [ ! -d "secrets" ]; then
         echo "❌ 缺少 secrets/ 目录"
@@ -115,7 +115,7 @@ check_secrets_environment() {
         read -n 1
         exit 1
     fi
-    
+
     # 检查PostgreSQL密钥文件
     if [ ! -f "secrets/POSTGRES_PASSWORD" ]; then
         echo "❌ 缺少必需的密钥文件: secrets/POSTGRES_PASSWORD"
@@ -125,7 +125,7 @@ check_secrets_environment() {
         read -n 1
         exit 1
     fi
-    
+
     echo "✅ Docker Secrets环境检查通过"
 }
 
@@ -134,14 +134,14 @@ main() {
     echo "🔍 检查系统环境..."
     check_docker
     check_secrets_environment
-    
+
     echo "🔍 检查端口冲突..."
     check_port_conflict 5432 "PostgreSQL"
     check_port_conflict 6379 "Redis"
-    
+
     echo ""
     echo "🗄️  启动数据库服务..."
-    
+
     # 仅启动数据库相关服务（使用Docker Secrets配置）
     if ! docker-compose -f docker-compose.yml -f docker-compose.secrets.yml up -d postgres redis; then
         echo "❌ 数据库服务启动失败"
@@ -150,30 +150,30 @@ main() {
         read -n 1
         exit 1
     fi
-    
+
     echo ""
     echo "⏳ 等待数据库服务就绪..."
-    
+
     # 等待PostgreSQL服务
     if ! wait_for_service "postgres"; then
         echo "PostgreSQL启动失败，查看日志: docker-compose -f docker-compose.yml -f docker-compose.secrets.yml logs postgres"
         exit 1
     fi
-    
+
     # 等待Redis服务
     if ! wait_for_service "redis"; then
         echo "Redis启动失败，查看日志: docker-compose -f docker-compose.yml -f docker-compose.secrets.yml logs redis"
         exit 1
     fi
-    
+
     # 测试数据库连接
     if ! test_database_connection; then
         echo "数据库连接测试失败"
         exit 1
     fi
-    
+
     show_service_status
-    
+
     echo "🎉 数据库服务启动成功！"
     echo ""
     echo "🔗 连接信息:"
@@ -195,7 +195,7 @@ main() {
     echo ""
     echo "💡 按 Ctrl+C 可以安全退出此脚本，数据库将继续在后台运行"
     echo ""
-    
+
     # 持续监控数据库状态
     echo "🔄 监控数据库状态中... (按 Ctrl+C 退出监控)"
     while true; do

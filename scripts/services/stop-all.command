@@ -51,7 +51,7 @@ optional_cleanup() {
     echo "4. 跳过额外清理"
     echo ""
     read -p "请选择清理级别 (1-4): " cleanup_level
-    
+
     case $cleanup_level in
         1)
             echo "ℹ️  仅停止服务，保留所有数据"
@@ -83,10 +83,10 @@ optional_cleanup() {
 check_ports_released() {
     echo ""
     echo "🔍 检查端口释放状态..."
-    
+
     local ports=(5432 6379 8000 3000)
     local all_released=true
-    
+
     for port in "${ports[@]}"; do
         if lsof -Pi :$port -sTCP:LISTEN -t >/dev/null 2>&1; then
             echo "⚠️  端口 $port 仍被占用"
@@ -95,7 +95,7 @@ check_ports_released() {
             echo "✅ 端口 $port 已释放"
         fi
     done
-    
+
     if [ "$all_released" = true ]; then
         echo "✅ 所有端口已成功释放"
     else
@@ -107,17 +107,17 @@ check_ports_released() {
 main() {
     echo "🔍 检查系统环境..."
     check_docker
-    
+
     show_current_status
-    
+
     echo "🛑 开始停止所有服务..."
-    
+
     # 检查是否有正在运行的服务
     if docker-compose -f docker-compose.yml -f docker-compose.secrets.yml ps | grep -q "Up"; then
         echo "🔄 正在停止 LiVin-Matrix 服务..."
         if docker-compose -f docker-compose.yml -f docker-compose.secrets.yml stop; then
             echo "✅ 所有服务已停止"
-            
+
             # 等待服务完全停止
             echo "⏳ 等待服务完全停止..."
             local attempts=0
@@ -125,7 +125,7 @@ main() {
                 sleep 2
                 attempts=$((attempts + 1))
             done
-            
+
             if [ $attempts -ge 30 ]; then
                 echo "⚠️  部分服务停止耗时较长，但正在后台停止"
             else
@@ -138,13 +138,13 @@ main() {
     else
         echo "ℹ️  没有正在运行的服务，无需停止"
     fi
-    
+
     # 可选清理
     optional_cleanup
-    
+
     # 检查端口释放
     check_ports_released
-    
+
     echo ""
     echo "🎉 所有服务已停止！"
     echo ""

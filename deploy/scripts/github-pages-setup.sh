@@ -92,16 +92,16 @@ parse_arguments() {
                 ;;
         esac
     done
-    
+
     # 从环境变量获取缺失的值
     if [ -z "$GITHUB_TOKEN" ] && [ -n "${GITHUB_TOKEN:-}" ]; then
         GITHUB_TOKEN="$GITHUB_TOKEN"
     fi
-    
+
     if [ -z "$API_BASE_URL" ] && [ -n "${VITE_API_BASE_URL:-}" ]; then
         API_BASE_URL="$VITE_API_BASE_URL"
     fi
-    
+
     # 尝试从git remote获取仓库信息
     if [ -z "$REPO_OWNER" ] || [ -z "$REPO_NAME" ]; then
         if git remote get-url origin &>/dev/null; then
@@ -113,14 +113,14 @@ parse_arguments() {
             fi
         fi
     fi
-    
+
     # 验证必需参数
     if [ -z "$REPO_OWNER" ] || [ -z "$REPO_NAME" ]; then
         log_error "缺少必需参数: 仓库所有者和仓库名称"
         show_usage
         exit 1
     fi
-    
+
     if [ -z "$GITHUB_TOKEN" ]; then
         log_warning "未提供GitHub Token，将跳过API相关操作"
     fi
@@ -129,34 +129,34 @@ parse_arguments() {
 # 检查必需的工具
 check_prerequisites() {
     log_info "检查必需的工具..."
-    
+
     local missing_tools=()
-    
+
     if ! command -v node &> /dev/null; then
         missing_tools+=("nodejs")
     fi
-    
+
     if ! command -v npm &> /dev/null; then
         missing_tools+=("npm")
     fi
-    
+
     if ! command -v git &> /dev/null; then
         missing_tools+=("git")
     fi
-    
+
     if ! command -v curl &> /dev/null; then
         missing_tools+=("curl")
     fi
-    
+
     if ! command -v jq &> /dev/null; then
         missing_tools+=("jq")
     fi
-    
+
     if [ ${#missing_tools[@]} -ne 0 ]; then
         log_error "缺少必需的工具: ${missing_tools[*]}"
         exit 1
     fi
-    
+
     log_success "工具检查完成"
 }
 
@@ -166,23 +166,23 @@ verify_github_access() {
         log_warning "跳过GitHub API验证（未提供token）"
         return 0
     fi
-    
+
     log_info "验证GitHub仓库访问..."
-    
+
     local response=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
         "https://api.github.com/repos/$REPO_OWNER/$REPO_NAME")
-    
+
     if echo "$response" | jq -e '.message == "Not Found"' &>/dev/null; then
         log_error "仓库不存在或无权访问: $REPO_OWNER/$REPO_NAME"
         exit 1
     fi
-    
+
     if echo "$response" | jq -e '.message' &>/dev/null; then
         local error_msg=$(echo "$response" | jq -r '.message')
         log_error "GitHub API错误: $error_msg"
         exit 1
     fi
-    
+
     log_success "GitHub仓库访问验证成功"
 }
 
@@ -193,20 +193,20 @@ configure_github_pages() {
         log_info "请手动在GitHub仓库设置中启用GitHub Pages"
         return 0
     fi
-    
+
     log_info "配置GitHub Pages..."
-    
+
     # 检查当前Pages配置
     local pages_config=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
         "https://api.github.com/repos/$REPO_OWNER/$REPO_NAME/pages" 2>/dev/null || echo "{}")
-    
+
     if echo "$pages_config" | jq -e '.source.branch' &>/dev/null; then
         log_info "GitHub Pages已配置"
         local current_source=$(echo "$pages_config" | jq -r '.source.branch')
         log_info "当前源分支: $current_source"
     else
         log_info "启用GitHub Pages..."
-        
+
         # 启用GitHub Pages，使用GitHub Actions
         local pages_payload=$(cat <<EOF
 {
@@ -217,13 +217,13 @@ configure_github_pages() {
 }
 EOF
 )
-        
+
         local response=$(curl -s -X POST \
             -H "Authorization: token $GITHUB_TOKEN" \
             -H "Accept: application/vnd.github.v3+json" \
             -d "$pages_payload" \
             "https://api.github.com/repos/$REPO_OWNER/$REPO_NAME/pages")
-        
+
         if echo "$response" | jq -e '.message' &>/dev/null; then
             local error_msg=$(echo "$response" | jq -r '.message')
             log_warning "Pages配置可能需要手动设置: $error_msg"
@@ -239,24 +239,24 @@ setup_github_secrets() {
         log_warning "跳过GitHub Secrets设置（未提供token）"
         return 0
     fi
-    
+
     log_info "设置GitHub Secrets..."
-    
+
     # 获取仓库公钥用于加密secrets
     local public_key_response=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
         "https://api.github.com/repos/$REPO_OWNER/$REPO_NAME/actions/secrets/public-key")
-    
+
     local public_key=$(echo "$public_key_response" | jq -r '.key')
     local key_id=$(echo "$public_key_response" | jq -r '.key_id')
-    
+
     if [ "$public_key" == "null" ] || [ "$key_id" == "null" ]; then
         log_error "无法获取仓库公钥"
         return 1
     fi
-    
+
     # 设置API基础URL secret
     set_github_secret "VITE_API_BASE_URL" "$API_BASE_URL" "$public_key" "$key_id"
-    
+
     log_success "GitHub Secrets设置完成"
 }
 
@@ -266,9 +266,9 @@ set_github_secret() {
     local secret_value="$2"
     local public_key="$3"
     local key_id="$4"
-    
+
     log_info "设置Secret: $secret_name"
-    
+
     # 这里需要sodium库来加密secret值
     # 由于bash脚本中难以直接实现加密，我们提供指导信息
     log_info "请手动在GitHub仓库设置中添加以下Secret:"
@@ -279,53 +279,53 @@ set_github_secret() {
 # 验证前端构建
 verify_frontend_build() {
     log_info "验证前端构建..."
-    
+
     # 进入前端目录
     cd "$PROJECT_ROOT/frontend"
-    
+
     # 检查package.json
     if [ ! -f "package.json" ]; then
         log_error "前端项目未找到package.json"
         exit 1
     fi
-    
+
     # 安装依赖
     log_info "安装前端依赖..."
     npm ci --prefer-offline --no-audit
-    
+
     # 运行类型检查
     if npm run type-check &>/dev/null; then
         log_success "TypeScript类型检查通过"
     else
         log_warning "TypeScript类型检查有警告"
     fi
-    
+
     # 运行代码检查
     if npm run lint &>/dev/null; then
         log_success "代码质量检查通过"
     else
         log_warning "代码质量检查有警告"
     fi
-    
+
     # 运行测试
     if npm run test:ci &>/dev/null; then
         log_success "测试通过"
     else
         log_warning "测试有失败或警告"
     fi
-    
+
     # 构建生产版本
     log_info "构建生产版本..."
     NODE_ENV=production VITE_API_BASE_URL="$API_BASE_URL" npm run build
-    
+
     if [ -d "dist" ] && [ -f "dist/index.html" ]; then
         log_success "前端构建完成"
-        
+
         # 显示构建统计
         local build_size=$(du -sh dist | cut -f1)
         local js_files=$(find dist -name "*.js" | wc -l)
         local css_files=$(find dist -name "*.css" | wc -l)
-        
+
         log_info "构建统计:"
         log_info "  总大小: $build_size"
         log_info "  JS文件: $js_files 个"
@@ -334,7 +334,7 @@ verify_frontend_build() {
         log_error "前端构建失败"
         exit 1
     fi
-    
+
     # 返回项目根目录
     cd "$PROJECT_ROOT"
 }
@@ -342,34 +342,34 @@ verify_frontend_build() {
 # 测试本地部署
 test_local_deployment() {
     log_info "测试本地部署..."
-    
+
     cd "$PROJECT_ROOT/frontend"
-    
+
     # 启动预览服务器
     log_info "启动本地预览服务器..."
     npm run preview &
     local preview_pid=$!
-    
+
     # 等待服务器启动
     sleep 5
-    
+
     # 测试本地访问
     if curl -f -s http://localhost:3000 > /dev/null; then
         log_success "本地部署测试成功"
     else
         log_error "本地部署测试失败"
     fi
-    
+
     # 关闭预览服务器
     kill $preview_pid 2>/dev/null || true
-    
+
     cd "$PROJECT_ROOT"
 }
 
 # 创建部署文档
 create_deployment_docs() {
     log_info "创建部署文档..."
-    
+
     cat > "$PROJECT_ROOT/docs/github-pages-deployment.md" << EOF
 # GitHub Pages 部署指南
 
@@ -469,7 +469,7 @@ GitHub Pages自动启用HTTPS，并在配置中强制重定向HTTP请求。
 部署环境: GitHub Pages
 API地址: $API_BASE_URL
 EOF
-    
+
     log_success "部署文档创建完成: docs/github-pages-deployment.md"
 }
 
@@ -481,13 +481,13 @@ display_deployment_info() {
     echo "仓库: $REPO_OWNER/$REPO_NAME"
     echo "GitHub Pages URL: https://$REPO_OWNER.github.io/$REPO_NAME/"
     echo "API基础URL: $API_BASE_URL"
-    
+
     echo
     echo "=== GitHub Actions 工作流 ==="
     echo "工作流文件: .github/workflows/deploy-frontend.yml"
     echo "触发条件: 推送到main分支 + 前端文件变更"
     echo "手动触发: GitHub仓库 → Actions → Deploy Frontend"
-    
+
     echo
     echo "=== 后续步骤 ==="
     echo "1. 推送代码到main分支触发自动部署"
@@ -495,7 +495,7 @@ display_deployment_info() {
     echo "3. 添加必要的GitHub Secrets"
     echo "4. 验证部署URL的可访问性"
     echo "5. 配置自定义域名（可选）"
-    
+
     if [ -z "$GITHUB_TOKEN" ]; then
         echo
         echo "=== 手动配置步骤 ==="
@@ -505,12 +505,12 @@ display_deployment_info() {
         echo "3. 访问 https://github.com/$REPO_OWNER/$REPO_NAME/settings/secrets/actions"
         echo "4. 添加Secret: VITE_API_BASE_URL = $API_BASE_URL"
     fi
-    
+
     echo
     echo "=== 测试命令 ==="
     echo "curl -f https://$REPO_OWNER.github.io/$REPO_NAME/"
     echo "curl -f https://$REPO_OWNER.github.io/$REPO_NAME/health.json"
-    
+
     echo
     echo "=== 文档位置 ==="
     echo "部署文档: docs/github-pages-deployment.md"
@@ -521,10 +521,10 @@ display_deployment_info() {
 # 主函数
 main() {
     log_info "开始GitHub Pages部署配置..."
-    
+
     # 解析参数
     parse_arguments "$@"
-    
+
     # 执行配置步骤
     check_prerequisites
     verify_github_access
@@ -534,7 +534,7 @@ main() {
     test_local_deployment
     create_deployment_docs
     display_deployment_info
-    
+
     log_success "GitHub Pages部署配置完成！"
 }
 

@@ -15,7 +15,7 @@ env:
 jobs:
   test:
     runs-on: ubuntu-latest
-    
+
     services:
       postgres:
         image: postgres:14
@@ -30,35 +30,35 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-          
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        
+
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: 'pip'
           cache-dependency-path: backend/requirements*.txt
-          
+
       - name: Install dependencies
         run: |
           cd backend
           pip install --upgrade pip
           pip install -r requirements.txt
           pip install -r requirements-test.txt
-          
+
       - name: Run Black code formatting check
         run: |
           cd backend
           black --check . --diff
-          
+
       - name: Run Flake8 linting
         run: |
           cd backend
           flake8 .
-          
+
       - name: Run pytest with coverage (parallel)
         run: |
           cd backend
@@ -72,26 +72,26 @@ jobs:
           GITHUB_CLIENT_ID: ${{ secrets.GITHUB_CLIENT_ID }}
           GITHUB_CLIENT_SECRET: ${{ secrets.GITHUB_CLIENT_SECRET }}
           GITHUB_REDIRECT_URI: ${{ secrets.GITHUB_REDIRECT_URI }}
-          
+
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
         with:
           file: ./backend/coverage.xml
           flags: backend
           name: backend-coverage
-          
+
   build:
     needs: test
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-        
+
       - name: Build Docker image with cache
         uses: docker/build-push-action@v5
         with:
@@ -103,23 +103,23 @@ jobs:
             backend:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          
+
       - name: Run container smoke test
         run: |
           docker run --rm -d --name test-backend -p 8000:8000 backend:latest
           sleep 10
           curl -f http://localhost:8000/health || exit 1
           docker stop test-backend
-          
+
   deploy-staging:
     needs: build
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        
+
       - name: Deploy to staging
         id: deploy
         run: |
@@ -129,7 +129,7 @@ jobs:
           echo "deployment_success=true" >> $GITHUB_OUTPUT
           echo "Staging deployment completed successfully"
         continue-on-error: true
-        
+
       - name: Rollback on failure
         if: steps.deploy.outputs.deployment_success != 'true'
         run: |
@@ -139,7 +139,7 @@ jobs:
           echo "Notifying team about deployment failure..."
           echo "Rollback completed successfully"
           exit 1
-          
+
       - name: Post-deployment verification
         if: steps.deploy.outputs.deployment_success == 'true'
         run: |

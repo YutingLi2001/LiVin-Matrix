@@ -5,10 +5,10 @@ import { resolve } from 'path'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
-  
+
   // GitHub Pages部署配置
   base: process.env.NODE_ENV === 'production' ? (process.env.PUBLIC_URL || '/') : '/',
-  
+
   // 构建配置
   build: {
     outDir: 'dist',
@@ -27,7 +27,7 @@ export default defineConfig({
     // 生产环境压缩
     minify: process.env.NODE_ENV === 'production' ? 'esbuild' : false,
   },
-  
+
   // 开发服务器配置
   server: {
     port: 5173,
@@ -40,20 +40,20 @@ export default defineConfig({
       },
     },
   },
-  
+
   // 预览服务器配置
   preview: {
     port: 5173,
     host: true,
   },
-  
+
   // 环境变量配置
   define: {
     __APP_VERSION__: JSON.stringify(process.env.npm_package_version || '1.0.0'),
     __BUILD_TIME__: JSON.stringify(new Date().toISOString()),
     __GIT_COMMIT__: JSON.stringify(process.env.VITE_APP_VERSION || 'unknown'),
   },
-  
+
   // 路径别名
   resolve: {
     alias: {

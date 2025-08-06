@@ -52,23 +52,23 @@ nodeGroups:
     maxSize: 3
     volumeSize: 20          # 免费层EBS限制
     volumeType: gp3
-    
+
     # 放置在私有子网中
     subnets:
       - !Ref LivinMatrixPrivateSubnet1a
       - !Ref LivinMatrixPrivateSubnet1b
-    
+
     # 安全组配置
     securityGroups:
       withShared: true
       withLocal: true
       attachIDs:
         - !Ref LivinMatrixEKSSG
-    
+
     # SSH访问配置（紧急情况使用）
     ssh:
       enableSsm: true  # 使用SSM而不是SSH密钥
-    
+
     # 标签配置
     tags:
       Name: "livin-matrix-worker"
@@ -77,16 +77,16 @@ nodeGroups:
       # EKS自动扩缩容标签
       "k8s.io/cluster-autoscaler/enabled": "true"
       "k8s.io/cluster-autoscaler/livin-matrix-cluster": "owned"
-    
+
     # 实例配置
     instanceProfile: # 将自动创建
     ami: auto
-    
+
     # 节点启动配置
     preBootstrapCommands:
       - "yum update -y"
       - "amazon-linux-extras install docker"
-    
+
     # Kubernetes标签
     labels:
       nodegroup-type: "worker"

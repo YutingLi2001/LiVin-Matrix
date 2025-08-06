@@ -34,18 +34,18 @@ const MatrixAnalysisPage: React.FC = () => {
   const [timeRange, setTimeRange] = useState<TimeRange>('month');
   const [selectedDimensions, setSelectedDimensions] = useState<string[]>(ALL_DIMENSIONS);
   const [selectedCell, setSelectedCell] = useState<[number, number] | null>(null);
-  
+
   const { matrixData, loading, error } = useMatrixAnalysis(timeRange, selectedDimensions);
 
   return (
     <div className="space-y-6">
-      <AnalysisHeader 
+      <AnalysisHeader
         timeRange={timeRange}
         onTimeRangeChange={setTimeRange}
         dimensions={selectedDimensions}
         onDimensionsChange={setSelectedDimensions}
       />
-      
+
       <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
         <div className="xl:col-span-3">
           <MatrixHeatmap
@@ -56,7 +56,7 @@ const MatrixAnalysisPage: React.FC = () => {
             loading={loading}
           />
         </div>
-        
+
         <div className="space-y-4">
           <CorrelationRankings data={matrixData} />
           <InsightPanel correlations={matrixData} />

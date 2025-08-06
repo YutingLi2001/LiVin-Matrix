@@ -33,7 +33,7 @@ check_docker() {
 check_port_conflict() {
     local port=$1
     local service=$2
-    
+
     if lsof -Pi :$port -sTCP:LISTEN -t >/dev/null 2>&1; then
         echo "⚠️  端口 $port 已被占用 ($service)，正在尝试清理..."
         # 尝试停止可能的冲突服务
@@ -41,7 +41,7 @@ check_port_conflict() {
             5432) docker stop livin-matrix-postgres 2>/dev/null || true ;;
             6379) docker stop livin-matrix-redis 2>/dev/null || true ;;
             8000) docker stop livin-matrix-backend 2>/dev/null || true ;;
-            3000|5173) 
+            3000|5173)
                 docker stop livin-matrix-frontend 2>/dev/null || true
                 pkill -f "vite.*$port" 2>/dev/null || true
                 ;;
@@ -55,21 +55,21 @@ wait_for_service() {
     local service=$1
     local max_attempts=30
     local attempt=1
-    
+
     echo "🔄 等待 $service 服务启动..."
-    
+
     while [ $attempt -le $max_attempts ]; do
         # 使用docker-compose ps检查服务状态
         if docker-compose -f docker-compose.yml -f docker-compose.secrets.yml ps --services --filter "status=running" | grep -q "$service"; then
             echo "✅ $service 服务已启动"
             return 0
         fi
-        
+
         echo "   尝试 $attempt/$max_attempts..."
         sleep 2
         attempt=$((attempt + 1))
     done
-    
+
     echo "❌ $service 服务启动超时"
     return 1
 }
@@ -85,17 +85,17 @@ show_service_status() {
 # 检查Secrets文件
 check_secrets_files() {
     echo "🔐 检查Secrets文件配置..."
-    
-    local required_secrets=("POSTGRES_PASSWORD" "JWT_SECRET_KEY" "GITHUB_CLIENT_SECRET" 
+
+    local required_secrets=("POSTGRES_PASSWORD" "JWT_SECRET_KEY" "GITHUB_CLIENT_SECRET"
                            "SESSION_SECRET_KEY" "RESEND_API_KEY" "GITHUB_CLIENT_ID" "GITHUB_REDIRECT_URI")
     local missing_secrets=()
-    
+
     for secret in "${required_secrets[@]}"; do
         if [ ! -f "secrets/$secret" ]; then
             missing_secrets+=("$secret")
         fi
     done
-    
+
     if [ ${#missing_secrets[@]} -gt 0 ]; then
         echo "❌ 缺少必要的Secrets文件:"
         for secret in "${missing_secrets[@]}"; do
@@ -109,7 +109,7 @@ check_secrets_files() {
         read -n 1
         exit 1
     fi
-    
+
     echo "✅ 所有Secrets文件配置完成"
 }
 
@@ -119,7 +119,7 @@ check_configuration() {
         echo "❌ 缺少 docker-compose.yml 文件"
         exit 1
     fi
-    
+
     if [ ! -f "docker-compose.secrets.yml" ]; then
         echo "❌ 缺少 docker-compose.secrets.yml 文件"
         echo "请确保已经完成 Docker Secrets 配置"
@@ -129,7 +129,7 @@ check_configuration() {
         read -n 1
         exit 1
     fi
-    
+
     echo "✅ 配置文件检查完成"
 }
 
@@ -139,16 +139,16 @@ main() {
     check_docker
     check_secrets_files
     check_configuration
-    
+
     echo "🔍 检查端口冲突..."
     check_port_conflict 5432 "PostgreSQL"
     check_port_conflict 6379 "Redis"
     check_port_conflict 8000 "Backend API"
     check_port_conflict 3000 "Frontend"
-    
+
     echo ""
     echo "🚀 启动所有服务..."
-    
+
     # 使用Docker Compose启动所有服务（测试模式）
     if ! docker-compose -f docker-compose.yml -f docker-compose.secrets.yml up -d; then
         echo "❌ 服务启动失败"
@@ -157,30 +157,30 @@ main() {
         read -n 1
         exit 1
     fi
-    
+
     echo ""
     echo "⏳ 等待服务就绪..."
-    
+
     # 等待数据库服务
     if ! wait_for_service "postgres"; then
         echo "数据库启动失败，查看日志: docker-compose -f docker-compose.yml -f docker-compose.secrets.yml logs postgres"
         exit 1
     fi
-    
+
     # 等待Redis服务
     if ! wait_for_service "redis"; then
         echo "Redis启动失败，查看日志: docker-compose -f docker-compose.yml -f docker-compose.secrets.yml logs redis"
         exit 1
     fi
-    
+
     # 等待后端服务
     if ! wait_for_service "backend"; then
         echo "后端服务启动失败，查看日志: docker-compose -f docker-compose.yml -f docker-compose.secrets.yml logs backend"
         exit 1
     fi
-    
+
     show_service_status
-    
+
     echo "🎉 所有服务启动成功！"
     echo ""
     echo "📱 访问地址:"
@@ -196,7 +196,7 @@ main() {
     echo "💡 按 Ctrl+C 可以安全退出此脚本，服务将继续在后台运行"
     echo "   要停止所有服务，请运行停止脚本或使用 docker-compose -f docker-compose.yml -f docker-compose.secrets.yml down"
     echo ""
-    
+
     # 持续监控服务状态
     echo "🔄 监控服务状态中... (按 Ctrl+C 退出监控)"
     while true; do

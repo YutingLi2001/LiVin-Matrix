@@ -2,11 +2,11 @@
 
 ## 任务概述
 
-**任务ID**: E3S3  
-**任务标题**: 矩阵交互和数据钻取  
-**所属Epic**: Epic 3 - 矩阵分析与可视化  
-**预估时间**: 3天  
-**优先级**: 高  
+**任务ID**: E3S3
+**任务标题**: 矩阵交互和数据钻取
+**所属Epic**: Epic 3 - 矩阵分析与可视化
+**预估时间**: 3天
+**优先级**: 高
 
 ## 任务目标
 
@@ -167,7 +167,7 @@ const ScatterPlotAnalysis: React.FC<{
   timeRange: [Date, Date];
   onTimeRangeChange: (range: [Date, Date]) => void;
 }> = ({ data, dimension1, dimension2, regressionLine, timeRange, onTimeRangeChange }) => {
-  
+
   const filteredData = useMemo(() => {
     return data.filter(point => {
       const pointDate = new Date(point.date);
@@ -179,7 +179,7 @@ const ScatterPlotAnalysis: React.FC<{
     const xValues = filteredData.map(d => d.value1);
     const minX = Math.min(...xValues);
     const maxX = Math.max(...xValues);
-    
+
     return [
       { x: minX, y: regressionLine.slope * minX + regressionLine.intercept },
       { x: maxX, y: regressionLine.slope * maxX + regressionLine.intercept }
@@ -215,14 +215,14 @@ const ScatterPlotAnalysis: React.FC<{
             <Tooltip
               content={<CustomScatterTooltip dimension1={dimension1} dimension2={dimension2} />}
             />
-            
+
             {/* 正常数据点 */}
             <Scatter
               data={filteredData.filter(d => !d.isOutlier)}
               fill="#3b82f6"
               fillOpacity={0.6}
             />
-            
+
             {/* 异常数据点 */}
             <Scatter
               data={filteredData.filter(d => d.isOutlier)}
@@ -230,7 +230,7 @@ const ScatterPlotAnalysis: React.FC<{
               fillOpacity={0.8}
               shape="triangle"
             />
-            
+
             {/* 回归趋势线 */}
             <Line
               type="linear"
@@ -258,7 +258,7 @@ const ScatterPlotAnalysis: React.FC<{
 
 ## 依赖关系
 
-**前置依赖**: E3S2 (6x6矩阵热力图可视化) - 需要基础矩阵组件  
+**前置依赖**: E3S2 (6x6矩阵热力图可视化) - 需要基础矩阵组件
 **后续任务**: E3S4 (时间维度分析) - 可以复用时间筛选功能
 
 ## 完成标准
@@ -272,6 +272,6 @@ const ScatterPlotAnalysis: React.FC<{
 
 ---
 
-**任务负责人**: [待分配]  
-**创建时间**: 2024年  
+**任务负责人**: [待分配]
+**创建时间**: 2024年
 **最后更新**: 2024年

@@ -9,19 +9,19 @@ spec:
   name: "livin-matrix-alb"
   type: "application"
   scheme: "internet-facing"
-  
+
   # 安全组配置
   securityGroups:
     - !Ref LivinMatrixALBSG
-  
+
   # 子网配置 - 使用公有子网
   subnets:
     - !Ref LivinMatrixPublicSubnet1a
     - !Ref LivinMatrixPublicSubnet1b
-  
+
   # IP地址类型
   ipAddressType: "ipv4"
-  
+
   # 负载均衡器属性
   loadBalancerAttributes:
     - key: "access_logs.s3.enabled"
@@ -36,7 +36,7 @@ spec:
       value: "true"
     - key: "routing.http.drop_invalid_header_fields.enabled"
       value: "true"
-  
+
   # 标签
   tags:
     - key: "Name"
@@ -56,17 +56,17 @@ spec:
   loadBalancerArn: !Ref LivinMatrixALB
   port: 443
   protocol: "HTTPS"
-  
+
   # SSL配置
   sslPolicy: "ELBSecurityPolicy-TLS-1-2-2017-01"
   certificates:
     - certificateArn: !Ref LivinMatrixSSLCertificate
-  
+
   # 默认操作 - 转发到后端服务
   defaultActions:
     - type: "forward"
       targetGroupArn: !Ref LivinMatrixBackendTG
-  
+
   # 路由规则
   rules:
     # API路由
@@ -77,7 +77,7 @@ spec:
       actions:
         - type: "forward"
           targetGroupArn: !Ref LivinMatrixBackendTG
-    
+
     # 健康检查路由
     - priority: 200
       conditions:
@@ -86,7 +86,7 @@ spec:
       actions:
         - type: "forward"
           targetGroupArn: !Ref LivinMatrixBackendTG
-    
+
     # 静态资源重定向到GitHub Pages
     - priority: 300
       conditions:
@@ -112,7 +112,7 @@ spec:
   loadBalancerArn: !Ref LivinMatrixALB
   port: 80
   protocol: "HTTP"
-  
+
   defaultActions:
     - type: "redirect"
       redirectConfig:
@@ -135,7 +135,7 @@ spec:
   protocol: "HTTP"
   vpcId: !Ref LivinMatrixVPC
   targetType: "ip"  # 用于EKS Pod IP
-  
+
   # 健康检查配置
   healthCheckEnabled: true
   healthCheckIntervalSeconds: 30
@@ -147,7 +147,7 @@ spec:
   unhealthyThresholdCount: 3
   matcher:
     httpCode: "200"
-  
+
   # 目标组属性
   targetGroupAttributes:
     - key: "deregistration_delay.timeout_seconds"
@@ -156,7 +156,7 @@ spec:
       value: "false"
     - key: "load_balancing.algorithm.type"
       value: "round_robin"
-  
+
   tags:
     - key: "Name"
       value: "livin-matrix-backend-tg"
@@ -194,14 +194,14 @@ metadata:
 spec:
   bucketName: "livin-matrix-alb-logs-${random_suffix}"
   region: "us-east-1"
-  
+
   # 访问控制
   publicAccessBlockConfiguration:
     blockPublicAcls: true
     blockPublicPolicy: true
     ignorePublicAcls: true
     restrictPublicBuckets: true
-  
+
   # 生命周期配置
   lifecycleConfiguration:
     rules:
@@ -211,14 +211,14 @@ spec:
           days: 30  # 30天后删除日志
         noncurrentVersionExpiration:
           noncurrentDays: 7
-  
+
   # 加密配置
   serverSideEncryptionConfiguration:
     rules:
       - applyServerSideEncryptionByDefault:
           sseAlgorithm: "AES256"
         bucketKeyEnabled: true
-  
+
   tags:
     - key: "Name"
       value: "livin-matrix-logs"
@@ -265,7 +265,7 @@ spec:
     dnsName: !GetAtt LivinMatrixALB.DNSName
     hostedZoneId: !GetAtt LivinMatrixALB.CanonicalHostedZoneID
     evaluateTargetHealth: true
-  
+
   comment: "API endpoint for LiVin Matrix application"
   tags:
     - key: "Project"

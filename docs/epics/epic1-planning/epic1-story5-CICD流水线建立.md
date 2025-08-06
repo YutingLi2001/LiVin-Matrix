@@ -2,11 +2,11 @@
 
 ## 任务概述
 
-**任务ID**: E1S5  
-**任务标题**: CI/CD流水线建立  
-**所属Epic**: Epic 1 - 基础架构与用户认证  
-**预估时间**: 4天  
-**优先级**: 高  
+**任务ID**: E1S5
+**任务标题**: CI/CD流水线建立
+**所属Epic**: Epic 1 - 基础架构与用户认证
+**预估时间**: 4天
+**优先级**: 高
 
 ## 任务目标
 
@@ -82,13 +82,13 @@ jobs:
           node-version: '18'
           cache: 'npm'
           cache-dependency-path: frontend/package-lock.json
-      
+
       - name: Install dependencies
         run: cd frontend && npm ci
-      
+
       - name: Run tests
         run: cd frontend && npm run test:coverage
-      
+
       - name: Upload coverage
         uses: codecov/codecov-action@v3
 
@@ -127,23 +127,23 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-    
+
     steps:
       - uses: actions/checkout@v3
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.11'
-      
+
       - name: Install dependencies
         run: |
           cd backend
           pip install -r requirements.txt
           pip install -r requirements-test.txt
-      
+
       - name: Run tests
         run: cd backend && pytest --cov=app --cov-report=xml
-      
+
       - name: Upload coverage
         uses: codecov/codecov-action@v3
 
@@ -172,11 +172,11 @@ jobs:
 
 ## 依赖关系
 
-**前置依赖**: 
+**前置依赖**:
 - E1S1 (项目基础架构搭建) - 需要Docker配置
 - E1S4 (基础API框架建立) - 需要API端点进行健康检查
 
-**后续任务**: 
+**后续任务**:
 - E1S6 (AWS基础设施部署) - 需要CI/CD流程
 - 后续所有开发任务 - 依赖自动化测试和部署
 
@@ -259,6 +259,6 @@ jobs:
 
 ---
 
-**任务负责人**: [待分配]  
-**创建时间**: 2024年  
+**任务负责人**: [待分配]
+**创建时间**: 2024年
 **最后更新**: 2024年

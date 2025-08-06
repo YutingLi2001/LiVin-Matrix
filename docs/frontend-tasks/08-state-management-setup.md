@@ -69,7 +69,7 @@ interface AnalysisState {
 
 ### Action定义
 ```typescript
-type AppAction = 
+type AppAction =
   | { type: 'SET_USER_PROFILE'; payload: UserProfile }
   | { type: 'UPDATE_USER_DATA'; payload: UserRecord[] }
   | { type: 'SET_CORRELATION_MATRIX'; payload: CorrelationMatrix }

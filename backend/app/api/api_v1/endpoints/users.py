@@ -60,7 +60,9 @@ async def get_user_profile(
 
     except Exception as e:
         return create_error_response(
-            message="获取用户档案失败", error_code=ErrorCodes.INTERNAL_ERROR, details={"error": str(e)}
+            message="获取用户档案失败",
+            error_code=ErrorCodes.INTERNAL_ERROR,
+            details={"error": str(e)},
         )
 
 
@@ -121,7 +123,9 @@ async def update_user_profile(
         return create_error_response(message=str(e), error_code=ErrorCodes.VALIDATION_ERROR)
     except Exception as e:
         return create_error_response(
-            message="用户档案更新失败", error_code=ErrorCodes.INTERNAL_ERROR, details={"error": str(e)}
+            message="用户档案更新失败",
+            error_code=ErrorCodes.INTERNAL_ERROR,
+            details={"error": str(e)},
         )
 
 

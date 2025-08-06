@@ -1,6 +1,7 @@
 """
 安全相关工具和常量
 """
+
 import hashlib
 import hmac
 import secrets

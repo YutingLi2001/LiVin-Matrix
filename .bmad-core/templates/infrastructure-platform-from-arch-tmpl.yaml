@@ -15,7 +15,7 @@ sections:
   - id: initial-setup
     instruction: |
       Initial Setup
-      
+
       1. Replace {{project_name}} with the actual project name throughout the document
       2. Gather and review required inputs:
          - **Infrastructure Architecture Document** (Primary input - REQUIRED)
@@ -23,10 +23,10 @@ sections:
          - Infrastructure Guidelines
          - Technology Stack Document
          - Infrastructure Checklist
-      
+
       3. Validate that the infrastructure architecture has been reviewed and approved
       4. <critical_rule>All platform implementation must align with the approved infrastructure architecture. Any deviations require architect approval.</critical_rule>
-      
+
       Output file location: `docs/platform-infrastructure/platform-implementation.md`
 
   - id: executive-summary
@@ -107,7 +107,7 @@ sections:
     instruction: Final Review - Ensure all platform layers are properly implemented, integrated, and documented. Verify that the implementation fully supports all requirements.
     content: |
       ---
-      
+
       _Platform Version: 1.0_
       _Implementation Date: {{implementation_date}}_
       _Next Review: {{review_date}}_

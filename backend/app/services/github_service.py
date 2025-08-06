@@ -1,6 +1,7 @@
 """
 GitHub OAuth服务
 """
+
 from typing import Any, Dict, Optional
 from urllib.parse import urlencode
 
@@ -147,7 +148,8 @@ class GitHubOAuthService:
 
                 if not primary_email:
                     raise HTTPException(
-                        status_code=status.HTTP_400_BAD_REQUEST, detail="无法获取已验证的GitHub邮箱地址"
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="无法获取已验证的GitHub邮箱地址",
                     )
 
                 # 构建用户信息
@@ -173,5 +175,6 @@ class GitHubOAuthService:
             )
         except Exception as e:
             raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"获取用户信息失败: {str(e)}"
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"获取用户信息失败: {str(e)}",
             )

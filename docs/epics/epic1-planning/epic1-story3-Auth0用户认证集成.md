@@ -2,19 +2,19 @@
 
 ## ⚠️ **重要迁移通知**
 
-**原实现**: Auth0认证服务  
-**新实现**: GitHub OAuth + JWT认证系统  
-**迁移原因**: 成本控制（$35/月 → $0/月）  
-**新架构文档**: [GitHub OAuth + JWT认证系统架构](../../architecture/github-oauth-jwt-auth-architecture.md)  
-**新Story**: [Story 1.5.2: GitHub OAuth + JWT认证系统实现](../../stories/epic1.5/1.5.2.auth0-service-configuration.md)  
+**原实现**: Auth0认证服务
+**新实现**: GitHub OAuth + JWT认证系统
+**迁移原因**: 成本控制（$35/月 → $0/月）
+**新架构文档**: [GitHub OAuth + JWT认证系统架构](../../architecture/github-oauth-jwt-auth-architecture.md)
+**新Story**: [Story 1.5.2: GitHub OAuth + JWT认证系统实现](../../stories/epic1.5/1.5.2.auth0-service-configuration.md)
 
 ## 任务概述
 
-**任务ID**: E1S3  
-**任务标题**: ~~Auth0用户认证集成~~ **用户认证集成 (已迁移至GitHub OAuth)**  
-**所属Epic**: Epic 1 - 基础架构与用户认证  
-**预估时间**: 3天  
-**优先级**: 高  
+**任务ID**: E1S3
+**任务标题**: ~~Auth0用户认证集成~~ **用户认证集成 (已迁移至GitHub OAuth)**
+**所属Epic**: Epic 1 - 基础架构与用户认证
+**预估时间**: 3天
+**优先级**: 高
 **状态**: ✅ **已完成** (原Auth0实现) → 🔄 **已迁移** (GitHub OAuth实现)
 
 ## 任务目标 (历史记录)
@@ -101,8 +101,8 @@ security = HTTPBearer()
 async def verify_token(token: str = Depends(security)):
     try:
         payload = jwt.decode(
-            token.credentials, 
-            key, 
+            token.credentials,
+            key,
             algorithms=["RS256"],
             audience=AUDIENCE,
             issuer=f"https://{DOMAIN}/"
@@ -120,11 +120,11 @@ async def verify_token(token: str = Depends(security)):
 
 ## 依赖关系
 
-**前置依赖**: 
+**前置依赖**:
 - E1S1 (项目基础架构搭建) - 需要前后端项目结构
 - E1S2 (数据库设计与部署) - 需要用户表结构
 
-**后续任务**: 
+**后续任务**:
 - E1S4 (基础API框架建立) - 需要认证中间件
 - E2S1 (数据录入界面架构) - 需要用户认证状态
 
@@ -189,12 +189,12 @@ async def verify_token(token: str = Depends(security)):
 ## 相关文档
 
 - [Auth0集成指南](../Auth0集成指南.md)
-- [JWT验证实现](../JWT验证实现.md)  
+- [JWT验证实现](../JWT验证实现.md)
 - [用户认证测试用例](../用户认证测试用例.md)
 - [安全配置检查清单](../安全配置检查清单.md)
 
 ---
 
-**任务负责人**: [待分配]  
-**创建时间**: 2024年  
+**任务负责人**: [待分配]
+**创建时间**: 2024年
 **最后更新**: 2024年

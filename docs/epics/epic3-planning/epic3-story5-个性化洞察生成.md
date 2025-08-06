@@ -2,11 +2,11 @@
 
 ## 任务概述
 
-**任务ID**: E3S5  
-**任务标题**: 个性化洞察生成  
-**所属Epic**: Epic 3 - 矩阵分析与可视化  
-**预估时间**: 3天  
-**优先级**: 高  
+**任务ID**: E3S5
+**任务标题**: 个性化洞察生成
+**所属Epic**: Epic 3 - 矩阵分析与可视化
+**预估时间**: 3天
+**优先级**: 高
 
 ## 任务目标
 
@@ -64,7 +64,7 @@ import random
 from datetime import datetime
 
 class InsightsService:
-    
+
     def __init__(self):
         self.insight_templates = {
             'strong_positive': [
@@ -90,8 +90,8 @@ class InsightsService:
                 ]
             }
         }
-    
-    def generate_comprehensive_insights(self, 
+
+    def generate_comprehensive_insights(self,
                                       correlation_data: Dict,
                                       time_series_data: Dict,
                                       user_id: str) -> Dict:
@@ -106,15 +106,15 @@ class InsightsService:
             'generated_at': datetime.utcnow().isoformat(),
             'confidence_score': self._calculate_confidence(correlation_data)
         }
-        
+
         return insights
-    
+
     def _analyze_top_correlations(self, correlation_data: Dict) -> List[Dict]:
         """
         分析前3个最强相关性
         """
         correlations = []
-        
+
         for dim1, dim1_data in correlation_data['correlations'].items():
             for dim2, corr_value in dim1_data.items():
                 if dim1 != dim2:  # 排除自相关
@@ -127,11 +127,11 @@ class InsightsService:
                             'p_value': p_value,
                             'strength': self._get_correlation_strength(abs(corr_value))
                         })
-        
+
         # 按相关性强度排序，取前3个
         correlations.sort(key=lambda x: abs(x['correlation']), reverse=True)
         top_3 = correlations[:3]
-        
+
         # 生成洞察文本
         insights = []
         for corr in top_3:
@@ -141,9 +141,9 @@ class InsightsService:
                 'insight': insight_text,
                 'actionable': True
             })
-        
+
         return insights
-    
+
     def _generate_correlation_insight(self, correlation: Dict) -> str:
         """
         生成相关性洞察文本
@@ -151,29 +151,29 @@ class InsightsService:
         dim1_label = self._get_dimension_label(correlation['dimension1'])
         dim2_label = self._get_dimension_label(correlation['dimension2'])
         corr_value = correlation['correlation']
-        
+
         if corr_value > 0.5:
             template = random.choice(self.insight_templates['strong_positive'])
         elif corr_value < -0.5:
             template = random.choice(self.insight_templates['strong_negative'])
         else:
             template = "你的{dim1}与{dim2}存在{strength}相关关系(r={corr:.3f})。"
-        
+
         return template.format(
             dim1=dim1_label,
             dim2=dim2_label,
             corr=corr_value,
             strength=correlation['strength']
         )
-    
-    def _generate_suggestions(self, 
+
+    def _generate_suggestions(self,
                             correlation_data: Dict,
                             time_series_data: Dict) -> List[Dict]:
         """
         生成改进建议
         """
         suggestions = []
-        
+
         # 基于相关性的建议
         for insight in self._analyze_top_correlations(correlation_data):
             if insight['correlation'] > 0.5:
@@ -183,11 +183,11 @@ class InsightsService:
                     'priority': 'high',
                     'title': f"同时改善{self._get_dimension_label(insight['dimension1'])}和{self._get_dimension_label(insight['dimension2'])}",
                     'description': f"由于这两个维度高度正相关，改善其中一个很可能带动另一个的提升。",
-                    'specific_actions': self._get_specific_actions(insight['dimension1']) + 
+                    'specific_actions': self._get_specific_actions(insight['dimension1']) +
                                      self._get_specific_actions(insight['dimension2'])
                 }
                 suggestions.append(suggestion)
-        
+
         # 基于趋势的建议
         for dim, trend_data in time_series_data.items():
             if trend_data['trend_analysis']['direction'] == '下降':
@@ -199,28 +199,28 @@ class InsightsService:
                     'specific_actions': self._get_specific_actions(dim)
                 }
                 suggestions.append(suggestion)
-        
+
         # 按优先级排序
         priority_order = {'high': 3, 'medium': 2, 'low': 1}
         suggestions.sort(key=lambda x: priority_order[x['priority']], reverse=True)
-        
+
         return suggestions[:5]  # 返回前5个建议
-    
+
     def _get_specific_actions(self, dimension: str) -> List[str]:
         """
         获取特定维度的改进行动
         """
         return self.insight_templates['improvement_suggestions'].get(
-            dimension, 
+            dimension,
             ["保持关注该维度的变化，寻找改进机会"]
         )
-    
+
     def _identify_anomalies(self, time_series_data: Dict) -> List[Dict]:
         """
         识别异常模式
         """
         alerts = []
-        
+
         for dimension, data in time_series_data.items():
             anomalies = data.get('anomalies', [])
             if len(anomalies) > 0:
@@ -235,7 +235,7 @@ class InsightsService:
                         'suggestion': f"建议回顾最近影响{self._get_dimension_label(dimension)}的因素"
                     }
                     alerts.append(alert)
-        
+
         return alerts
 ```
 
@@ -281,7 +281,7 @@ const InsightsPanel: React.FC<InsightsPanelProps> = ({
               <div className="insight-content">
                 <div className="insight-text">{insight.insight}</div>
                 <div className="insight-meta">
-                  强度: {insight.strength} | 
+                  强度: {insight.strength} |
                   显著性: p = {insight.p_value.toFixed(4)}
                 </div>
               </div>
@@ -326,7 +326,7 @@ const InsightsPanel: React.FC<InsightsPanelProps> = ({
                   ))}
                 </ul>
               </div>
-              <button 
+              <button
                 className="suggestion-action-btn"
                 onClick={() => onSuggestionClick(suggestion)}
               >
@@ -352,7 +352,7 @@ const InsightsPanel: React.FC<InsightsPanelProps> = ({
 
 ## 依赖关系
 
-**前置依赖**: 
+**前置依赖**:
 - E3S1 (相关性算法实现) - 需要相关性数据
 - E3S4 (时间维度分析) - 需要趋势分析数据
 
@@ -370,6 +370,6 @@ const InsightsPanel: React.FC<InsightsPanelProps> = ({
 
 ---
 
-**任务负责人**: [待分配]  
-**创建时间**: 2024年  
+**任务负责人**: [待分配]
+**创建时间**: 2024年
 **最后更新**: 2024年

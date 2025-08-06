@@ -46,19 +46,19 @@ echo
 echo "2. 检查Docker服务..."
 if command -v docker &> /dev/null; then
     echo "✅ Docker已安装"
-    
+
     # 检查docker-compose文件
     if [[ -f "../docker-compose.yml" ]]; then
         echo "✅ docker-compose.yml存在"
-        
+
         # 尝试启动PostgreSQL服务
         echo "正在启动PostgreSQL服务..."
         cd .. && docker compose up -d postgres
-        
+
         # 等待服务启动
         echo "等待PostgreSQL服务启动..."
         sleep 10
-        
+
         # 检查服务状态
         if docker compose ps postgres | grep -q "running"; then
             echo "✅ PostgreSQL服务运行正常"
@@ -67,7 +67,7 @@ if command -v docker &> /dev/null; then
             docker compose logs postgres
             exit 1
         fi
-        
+
         cd backend
     else
         echo "❌ docker-compose.yml不存在"
@@ -84,7 +84,7 @@ echo
 echo "3. 检查Python环境..."
 if command -v python3 &> /dev/null; then
     echo "✅ Python3已安装"
-    
+
     # 检查虚拟环境
     if [[ -d ".venv" ]]; then
         echo "✅ 虚拟环境存在"
@@ -95,11 +95,11 @@ if command -v python3 &> /dev/null; then
         echo "⚠️  未检测到虚拟环境，建议创建:"
         echo "   python3 -m venv .venv && source .venv/bin/activate"
     fi
-    
+
     # 安装依赖
     echo "正在安装依赖..."
     pip install -r requirements.txt -r requirements-dev.txt
-    
+
 else
     echo "❌ Python3未安装"
     exit 1
@@ -146,21 +146,21 @@ echo "7. 验证数据库表结构..."
 if command -v psql &> /dev/null; then
     echo "检查数据库表..."
     PGPASSWORD=devpassword123 psql -h localhost -U postgres -d livin_matrix_dev -c "
-    SELECT table_name 
-    FROM information_schema.tables 
-    WHERE table_schema = 'public' 
+    SELECT table_name
+    FROM information_schema.tables
+    WHERE table_schema = 'public'
     ORDER BY table_name;
     "
-    
+
     echo "检查用户表结构..."
     PGPASSWORD=devpassword123 psql -h localhost -U postgres -d livin_matrix_dev -c "\d+ users"
-    
+
     echo "检查每日记录表结构..."
     PGPASSWORD=devpassword123 psql -h localhost -U postgres -d livin_matrix_dev -c "\d+ user_daily_records"
-    
+
     echo "检查运动记录表结构..."
     PGPASSWORD=devpassword123 psql -h localhost -U postgres -d livin_matrix_dev -c "\d+ workout_sessions"
-    
+
     echo "✅ 数据库表结构验证完成"
 else
     echo "⚠️  psql未安装，跳过数据库表结构验证"
@@ -192,7 +192,7 @@ try:
     db.commit()
     db.refresh(user)
     print(f'✅ 创建用户成功: {user.email}')
-    
+
     # 创建每日记录
     record = UserDailyRecord(
         user_id=user.id,
@@ -205,7 +205,7 @@ try:
     db.commit()
     db.refresh(record)
     print(f'✅ 创建每日记录成功: {record.record_date}')
-    
+
     # 创建运动记录
     workout = WorkoutSession(
         user_daily_record_id=record.id,
@@ -219,14 +219,14 @@ try:
     db.commit()
     db.refresh(workout)
     print(f'✅ 创建运动记录成功: {workout.workout_type}, 时长: {workout.duration_minutes}分钟')
-    
+
     # 清理测试数据
     db.delete(user)  # 级联删除相关记录
     db.commit()
     print('✅ 清理测试数据完成')
-    
+
     print('✅ 基本数据库操作测试通过')
-    
+
 except Exception as e:
     print(f'❌ 数据库操作测试失败: {e}')
     sys.exit(1)

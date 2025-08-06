@@ -2,11 +2,11 @@
 
 ## 任务概述
 
-**任务ID**: E3S4  
-**任务标题**: 时间维度分析  
-**所属Epic**: Epic 3 - 矩阵分析与可视化  
-**预估时间**: 3天  
-**优先级**: 高  
+**任务ID**: E3S4
+**任务标题**: 时间维度分析
+**所属Epic**: Epic 3 - 矩阵分析与可视化
+**预估时间**: 3天
+**优先级**: 高
 
 ## 任务目标
 
@@ -67,9 +67,9 @@ from datetime import datetime, timedelta
 from typing import Dict, List, Tuple, Optional
 
 class TimeSeriesService:
-    
-    def analyze_dimension_trends(self, 
-                               user_data: List[Dict], 
+
+    def analyze_dimension_trends(self,
+                               user_data: List[Dict],
                                dimension: str,
                                days: int = 30) -> Dict:
         """
@@ -79,7 +79,7 @@ class TimeSeriesService:
         df = pd.DataFrame(user_data)
         df['record_date'] = pd.to_datetime(df['record_date'])
         df = df.sort_values('record_date')
-        
+
         # 填充缺失日期
         date_range = pd.date_range(
             start=df['record_date'].min(),
@@ -87,9 +87,9 @@ class TimeSeriesService:
             freq='D'
         )
         df_full = df.set_index('record_date').reindex(date_range)
-        
+
         series = df_full[dimension].dropna()
-        
+
         return {
             'raw_data': series.to_dict(),
             'trend_analysis': self._analyze_trend(series),
@@ -97,20 +97,20 @@ class TimeSeriesService:
             'anomalies': self._detect_anomalies(series),
             'forecast': self._forecast_trend(series, days=7)
         }
-    
+
     def _analyze_trend(self, series: pd.Series) -> Dict:
         """
         趋势分析
         """
         x = np.arange(len(series)).reshape(-1, 1)
         y = series.values
-        
+
         model = LinearRegression()
         model.fit(x, y)
-        
+
         trend_slope = model.coef_[0]
         r_squared = model.score(x, y)
-        
+
         # 趋势方向判断
         if abs(trend_slope) < 0.01:
             trend_direction = "稳定"
@@ -118,28 +118,28 @@ class TimeSeriesService:
             trend_direction = "上升"
         else:
             trend_direction = "下降"
-        
+
         return {
             'slope': trend_slope,
             'r_squared': r_squared,
             'direction': trend_direction,
             'strength': 'strong' if r_squared > 0.7 else 'moderate' if r_squared > 0.3 else 'weak'
         }
-    
+
     def _analyze_seasonality(self, df: pd.DataFrame, dimension: str) -> Dict:
         """
         季节性模式分析
         """
         df['weekday'] = df.index.weekday
         df['is_weekend'] = df['weekday'].isin([5, 6])
-        
+
         weekday_data = df[~df['is_weekend']][dimension].dropna()
         weekend_data = df[df['is_weekend']][dimension].dropna()
-        
+
         if len(weekday_data) > 0 and len(weekend_data) > 0:
             # t检验比较工作日与周末差异
             t_stat, p_value = stats.ttest_ind(weekday_data, weekend_data)
-            
+
             return {
                 'weekday_mean': weekday_data.mean(),
                 'weekend_mean': weekend_data.mean(),
@@ -147,9 +147,9 @@ class TimeSeriesService:
                 'significant': p_value < 0.05,
                 'p_value': p_value
             }
-        
+
         return {'significant': False}
-    
+
     def _detect_anomalies(self, series: pd.Series) -> List[Dict]:
         """
         异常检测
@@ -157,7 +157,7 @@ class TimeSeriesService:
         # Z-score方法
         z_scores = np.abs(stats.zscore(series))
         anomalies = []
-        
+
         for idx, (date, value) in enumerate(series.items()):
             if z_scores[idx] > 2.5:  # 异常阈值
                 anomalies.append({
@@ -166,34 +166,34 @@ class TimeSeriesService:
                     'z_score': z_scores[idx],
                     'type': 'statistical_outlier'
                 })
-        
+
         return anomalies
-    
+
     def _forecast_trend(self, series: pd.Series, days: int = 7) -> Dict:
         """
         趋势预测
         """
         x = np.arange(len(series)).reshape(-1, 1)
         y = series.values
-        
+
         model = LinearRegression()
         model.fit(x, y)
-        
+
         # 预测未来数值
         future_x = np.arange(len(series), len(series) + days).reshape(-1, 1)
         forecast = model.predict(future_x)
-        
+
         # 计算预测区间(简化版)
         residuals = y - model.predict(x)
         mse = np.mean(residuals ** 2)
         std_error = np.sqrt(mse)
-        
+
         forecast_dates = pd.date_range(
             start=series.index[-1] + timedelta(days=1),
             periods=days,
             freq='D'
         )
-        
+
         forecast_data = []
         for i, date in enumerate(forecast_dates):
             forecast_data.append({
@@ -202,7 +202,7 @@ class TimeSeriesService:
                 'lower_bound': forecast[i] - 1.96 * std_error,
                 'upper_bound': forecast[i] + 1.96 * std_error
             })
-        
+
         return {
             'forecasts': forecast_data,
             'model_accuracy': model.score(x, y),
@@ -258,7 +258,7 @@ const TimeSeriesChart: React.FC<TimeSeriesChartProps> = ({
       <div className="chart-header">
         <h4>{getDimensionLabel(dimension)} 时间趋势</h4>
         <div className="trend-info">
-          趋势: {timeSeriesData.trend_analysis.direction} 
+          趋势: {timeSeriesData.trend_analysis.direction}
           ({timeSeriesData.trend_analysis.strength})
         </div>
       </div>
@@ -266,13 +266,13 @@ const TimeSeriesChart: React.FC<TimeSeriesChartProps> = ({
       <ResponsiveContainer width="100%" height={300}>
         <LineChart data={chartData}>
           <CartesianGrid strokeDasharray="3 3" />
-          <XAxis 
-            dataKey="date" 
+          <XAxis
+            dataKey="date"
             tickFormatter={(date) => new Date(date).toLocaleDateString()}
           />
           <YAxis domain={['dataMin - 5%', 'dataMax + 5%']} />
           <Tooltip content={<CustomTimeSeriesTooltip />} />
-          
+
           {/* 历史数据线 */}
           <Line
             type="monotone"
@@ -282,7 +282,7 @@ const TimeSeriesChart: React.FC<TimeSeriesChartProps> = ({
             dot={false}
             connectNulls={false}
           />
-          
+
           {/* 预测数据线 */}
           {showForecast && (
             <Line
@@ -295,7 +295,7 @@ const TimeSeriesChart: React.FC<TimeSeriesChartProps> = ({
               connectNulls={false}
             />
           )}
-          
+
           {/* 异常点标记 */}
           {showAnomalies && (
             <Scatter
@@ -320,7 +320,7 @@ const TimeSeriesChart: React.FC<TimeSeriesChartProps> = ({
 
 ## 依赖关系
 
-**前置依赖**: E3S1 (相关性算法实现) - 需要数据分析能力  
+**前置依赖**: E3S1 (相关性算法实现) - 需要数据分析能力
 **后续任务**: E3S5 (个性化洞察生成) - 时间分析为洞察提供数据支持
 
 ## 完成标准
@@ -334,6 +334,6 @@ const TimeSeriesChart: React.FC<TimeSeriesChartProps> = ({
 
 ---
 
-**任务负责人**: [待分配]  
-**创建时间**: 2024年  
+**任务负责人**: [待分配]
+**创建时间**: 2024年
 **最后更新**: 2024年

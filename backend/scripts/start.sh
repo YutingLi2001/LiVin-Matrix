@@ -24,7 +24,7 @@ while retry_count < max_retries:
     try:
         conn = psycopg2.connect(
             host='postgres',
-            database='livin_matrix_dev', 
+            database='livin_matrix_dev',
             user='postgres',
             password=password
         )

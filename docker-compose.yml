@@ -142,4 +142,3 @@ volumes:
 networks:
   livin-matrix-network:
     driver: bridge
-

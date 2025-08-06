@@ -2,11 +2,11 @@
 
 ## 任务概述
 
-**任务ID**: E2S3  
-**任务标题**: 饮食维度数据录入  
-**所属Epic**: Epic 2 - 数据管理核心  
-**预估时间**: 2天  
-**优先级**: 高  
+**任务ID**: E2S3
+**任务标题**: 饮食维度数据录入
+**所属Epic**: Epic 2 - 数据管理核心
+**预估时间**: 2天
+**优先级**: 高
 
 ## 任务目标
 
@@ -90,7 +90,7 @@ const NutritionInputs: React.FC<{
   data: NutritionData;
   onChange: (data: NutritionData) => void;
 }> = ({ data, onChange }) => {
-  
+
   const nutritionFields = [
     { key: 'calories', label: '卡路里', unit: 'kcal', max: 5000 },
     { key: 'protein', label: '蛋白质', unit: 'g', max: 500 },
@@ -123,11 +123,11 @@ const NutritionInputs: React.FC<{
 
 ### 模板选择组件
 ```typescript
-// components/NutritionEntry/TemplateSelector.tsx  
+// components/NutritionEntry/TemplateSelector.tsx
 const TemplateSelector: React.FC<{
   onSelectTemplate: (template: NutritionTemplate) => void;
 }> = ({ onSelectTemplate }) => {
-  
+
   const defaultTemplates: NutritionTemplate[] = [
     {
       id: 'weight-loss',
@@ -138,7 +138,7 @@ const TemplateSelector: React.FC<{
     },
     {
       id: 'normal',
-      name: '正常餐', 
+      name: '正常餐',
       description: '均衡营养，日常维持',
       nutrition: { calories: 2000, protein: 100, fat: 70, carbohydrates: 250 },
       isCustom: false
@@ -146,7 +146,7 @@ const TemplateSelector: React.FC<{
     {
       id: 'muscle-gain',
       name: '增肌餐',
-      description: '高蛋白高碳水，适合增肌期', 
+      description: '高蛋白高碳水，适合增肌期',
       nutrition: { calories: 2750, protein: 150, fat: 80, carbohydrates: 350 },
       isCustom: false
     }
@@ -179,37 +179,37 @@ export const analyzeNutrition = (data: NutritionData): NutritionValidation => {
   const errors: string[] = [];
   const warnings: string[] = [];
   const suggestions: string[] = [];
-  
+
   // 基础验证
   if (data.calories < 0 || data.calories > 5000) {
     errors.push('卡路里必须在0-5000之间');
   }
-  
+
   // 营养配比分析
-  const totalCaloriesFromMacros = 
+  const totalCaloriesFromMacros =
     data.protein * 4 + data.fat * 9 + data.carbohydrates * 4;
-  
+
   if (Math.abs(totalCaloriesFromMacros - data.calories) > 200) {
     warnings.push('营养素热量与总热量不匹配，请检查输入');
   }
-  
+
   // 健康建议
   if (data.calories < 1200 && data.calories > 0) {
     warnings.push('热量摄入过低，可能影响基础代谢');
   }
-  
+
   if (data.protein < data.calories * 0.15 / 4) {
     suggestions.push('建议增加蛋白质摄入，有助于肌肉维持');
   }
-  
+
   if (data.fat > data.calories * 0.35 / 9) {
     suggestions.push('脂肪摄入较高，建议适当减少');
   }
-  
+
   return {
     isValid: errors.length === 0,
     errors,
-    warnings, 
+    warnings,
     suggestions
   };
 };
@@ -217,12 +217,12 @@ export const analyzeNutrition = (data: NutritionData): NutritionValidation => {
 export const generateSmartDefaults = async (userId: string): Promise<NutritionData> => {
   // 获取用户历史数据
   const recentData = await getUserRecentNutrition(userId, 30);
-  
+
   if (recentData.length === 0) {
     // 新用户默认值
     return { calories: 2000, protein: 100, fat: 70, carbohydrates: 250 };
   }
-  
+
   // 计算平均值
   const avgNutrition = recentData.reduce((acc, curr) => ({
     calories: acc.calories + curr.calories,
@@ -230,7 +230,7 @@ export const generateSmartDefaults = async (userId: string): Promise<NutritionDa
     fat: acc.fat + curr.fat,
     carbohydrates: acc.carbohydrates + curr.carbohydrates
   }));
-  
+
   const count = recentData.length;
   return {
     calories: Math.round(avgNutrition.calories / count),
@@ -243,7 +243,7 @@ export const generateSmartDefaults = async (userId: string): Promise<NutritionDa
 
 ## 依赖关系
 
-**前置依赖**: E2S1 (数据录入界面架构) - 需要卡片组件框架  
+**前置依赖**: E2S1 (数据录入界面架构) - 需要卡片组件框架
 **后续任务**: E2S6 (数据持久化) - 需要饮食数据结构
 
 ## 预估时间分解
@@ -310,6 +310,6 @@ export const generateSmartDefaults = async (userId: string): Promise<NutritionDa
 
 ---
 
-**任务负责人**: [待分配]  
-**创建时间**: 2024年  
+**任务负责人**: [待分配]
+**创建时间**: 2024年
 **最后更新**: 2024年

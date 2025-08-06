@@ -2,11 +2,11 @@
 
 ## 任务概述
 
-**任务ID**: E2S4  
-**任务标题**: 运动维度数据录入  
-**所属Epic**: Epic 2 - 数据管理核心  
-**预估时间**: 3天  
-**优先级**: 高  
+**任务ID**: E2S4
+**任务标题**: 运动维度数据录入
+**所属Epic**: Epic 2 - 数据管理核心
+**预估时间**: 3天
+**优先级**: 高
 
 ## 任务目标
 
@@ -85,9 +85,9 @@ const WorkoutSessionList: React.FC<{
   onEdit: (session: WorkoutSession) => void;
   onDelete: (id: string) => void;
 }> = ({ sessions, onAdd, onEdit, onDelete }) => {
-  
+
   const totalDuration = sessions.reduce((sum, session) => sum + (session.duration || 0), 0);
-  
+
   return (
     <div className="workout-sessions">
       <div className="sessions-header">
@@ -96,7 +96,7 @@ const WorkoutSessionList: React.FC<{
           + 添加训练
         </button>
       </div>
-      
+
       {sessions.length === 0 ? (
         <div className="empty-state">今日暂无训练记录</div>
       ) : (
@@ -128,6 +128,6 @@ const WorkoutSessionList: React.FC<{
 
 ---
 
-**任务负责人**: [待分配]  
-**创建时间**: 2024年  
+**任务负责人**: [待分配]
+**创建时间**: 2024年
 **最后更新**: 2024年

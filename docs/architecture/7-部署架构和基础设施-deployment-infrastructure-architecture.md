@@ -32,7 +32,7 @@
   集群: "AWS EKS免费控制平面"
   节点: "1x t2.micro EC2实例"
   负载均衡: "ALB免费tier"
-  
+
 数据库:
   主库: "RDS PostgreSQL t3.micro"
   缓存: "ElastiCache Redis t2.micro"

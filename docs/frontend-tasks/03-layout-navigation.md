@@ -57,19 +57,19 @@ const AppLayout: React.FC<LayoutProps> = ({ children }) => {
 
   return (
     <div className="min-h-screen bg-primary text-primary">
-      <Header 
+      <Header
         sidebarOpen={sidebarOpen}
         setSidebarOpen={setSidebarOpen}
         isMobile={isMobile}
       />
-      
+
       <div className="flex">
-        <Sidebar 
+        <Sidebar
           open={sidebarOpen}
           onClose={() => setSidebarOpen(false)}
           isMobile={isMobile}
         />
-        
+
         <Main className={cn(
           'flex-1 transition-all duration-300',
           sidebarOpen && !isMobile ? 'ml-240' : 'ml-0'
@@ -92,7 +92,7 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ open, onClose, isMobile }) => {
   const location = useLocation();
-  
+
   const menuItems = [
     { path: '/', label: 'Dashboard', icon: HomeIcon },
     { path: '/matrix', label: 'Matrix Analysis', icon: GridIcon },
@@ -105,12 +105,12 @@ const Sidebar: React.FC<SidebarProps> = ({ open, onClose, isMobile }) => {
     <>
       {/* Mobile Overlay */}
       {isMobile && open && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40"
           onClick={onClose}
         />
       )}
-      
+
       {/* Sidebar */}
       <aside className={cn(
         'fixed top-16 left-0 z-50 h-[calc(100vh-4rem)]',
@@ -129,7 +129,7 @@ const Sidebar: React.FC<SidebarProps> = ({ open, onClose, isMobile }) => {
                 'flex items-center space-x-3 px-4 py-3 rounded-lg',
                 'text-secondary hover:text-primary transition-colors',
                 'hover:bg-primary-500/10 neon-glow',
-                location.pathname === item.path && 
+                location.pathname === item.path &&
                 'bg-primary-500/20 text-neon-purple border border-neon-purple/50'
               )}
               onClick={isMobile ? onClose : undefined}
@@ -153,10 +153,10 @@ interface HeaderProps {
   isMobile: boolean;
 }
 
-const Header: React.FC<HeaderProps> = ({ 
-  sidebarOpen, 
-  setSidebarOpen, 
-  isMobile 
+const Header: React.FC<HeaderProps> = ({
+  sidebarOpen,
+  setSidebarOpen,
+  isMobile
 }) => {
   return (
     <header className="sticky top-0 z-30 h-16 bg-secondary/80 backdrop-blur-lg border-b border-primary-500/30">
@@ -169,7 +169,7 @@ const Header: React.FC<HeaderProps> = ({
           >
             <MenuIcon className="w-5 h-5 text-primary" />
           </button>
-          
+
           <div className="flex items-center space-x-2">
             <div className="w-8 h-8 bg-gradient-to-br from-neon-purple to-neon-cyan rounded-lg flex items-center justify-center">
               <span className="text-primary font-bold font-display">LM</span>

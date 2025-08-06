@@ -47,16 +47,16 @@
   --primary-50: #f3f0ff;
   --primary-500: #8b5cf6;    /* 主品牌色 - Obsidian紫 */
   --primary-900: #4c1d95;
-  
+
   /* 赛博朋克背景系统 */
   --bg-primary: #000000;       /* 纯黑主背景 */
   --bg-secondary: #0a0a0a;     /* 微黑卡片背景 */
-  
+
   /* 霓虹发光色彩 */
   --neon-purple: #8b5cf6;
   --neon-cyan: #22d3ee;
   --neon-pink: #ec4899;
-  
+
   /* 文本颜色系统 */
   --text-primary: #ffffff;
   --text-secondary: #b4b4b4;
@@ -95,7 +95,7 @@ module.exports = {
 }
 
 .neon-glow:hover {
-  box-shadow: 
+  box-shadow:
     0 0 20px rgba(139, 92, 246, 0.6),
     0 0 40px rgba(139, 92, 246, 0.3),
     inset 0 0 20px rgba(139, 92, 246, 0.1);

@@ -26,7 +26,7 @@
 **前端环境变量** (frontend/.env)：
 ```bash
 VITE_AUTH0_DOMAIN=your-domain.auth0.com
-VITE_AUTH0_CLIENT_ID=your-client-id  
+VITE_AUTH0_CLIENT_ID=your-client-id
 VITE_AUTH0_AUDIENCE=your-api-identifier
 VITE_API_BASE_URL=http://localhost:8000
 ```

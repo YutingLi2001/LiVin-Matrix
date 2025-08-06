@@ -107,7 +107,9 @@ class UserDailyRecordBase(BaseModel):
     # 社交维度
     initiated_social: Optional[int] = Field(None, ge=0, description="发起社交次数")
     responded_social: Optional[int] = Field(None, ge=0, description="响应社交次数")
-    interpersonal_satisfaction: Optional[int] = Field(None, ge=1, le=10, description="人际关系满意度 1-10")
+    interpersonal_satisfaction: Optional[int] = Field(
+        None, ge=1, le=10, description="人际关系满意度 1-10"
+    )
     solitude_satisfaction: Optional[int] = Field(None, ge=1, le=10, description="独处满意度 1-10")
 
 

@@ -37,20 +37,20 @@ def get_async_engine() -> AsyncEngine:
             database_url,
             poolclass=QueuePool if not database_url.startswith("sqlite") else None,
             pool_size=settings.DB_POOL_SIZE if not database_url.startswith("sqlite") else None,
-            max_overflow=settings.DB_MAX_OVERFLOW
-            if not database_url.startswith("sqlite")
-            else None,
-            pool_recycle=settings.DB_POOL_RECYCLE
-            if not database_url.startswith("sqlite")
-            else None,
-            pool_pre_ping=settings.DB_POOL_PRE_PING
-            if not database_url.startswith("sqlite")
-            else None,
+            max_overflow=(
+                settings.DB_MAX_OVERFLOW if not database_url.startswith("sqlite") else None
+            ),
+            pool_recycle=(
+                settings.DB_POOL_RECYCLE if not database_url.startswith("sqlite") else None
+            ),
+            pool_pre_ping=(
+                settings.DB_POOL_PRE_PING if not database_url.startswith("sqlite") else None
+            ),
             echo=settings.DEBUG,
             # 连接超时配置
-            connect_args={"server_settings": {"jit": "off"}}
-            if "postgresql" in database_url
-            else {},
+            connect_args=(
+                {"server_settings": {"jit": "off"}} if "postgresql" in database_url else {}
+            ),
         )
     return _async_engine
 

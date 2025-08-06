@@ -1,6 +1,7 @@
 """
 JWT认证中间件 - 基于GitHub OAuth
 """
+
 from typing import Any, Dict, Optional
 
 from fastapi import Depends, HTTPException, status
@@ -45,7 +46,9 @@ class JWTBearer:
             result = await db.execute(select(TokenBlacklist).where(TokenBlacklist.jti == jti))
             blacklisted_token = result.scalar_one_or_none()
             if blacklisted_token:
-                raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token已被撤销")
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED, detail="Token已被撤销"
+                )
 
             return payload
 

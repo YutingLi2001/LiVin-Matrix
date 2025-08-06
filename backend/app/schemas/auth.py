@@ -1,6 +1,7 @@
 """
 认证相关的Pydantic模型
 """
+
 from typing import Any, Dict, Optional
 
 from pydantic import BaseModel, EmailStr, Field

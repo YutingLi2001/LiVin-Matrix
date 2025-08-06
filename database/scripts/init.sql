@@ -6,7 +6,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- 可选：创建开发环境专用数据库用户
 -- 生产环境应通过其他方式管理用户权限
-DO $$ 
+DO $$
 BEGIN
     -- 检查是否在开发环境（通过数据库名称判断）
     IF current_database() LIKE '%_dev' THEN

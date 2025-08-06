@@ -6,6 +6,7 @@ Create Date: 2025-08-02 10:01:00.000000
 
 注意：此迁移应在所有用户数据已迁移到GitHub OAuth后执行
 """
+
 import sqlalchemy as sa
 
 from alembic import op

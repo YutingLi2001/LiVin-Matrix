@@ -131,7 +131,7 @@ const MatrixCell: React.FC<MatrixCellProps> = ({
       <span className="text-primary font-bold font-mono">
         {value.toFixed(2)}
       </span>
-      
+
       {/* 悬停发光效果 */}
       <div className="absolute inset-0 opacity-0 hover:opacity-100 transition-opacity">
         <div className="w-full h-full border-2 border-neon-purple shadow-neon-glow rounded-sm" />

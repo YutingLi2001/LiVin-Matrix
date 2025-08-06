@@ -2,11 +2,11 @@
 
 ## 任务概述
 
-**任务ID**: E2S2  
-**任务标题**: 睡眠维度数据录入  
-**所属Epic**: Epic 2 - 数据管理核心  
-**预估时间**: 2天  
-**优先级**: 高  
+**任务ID**: E2S2
+**任务标题**: 睡眠维度数据录入
+**所属Epic**: Epic 2 - 数据管理核心
+**预估时间**: 2天
+**优先级**: 高
 
 ## 任务目标
 
@@ -89,13 +89,13 @@ const TimeSelector: React.FC<TimeSelectorProps> = ({
   value, onChange, label, placeholder = "00:00"
 }) => {
   const [hours, minutes] = value.split(':').map(Number);
-  
+
   return (
     <div className="time-selector">
       <label className="time-label">{label}</label>
       <div className="time-inputs">
-        <select 
-          value={hours} 
+        <select
+          value={hours}
           onChange={(e) => updateTime(parseInt(e.target.value), minutes)}
         >
           {Array.from({length: 24}, (_, i) => (
@@ -103,7 +103,7 @@ const TimeSelector: React.FC<TimeSelectorProps> = ({
           ))}
         </select>
         <span>:</span>
-        <select 
+        <select
           value={minutes}
           onChange={(e) => updateTime(hours, parseInt(e.target.value))}
         >
@@ -132,7 +132,7 @@ const StarRating: React.FC<StarRatingProps> = ({
   value, onChange, maxRating = 10, label, labels
 }) => {
   const [hoverRating, setHoverRating] = useState(0);
-  
+
   return (
     <div className="star-rating">
       {label && <label className="rating-label">{label}</label>}
@@ -155,7 +155,7 @@ const StarRating: React.FC<StarRatingProps> = ({
       <div className="rating-text">
         {(hoverRating || value) > 0 && (
           <span>
-            {hoverRating || value}/10 
+            {hoverRating || value}/10
             {labels && labels[hoverRating || value] && ` - ${labels[hoverRating || value]}`}
           </span>
         )}
@@ -174,40 +174,40 @@ export const calculateSleepDuration = (startTime: string, endTime: string): {
 } => {
   const [startHour, startMin] = startTime.split(':').map(Number);
   const [endHour, endMin] = endTime.split(':').map(Number);
-  
+
   const startMinutes = startHour * 60 + startMin;
   let endMinutes = endHour * 60 + endMin;
-  
+
   // 检测跨夜情况
   const isCrossNight = endMinutes <= startMinutes;
   if (isCrossNight) {
     endMinutes += 24 * 60; // 加一天
   }
-  
+
   const duration = endMinutes - startMinutes;
-  
+
   return { duration, isCrossNight };
 };
 
 export const validateSleepData = (data: SleepData): SleepValidation => {
   const errors: string[] = [];
   const warnings: string[] = [];
-  
+
   if (!data.sleepStartTime || !data.sleepEndTime) {
     errors.push('请设置睡眠开始和结束时间');
   }
-  
+
   if (data.sleepQuality < 1 || data.sleepQuality > 10) {
     errors.push('睡眠质量评分必须在1-10之间');
   }
-  
+
   if (data.wakeClarity < 1 || data.wakeClarity > 10) {
     errors.push('晨起清醒度评分必须在1-10之间');
   }
-  
+
   const { duration } = calculateSleepDuration(data.sleepStartTime, data.sleepEndTime);
   const hours = duration / 60;
-  
+
   if (hours < 2 || hours > 16) {
     errors.push(`睡眠时长(${hours.toFixed(1)}小时)必须在2-16小时之间`);
   } else if (hours < 6) {
@@ -215,7 +215,7 @@ export const validateSleepData = (data: SleepData): SleepValidation => {
   } else if (hours > 12) {
     warnings.push('睡眠时长较长，建议检查睡眠质量');
   }
-  
+
   return {
     isValid: errors.length === 0,
     errors,
@@ -226,7 +226,7 @@ export const validateSleepData = (data: SleepData): SleepValidation => {
 
 ## 依赖关系
 
-**前置依赖**: E2S1 (数据录入界面架构) - 需要卡片组件和状态管理  
+**前置依赖**: E2S1 (数据录入界面架构) - 需要卡片组件和状态管理
 **后续任务**: E2S6 (数据持久化) - 需要睡眠数据结构
 
 ## 预估时间分解
@@ -306,6 +306,6 @@ export const validateSleepData = (data: SleepData): SleepValidation => {
 
 ---
 
-**任务负责人**: [待分配]  
-**创建时间**: 2024年  
+**任务负责人**: [待分配]
+**创建时间**: 2024年
 **最后更新**: 2024年

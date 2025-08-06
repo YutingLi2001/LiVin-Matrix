@@ -19,18 +19,18 @@
 
 3. **填入实际配置**
    根据您的实际环境填入以下值：
-   
+
    ```bash
    # 数据库配置
    POSTGRES_PASSWORD=your_secure_postgres_password_here
-   
+
    # GitHub OAuth 配置
    GITHUB_CLIENT_ID=your_github_client_id_here
    GITHUB_CLIENT_SECRET=your_github_client_secret_here
-   
+
    # 邮件服务配置
    RESEND_API_KEY=your_resend_api_key_here
-   
+
    # JWT 配置
    JWT_SECRET_KEY=your_jwt_secret_key_here
    SESSION_SECRET_KEY=your_session_secret_key_here

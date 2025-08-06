@@ -34,7 +34,7 @@ spec:
         prometheus.io/path: "/metrics"
     spec:
       serviceAccountName: livin-matrix-backend-sa
-      
+
       # 节点亲和性 - 优先调度到工作节点
       affinity:
         nodeAffinity:
@@ -54,18 +54,18 @@ spec:
                 matchLabels:
                   app: livin-matrix-backend
               topologyKey: kubernetes.io/hostname
-      
+
       # 安全上下文
       securityContext:
         runAsNonRoot: true
         runAsUser: 1000
         fsGroup: 2000
-      
+
       containers:
       - name: backend
         image: 068712345678.dkr.ecr.us-east-1.amazonaws.com/livin-matrix/backend:latest  # 替换为实际ECR URL
         imagePullPolicy: Always
-        
+
         ports:
         - name: http
           containerPort: 8000
@@ -73,7 +73,7 @@ spec:
         - name: metrics
           containerPort: 9090
           protocol: TCP
-        
+
         # 环境变量配置
         env:
         # 数据库连接 - 使用AWS RDS
@@ -101,7 +101,7 @@ spec:
             secretKeyRef:
               name: livin-matrix-db-secret
               key: password
-        
+
         # 应用配置
         - name: SECRET_KEY
           valueFrom:
@@ -116,30 +116,30 @@ spec:
           value: "/api/v1"
         - name: DEBUG
           value: "false"
-        
+
         # CORS配置
         - name: ALLOWED_ORIGINS
           valueFrom:
             configMapKeyRef:
               name: livin-matrix-config
               key: allowed-origins
-        
+
         # AWS配置
         - name: AWS_REGION
           value: "us-east-1"
         - name: AWS_DEFAULT_REGION
           value: "us-east-1"
-        
+
         # 日志配置
         - name: LOG_LEVEL
           value: "INFO"
         - name: LOG_FORMAT
           value: "json"
-        
+
         # 健康检查配置
         - name: HEALTH_CHECK_PATH
           value: "/health"
-        
+
         # 资源限制 - 适配t3.micro节点
         resources:
           limits:
@@ -150,7 +150,7 @@ spec:
             memory: "200Mi"
             cpu: "200m"
             ephemeral-storage: "500Mi"
-        
+
         # 安全上下文
         securityContext:
           allowPrivilegeEscalation: false
@@ -160,7 +160,7 @@ spec:
           capabilities:
             drop:
             - ALL
-        
+
         # 健康检查
         livenessProbe:
           httpGet:
@@ -172,7 +172,7 @@ spec:
           timeoutSeconds: 10
           failureThreshold: 3
           successThreshold: 1
-        
+
         readinessProbe:
           httpGet:
             path: /health
@@ -183,7 +183,7 @@ spec:
           timeoutSeconds: 5
           failureThreshold: 3
           successThreshold: 1
-        
+
         # 启动探针
         startupProbe:
           httpGet:
@@ -195,21 +195,21 @@ spec:
           timeoutSeconds: 5
           failureThreshold: 30
           successThreshold: 1
-        
+
         # 卷挂载
         volumeMounts:
         - name: tmp-volume
           mountPath: /tmp
         - name: app-logs
           mountPath: /app/logs
-      
+
       # 卷定义
       volumes:
       - name: tmp-volume
         emptyDir: {}
       - name: app-logs
         emptyDir: {}
-      
+
       # DNS配置
       dnsPolicy: ClusterFirst
       restartPolicy: Always

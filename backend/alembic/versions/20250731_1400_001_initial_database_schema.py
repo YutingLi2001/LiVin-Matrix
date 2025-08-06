@@ -1,10 +1,11 @@
 """初始数据库结构 - 用户表、每日记录表和运动记录表
 
 Revision ID: 001
-Revises: 
+Revises:
 Create Date: 2025-07-31 14:00:00.000000
 
 """
+
 import sqlalchemy as sa
 
 from alembic import op
@@ -57,9 +58,14 @@ def upgrade() -> None:
         sa.Column("fat", sa.Integer(), nullable=True, comment="脂肪克数 0-500"),
         sa.Column("carbohydrates", sa.Integer(), nullable=True, comment="碳水化合物克数 0-1000"),
         # 运动维度
-        sa.Column("total_workout_duration", sa.Integer(), nullable=True, comment="总训练时长（分钟）"),
         sa.Column(
-            "daily_steps", sa.Numeric(precision=4, scale=1), nullable=True, comment="每日步数（千步）"
+            "total_workout_duration", sa.Integer(), nullable=True, comment="总训练时长（分钟）"
+        ),
+        sa.Column(
+            "daily_steps",
+            sa.Numeric(precision=4, scale=1),
+            nullable=True,
+            comment="每日步数（千步）",
         ),
         # 情绪维度
         sa.Column("overall_mood", sa.Integer(), nullable=True, comment="整体心情评分 1-10"),
@@ -89,7 +95,9 @@ def upgrade() -> None:
         sa.Column(
             "interpersonal_satisfaction", sa.Integer(), nullable=True, comment="人际关系满意度 1-10"
         ),
-        sa.Column("solitude_satisfaction", sa.Integer(), nullable=True, comment="独处时光满意度 1-10"),
+        sa.Column(
+            "solitude_satisfaction", sa.Integer(), nullable=True, comment="独处时光满意度 1-10"
+        ),
         sa.CheckConstraint("active_breaks >= 0", name="active_breaks_positive"),
         sa.CheckConstraint("anxiety_level >= 1 AND anxiety_level <= 10", name="anxiety_range"),
         sa.CheckConstraint("calories >= 0 AND calories <= 5000", name="calories_range"),
@@ -155,7 +163,10 @@ def upgrade() -> None:
         sa.Column("updated_at", sa.DateTime(), nullable=False),
         sa.Column("user_daily_record_id", sa.Integer(), nullable=False),
         sa.Column(
-            "workout_type", sa.String(length=20), nullable=False, comment="训练类型: strength/cardio"
+            "workout_type",
+            sa.String(length=20),
+            nullable=False,
+            comment="训练类型: strength/cardio",
         ),
         sa.Column(
             "cardio_type",

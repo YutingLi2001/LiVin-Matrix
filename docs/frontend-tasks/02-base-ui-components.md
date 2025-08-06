@@ -63,7 +63,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(({
   ...props
 }, ref) => {
   const baseClasses = 'inline-flex items-center justify-center font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:ring-offset-black';
-  
+
   const variantClasses = {
     primary: 'bg-primary-600 text-white hover:bg-primary-700 neon-glow',
     secondary: 'border border-primary-500 text-primary-400 hover:bg-primary-500/10 neon-border',
@@ -169,7 +169,7 @@ const Card: React.FC<CardProps> = ({
     elevated: 'shadow-lg backdrop-blur-10',
     outlined: 'border-2 border-primary-500/50'
   };
-  
+
   const paddingClasses = {
     sm: 'p-4',
     md: 'p-6',

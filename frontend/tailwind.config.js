@@ -61,11 +61,11 @@ export default {
       },
       keyframes: {
         'glow-pulse': {
-          'from': { 
+          'from': {
             textShadow: '0 0 5px #8b5cf6, 0 0 10px #8b5cf6, 0 0 15px #8b5cf6, 0 0 20px #8b5cf6',
             boxShadow: '0 0 5px #8b5cf6'
           },
-          'to': { 
+          'to': {
             textShadow: '0 0 10px #8b5cf6, 0 0 20px #8b5cf6, 0 0 30px #8b5cf6, 0 0 40px #8b5cf6',
             boxShadow: '0 0 20px #8b5cf6'
           }
