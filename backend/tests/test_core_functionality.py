@@ -54,6 +54,7 @@ def test_404_error_handling():
 def test_application_startup():
     """测试应用可以正常启动"""
     from app.main import app
+
     assert app is not None
 
 
@@ -105,7 +106,8 @@ def test_api_version_endpoint():
 def test_environment_configuration():
     """测试环境配置加载"""
     from app.core.config import get_settings
+
     settings = get_settings()
     # 验证关键配置项存在
-    assert hasattr(settings, 'PROJECT_NAME')
-    assert hasattr(settings, 'VERSION')
+    assert hasattr(settings, "PROJECT_NAME")
+    assert hasattr(settings, "VERSION")
