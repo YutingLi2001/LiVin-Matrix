@@ -1,0 +1,23 @@
+[flake8]
+max-line-length = 88
+exclude = 
+    .git,
+    __pycache__,
+    .venv,
+    venv,
+    alembic/versions/*,
+    migrations
+
+ignore = 
+    E501,  # 行长度超过79字符 (我们使用88字符限制)
+    W503,  # 二元操作符前的换行
+    W291,  # 行尾空格
+    W293,  # 空行包含空格
+    F401,  # 导入但未使用 (某些导入是为了模型注册等目的)
+    E402   # 模块级导入不在文件顶部 (alembic等有特殊需求)
+
+per-file-ignores =
+    __init__.py:F401
+    alembic/env.py:E402,F401
+    */migrations/*.py:E501,F401
+    tests/*.py:F401,F841
