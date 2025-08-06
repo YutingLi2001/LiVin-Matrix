@@ -30,11 +30,12 @@ def event_loop():
 def test_app():
     """创建测试应用实例"""
     from app.main import create_application
+
     app = create_application()
     return app
 
 
-@pytest.fixture(scope="session")  
+@pytest.fixture(scope="session")
 def client(test_app) -> Generator[TestClient, None, None]:
     """创建测试客户端"""
     with TestClient(test_app) as test_client:
@@ -44,27 +45,28 @@ def client(test_app) -> Generator[TestClient, None, None]:
 @pytest.fixture
 def authenticated_client(client):
     """创建已认证的测试客户端"""
+
     class AuthenticatedTestClient:
         def __init__(self, client):
             self.client = client
             self.headers = {"Authorization": "Bearer test_token"}
-        
+
         def get(self, url, **kwargs):
             kwargs.setdefault("headers", {}).update(self.headers)
             return self.client.get(url, **kwargs)
-        
+
         def post(self, url, **kwargs):
             kwargs.setdefault("headers", {}).update(self.headers)
             return self.client.post(url, **kwargs)
-        
+
         def put(self, url, **kwargs):
             kwargs.setdefault("headers", {}).update(self.headers)
             return self.client.put(url, **kwargs)
-        
+
         def delete(self, url, **kwargs):
             kwargs.setdefault("headers", {}).update(self.headers)
             return self.client.delete(url, **kwargs)
-    
+
     return lambda: AuthenticatedTestClient(client)
 
 
@@ -76,13 +78,14 @@ def mock_github_user():
         "login": "testuser",
         "name": "Test User",
         "email": "test@example.com",
-        "avatar_url": "https://github.com/images/test.jpg"
+        "avatar_url": "https://github.com/images/test.jpg",
     }
 
 
 @pytest.fixture
 def mock_settings():
     """模拟测试配置"""
+
     class MockSettings:
         PROJECT_NAME = "LiVin Matrix API Test"
         VERSION = "1.0.0-test"
@@ -93,7 +96,7 @@ def mock_settings():
         GITHUB_CLIENT_ID = "test_client_id"
         GITHUB_CLIENT_SECRET = "test_client_secret"
         GITHUB_REDIRECT_URI = "http://localhost:3000/auth/callback"
-    
+
     return MockSettings()
 
 
@@ -104,10 +107,10 @@ def test_db():
     # 使用临时文件作为SQLite数据库
     db_fd, db_path = tempfile.mkstemp()
     test_database_url = f"sqlite:///{db_path}"
-    
+
     # 这里可以设置数据库初始化逻辑
     yield test_database_url
-    
+
     # 清理
     os.close(db_fd)
     os.unlink(db_path)
@@ -122,5 +125,5 @@ def test_user_data():
         "username": "testuser",
         "email": "test@example.com",
         "full_name": "Test User",
-        "is_active": True
+        "is_active": True,
     }

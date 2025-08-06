@@ -93,9 +93,9 @@ class SecretsService:
         # 尝试多个路径：标准Docker secrets路径和fallback路径
         paths_to_try = [
             Path(self.SECRETS_DIR) / secret_name,
-            Path(self.SECRETS_DIR_FALLBACK) / secret_name
+            Path(self.SECRETS_DIR_FALLBACK) / secret_name,
         ]
-        
+
         for secret_path in paths_to_try:
             try:
                 if secret_path.exists() and secret_path.is_file():
@@ -114,7 +114,7 @@ class SecretsService:
             except Exception as e:
                 logger.error(f"Error reading secret file '{secret_path}': {str(e)}")
                 continue
-        
+
         logger.warning(f"Secret '{secret_name}' not found in any location")
         return None
 
@@ -127,7 +127,7 @@ class SecretsService:
         """
         required_secrets = {
             "GITHUB_CLIENT_SECRET": "GITHUB_CLIENT_SECRET",
-            "JWT_SECRET_KEY": "JWT_SECRET_KEY", 
+            "JWT_SECRET_KEY": "JWT_SECRET_KEY",
             "POSTGRES_PASSWORD": "POSTGRES_PASSWORD",
             "SESSION_SECRET_KEY": "SESSION_SECRET_KEY",
             "RESEND_API_KEY": "RESEND_API_KEY",

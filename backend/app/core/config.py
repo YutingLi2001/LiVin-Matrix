@@ -154,7 +154,7 @@ def create_settings() -> Settings:
                     postgres_password = get_secret(
                         "POSTGRES_PASSWORD", "POSTGRES_PASSWORD", "your_secure_password_here"
                     )
-                    # 替换URL中的密码占位符  
+                    # 替换URL中的密码占位符
                     base_settings.DATABASE_URL = base_settings.DATABASE_URL.replace(
                         "postgres@postgres", f"postgres:{postgres_password}@postgres"
                     )
@@ -176,6 +176,7 @@ def create_settings() -> Settings:
 # 懒加载设置，避免模块导入时就固化配置
 _settings_instance: Optional[Settings] = None
 
+
 def get_settings() -> Settings:
     """获取配置实例（懒加载）"""
     global _settings_instance
@@ -183,19 +184,22 @@ def get_settings() -> Settings:
         _settings_instance = create_settings()
     return _settings_instance
 
+
 def reload_settings() -> Settings:
     """强制重新加载配置"""
     global _settings_instance
     _settings_instance = None
     return get_settings()
 
+
 # 使用属性访问器实现懒加载
 class SettingsProxy:
     def __getattr__(self, name):
         return getattr(get_settings(), name)
-    
+
     def reload(self):
         """重新加载配置"""
         return reload_settings()
+
 
 settings = SettingsProxy()
