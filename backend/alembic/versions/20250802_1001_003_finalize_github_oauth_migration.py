@@ -34,8 +34,18 @@ def upgrade() -> None:
 
     # 设置GitHub字段为NOT NULL（仅在数据已迁移后执行）
     # 注意：在实际环境中，可能需要分步骤执行以避免锁定
-    op.alter_column("users", "github_user_id", existing_type=sa.BigInteger(), nullable=False)
-    op.alter_column("users", "github_username", existing_type=sa.String(length=255), nullable=False)
+    op.alter_column(
+        "users",
+        "github_user_id",
+        existing_type=sa.BigInteger(),
+        nullable=False,
+    )
+    op.alter_column(
+        "users",
+        "github_username",
+        existing_type=sa.String(length=255),
+        nullable=False,
+    )
 
 
 def downgrade() -> None:
@@ -45,9 +55,17 @@ def downgrade() -> None:
     警告：此操作将丢失GitHub OAuth数据
     """
     # 恢复GitHub字段为nullable
-    op.alter_column("users", "github_username", existing_type=sa.String(length=255), nullable=True)
+    op.alter_column(
+        "users",
+        "github_username",
+        existing_type=sa.String(length=255),
+        nullable=True,
+    )
     op.alter_column("users", "github_user_id", existing_type=sa.BigInteger(), nullable=True)
 
     # 恢复Auth0字段
-    op.add_column("users", sa.Column("auth0_user_id", sa.String(length=255), nullable=False))
+    op.add_column(
+        "users",
+        sa.Column("auth0_user_id", sa.String(length=255), nullable=False),
+    )
     op.create_index(op.f("ix_users_auth0_user_id"), "users", ["auth0_user_id"], unique=True)

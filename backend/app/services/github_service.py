@@ -63,11 +63,17 @@ class GitHubOAuthService:
                 "redirect_uri": settings.GITHUB_REDIRECT_URI,
             }
 
-            headers = {"Accept": "application/json", "User-Agent": "LiVin-Matrix/1.0"}
+            headers = {
+                "Accept": "application/json",
+                "User-Agent": "LiVin-Matrix/1.0",
+            }
 
             async with httpx.AsyncClient() as client:
                 response = await client.post(
-                    self.GITHUB_TOKEN_URL, data=data, headers=headers, timeout=30.0
+                    self.GITHUB_TOKEN_URL,
+                    data=data,
+                    headers=headers,
+                    timeout=30.0,
                 )
                 response.raise_for_status()
 
@@ -82,7 +88,8 @@ class GitHubOAuthService:
                 access_token = token_data.get("access_token")
                 if not access_token:
                     raise HTTPException(
-                        status_code=status.HTTP_400_BAD_REQUEST, detail="未能获取GitHub访问令牌"
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="未能获取GitHub访问令牌",
                     )
 
                 return access_token
@@ -94,7 +101,8 @@ class GitHubOAuthService:
             )
         except Exception as e:
             raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"令牌交换失败: {str(e)}"
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"令牌交换失败: {str(e)}",
             )
 
     async def get_user_info(self, access_token: str) -> Dict[str, Any]:
@@ -119,16 +127,12 @@ class GitHubOAuthService:
 
             async with httpx.AsyncClient() as client:
                 # 获取用户基本信息
-                user_response = await client.get(
-                    self.GITHUB_USER_URL, headers=headers, timeout=30.0
-                )
+                user_response = await client.get(self.GITHUB_USER_URL, headers=headers, timeout=30.0)
                 user_response.raise_for_status()
                 user_data = user_response.json()
 
                 # 获取用户邮箱信息
-                email_response = await client.get(
-                    self.GITHUB_USER_EMAILS_URL, headers=headers, timeout=30.0
-                )
+                email_response = await client.get(self.GITHUB_USER_EMAILS_URL, headers=headers, timeout=30.0)
                 email_response.raise_for_status()
                 emails_data = email_response.json()
 

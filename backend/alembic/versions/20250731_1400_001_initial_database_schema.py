@@ -56,10 +56,18 @@ def upgrade() -> None:
         sa.Column("calories", sa.Integer(), nullable=True, comment="总热量摄入 0-5000"),
         sa.Column("protein", sa.Integer(), nullable=True, comment="蛋白质克数 0-500"),
         sa.Column("fat", sa.Integer(), nullable=True, comment="脂肪克数 0-500"),
-        sa.Column("carbohydrates", sa.Integer(), nullable=True, comment="碳水化合物克数 0-1000"),
+        sa.Column(
+            "carbohydrates",
+            sa.Integer(),
+            nullable=True,
+            comment="碳水化合物克数 0-1000",
+        ),
         # 运动维度
         sa.Column(
-            "total_workout_duration", sa.Integer(), nullable=True, comment="总训练时长（分钟）"
+            "total_workout_duration",
+            sa.Integer(),
+            nullable=True,
+            comment="总训练时长（分钟）",
         ),
         sa.Column(
             "daily_steps",
@@ -81,8 +89,18 @@ def upgrade() -> None:
         ),
         sa.Column("active_breaks", sa.Integer(), nullable=True, comment="主动休息次数"),
         sa.Column("focus_quality", sa.Integer(), nullable=True, comment="专注质量评分 1-10"),
-        sa.Column("task_completion", sa.Integer(), nullable=True, comment="任务完成度评分 1-10"),
-        sa.Column("work_satisfaction", sa.Integer(), nullable=True, comment="工作满意度评分 1-10"),
+        sa.Column(
+            "task_completion",
+            sa.Integer(),
+            nullable=True,
+            comment="任务完成度评分 1-10",
+        ),
+        sa.Column(
+            "work_satisfaction",
+            sa.Integer(),
+            nullable=True,
+            comment="工作满意度评分 1-10",
+        ),
         sa.Column(
             "work_environment",
             sa.String(length=20),
@@ -93,25 +111,37 @@ def upgrade() -> None:
         sa.Column("initiated_social", sa.Integer(), nullable=True, comment="发起社交互动次数"),
         sa.Column("responded_social", sa.Integer(), nullable=True, comment="响应社交互动次数"),
         sa.Column(
-            "interpersonal_satisfaction", sa.Integer(), nullable=True, comment="人际关系满意度 1-10"
+            "interpersonal_satisfaction",
+            sa.Integer(),
+            nullable=True,
+            comment="人际关系满意度 1-10",
         ),
         sa.Column(
-            "solitude_satisfaction", sa.Integer(), nullable=True, comment="独处时光满意度 1-10"
+            "solitude_satisfaction",
+            sa.Integer(),
+            nullable=True,
+            comment="独处时光满意度 1-10",
         ),
         sa.CheckConstraint("active_breaks >= 0", name="active_breaks_positive"),
         sa.CheckConstraint("anxiety_level >= 1 AND anxiety_level <= 10", name="anxiety_range"),
         sa.CheckConstraint("calories >= 0 AND calories <= 5000", name="calories_range"),
         sa.CheckConstraint(
-            "carbohydrates >= 0 AND carbohydrates <= 1000", name="carbohydrates_range"
+            "carbohydrates >= 0 AND carbohydrates <= 1000",
+            name="carbohydrates_range",
         ),
-        sa.CheckConstraint("daily_steps >= 0 AND daily_steps <= 50.0", name="daily_steps_range"),
         sa.CheckConstraint(
-            "deep_work_hours >= 0 AND deep_work_hours <= 24.0", name="deep_work_hours_range"
+            "daily_steps >= 0 AND daily_steps <= 50.0",
+            name="daily_steps_range",
+        ),
+        sa.CheckConstraint(
+            "deep_work_hours >= 0 AND deep_work_hours <= 24.0",
+            name="deep_work_hours_range",
         ),
         sa.CheckConstraint("energy_level >= 1 AND energy_level <= 10", name="energy_range"),
         sa.CheckConstraint("fat >= 0 AND fat <= 500", name="fat_range"),
         sa.CheckConstraint(
-            "focus_quality >= 1 AND focus_quality <= 10", name="focus_quality_range"
+            "focus_quality >= 1 AND focus_quality <= 10",
+            name="focus_quality_range",
         ),
         sa.CheckConstraint("initiated_social >= 0", name="initiated_social_positive"),
         sa.CheckConstraint(
@@ -122,7 +152,8 @@ def upgrade() -> None:
         sa.CheckConstraint("protein >= 0 AND protein <= 500", name="protein_range"),
         sa.CheckConstraint("responded_social >= 0", name="responded_social_positive"),
         sa.CheckConstraint(
-            "sleep_quality >= 1 AND sleep_quality <= 10", name="sleep_quality_range"
+            "sleep_quality >= 1 AND sleep_quality <= 10",
+            name="sleep_quality_range",
         ),
         sa.CheckConstraint(
             "solitude_satisfaction >= 1 AND solitude_satisfaction <= 10",
@@ -130,21 +161,32 @@ def upgrade() -> None:
         ),
         sa.CheckConstraint("stress_level >= 1 AND stress_level <= 10", name="stress_range"),
         sa.CheckConstraint(
-            "task_completion >= 1 AND task_completion <= 10", name="task_completion_range"
+            "task_completion >= 1 AND task_completion <= 10",
+            name="task_completion_range",
         ),
         sa.CheckConstraint("total_workout_duration >= 0", name="workout_duration_positive"),
-        sa.CheckConstraint("wake_clarity >= 1 AND wake_clarity <= 10", name="wake_clarity_range"),
         sa.CheckConstraint(
-            "work_environment IN ('home', 'office', 'cafe', 'mixed')", name="work_environment_valid"
+            "wake_clarity >= 1 AND wake_clarity <= 10",
+            name="wake_clarity_range",
         ),
         sa.CheckConstraint(
-            "work_satisfaction >= 1 AND work_satisfaction <= 10", name="work_satisfaction_range"
+            "work_environment IN ('home', 'office', 'cafe', 'mixed')",
+            name="work_environment_valid",
+        ),
+        sa.CheckConstraint(
+            "work_satisfaction >= 1 AND work_satisfaction <= 10",
+            name="work_satisfaction_range",
         ),
         sa.ForeignKeyConstraint(["user_id"], ["users.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("user_id", "record_date", name="_user_date_uc"),
     )
-    op.create_index(op.f("ix_user_daily_records_id"), "user_daily_records", ["id"], unique=False)
+    op.create_index(
+        op.f("ix_user_daily_records_id"),
+        "user_daily_records",
+        ["id"],
+        unique=False,
+    )
     op.create_index(
         op.f("ix_user_daily_records_record_date"),
         "user_daily_records",
@@ -152,7 +194,10 @@ def upgrade() -> None:
         unique=False,
     )
     op.create_index(
-        op.f("ix_user_daily_records_user_id"), "user_daily_records", ["user_id"], unique=False
+        op.f("ix_user_daily_records_user_id"),
+        "user_daily_records",
+        ["user_id"],
+        unique=False,
     )
 
     # 创建运动记录表
@@ -191,11 +236,18 @@ def upgrade() -> None:
         sa.CheckConstraint("end_time > start_time", name="time_logic_valid"),
         sa.CheckConstraint("workout_type IN ('strength', 'cardio')", name="workout_type_valid"),
         sa.ForeignKeyConstraint(
-            ["user_daily_record_id"], ["user_daily_records.id"], ondelete="CASCADE"
+            ["user_daily_record_id"],
+            ["user_daily_records.id"],
+            ondelete="CASCADE",
         ),
         sa.PrimaryKeyConstraint("id"),
     )
-    op.create_index(op.f("ix_workout_sessions_id"), "workout_sessions", ["id"], unique=False)
+    op.create_index(
+        op.f("ix_workout_sessions_id"),
+        "workout_sessions",
+        ["id"],
+        unique=False,
+    )
     op.create_index(
         op.f("ix_workout_sessions_user_daily_record_id"),
         "workout_sessions",
@@ -208,12 +260,18 @@ def downgrade() -> None:
     """
     执行数据库降级操作 - 删除所有表
     """
-    op.drop_index(op.f("ix_workout_sessions_user_daily_record_id"), table_name="workout_sessions")
+    op.drop_index(
+        op.f("ix_workout_sessions_user_daily_record_id"),
+        table_name="workout_sessions",
+    )
     op.drop_index(op.f("ix_workout_sessions_id"), table_name="workout_sessions")
     op.drop_table("workout_sessions")
 
     op.drop_index(op.f("ix_user_daily_records_user_id"), table_name="user_daily_records")
-    op.drop_index(op.f("ix_user_daily_records_record_date"), table_name="user_daily_records")
+    op.drop_index(
+        op.f("ix_user_daily_records_record_date"),
+        table_name="user_daily_records",
+    )
     op.drop_index(op.f("ix_user_daily_records_id"), table_name="user_daily_records")
     op.drop_table("user_daily_records")
 

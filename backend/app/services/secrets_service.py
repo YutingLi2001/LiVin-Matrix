@@ -30,7 +30,10 @@ class SecretsService:
         logger.info(f"Secrets service initialized. Docker Secrets mode: {self.use_docker_secrets}")
 
     def read_secret(
-        self, secret_name: str, fallback_env: Optional[str] = None, default: Optional[str] = None
+        self,
+        secret_name: str,
+        fallback_env: Optional[str] = None,
+        default: Optional[str] = None,
     ) -> str:
         """
         读取密钥，支持Docker Secrets和环境变量回退
@@ -189,7 +192,9 @@ secrets_service = SecretsService()
 
 
 def get_secret(
-    secret_name: str, fallback_env: Optional[str] = None, default: Optional[str] = None
+    secret_name: str,
+    fallback_env: Optional[str] = None,
+    default: Optional[str] = None,
 ) -> str:
     """
     便捷函数：读取密钥

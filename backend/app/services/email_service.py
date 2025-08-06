@@ -28,7 +28,11 @@ class EmailService:
 
     def _check_configuration(self) -> bool:
         """检查邮件服务配置是否完整"""
-        required_settings = ["RESEND_API_KEY", "EMAIL_FROM_ADDRESS", "EMAIL_FROM_NAME"]
+        required_settings = [
+            "RESEND_API_KEY",
+            "EMAIL_FROM_ADDRESS",
+            "EMAIL_FROM_NAME",
+        ]
 
         for setting in required_settings:
             if not hasattr(settings, setting) or not getattr(settings, setting):
@@ -42,7 +46,10 @@ class EmailService:
         return True
 
     async def send_verification_email(
-        self, to_email: str, verification_token: str, user_name: Optional[str] = None
+        self,
+        to_email: str,
+        verification_token: str,
+        user_name: Optional[str] = None,
     ) -> bool:
         """
         发送邮箱验证邮件
@@ -67,9 +74,7 @@ class EmailService:
 
         return await self._send_email(to_email=to_email, subject=subject, html_content=html_content)
 
-    async def send_password_reset_email(
-        self, to_email: str, reset_token: str, user_name: Optional[str] = None
-    ) -> bool:
+    async def send_password_reset_email(self, to_email: str, reset_token: str, user_name: Optional[str] = None) -> bool:
         """
         发送密码重置邮件
 
@@ -158,12 +163,9 @@ class EmailService:
             )
 
             if email_response and (
-                hasattr(email_response, "id")
-                or (isinstance(email_response, dict) and "id" in email_response)
+                hasattr(email_response, "id") or (isinstance(email_response, dict) and "id" in email_response)
             ):
-                response_id = (
-                    email_response.id if hasattr(email_response, "id") else email_response.get("id")
-                )
+                response_id = email_response.id if hasattr(email_response, "id") else email_response.get("id")
                 logger.info(f"邮件发送成功: {response_id} -> {to_email}")
                 return True
             else:

@@ -8,4 +8,10 @@ from .token_blacklist import TokenBlacklist
 from .user import User
 from .workout import WorkoutSession
 
-__all__ = ["BaseModel", "User", "UserDailyRecord", "WorkoutSession", "TokenBlacklist"]
+__all__ = [
+    "BaseModel",
+    "User",
+    "UserDailyRecord",
+    "WorkoutSession",
+    "TokenBlacklist",
+]

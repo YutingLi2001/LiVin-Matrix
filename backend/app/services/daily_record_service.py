@@ -9,20 +9,25 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from ..models import UserDailyRecord, WorkoutSession
-from ..schemas import UserDailyRecordCreate, UserDailyRecordUpdate, WorkoutSessionCreate
+from ..schemas import (
+    UserDailyRecordCreate,
+    UserDailyRecordUpdate,
+    WorkoutSessionCreate,
+)
 
 
 class DailyRecordService:
     """每日记录服务类"""
 
     @staticmethod
-    def get_by_user_and_date(
-        db: Session, user_id: int, record_date: date
-    ) -> Optional[UserDailyRecord]:
+    def get_by_user_and_date(db: Session, user_id: int, record_date: date) -> Optional[UserDailyRecord]:
         """根据用户ID和日期获取记录"""
         return (
             db.query(UserDailyRecord)
-            .filter(UserDailyRecord.user_id == user_id, UserDailyRecord.record_date == record_date)
+            .filter(
+                UserDailyRecord.user_id == user_id,
+                UserDailyRecord.record_date == record_date,
+            )
             .first()
         )
 
@@ -45,13 +50,9 @@ class DailyRecordService:
         return query.order_by(UserDailyRecord.record_date.desc()).limit(limit).all()
 
     @staticmethod
-    def create_or_update(
-        db: Session, user_id: int, record_data: UserDailyRecordCreate
-    ) -> UserDailyRecord:
+    def create_or_update(db: Session, user_id: int, record_data: UserDailyRecordCreate) -> UserDailyRecord:
         """创建或更新每日记录"""
-        existing_record = DailyRecordService.get_by_user_and_date(
-            db, user_id, record_data.record_date
-        )
+        existing_record = DailyRecordService.get_by_user_and_date(db, user_id, record_data.record_date)
 
         if existing_record:
             # 更新现有记录
@@ -61,14 +62,13 @@ class DailyRecordService:
             return DailyRecordService._create_record(db, user_id, record_data)
 
     @staticmethod
-    def _create_record(
-        db: Session, user_id: int, record_data: UserDailyRecordCreate
-    ) -> UserDailyRecord:
+    def _create_record(db: Session, user_id: int, record_data: UserDailyRecordCreate) -> UserDailyRecord:
         """创建新的每日记录"""
         try:
             # 创建主记录
             db_record = UserDailyRecord(
-                user_id=user_id, **record_data.model_dump(exclude={"workout_sessions"})
+                user_id=user_id,
+                **record_data.model_dump(exclude={"workout_sessions"}),
             )
             db.add(db_record)
             db.flush()  # 获取ID但不提交
@@ -76,7 +76,8 @@ class DailyRecordService:
             # 创建运动记录
             for workout_data in record_data.workout_sessions:
                 workout = WorkoutSession(
-                    user_daily_record_id=db_record.id, **workout_data.model_dump()
+                    user_daily_record_id=db_record.id,
+                    **workout_data.model_dump(),
                 )
                 db.add(workout)
 
@@ -90,7 +91,9 @@ class DailyRecordService:
 
     @staticmethod
     def _update_record(
-        db: Session, record: UserDailyRecord, record_data: UserDailyRecordCreate
+        db: Session,
+        record: UserDailyRecord,
+        record_data: UserDailyRecordCreate,
     ) -> UserDailyRecord:
         """更新现有记录"""
         # 更新主记录字段
@@ -112,9 +115,7 @@ class DailyRecordService:
         return record
 
     @staticmethod
-    def add_workout_session(
-        db: Session, record_id: int, workout_data: WorkoutSessionCreate
-    ) -> WorkoutSession:
+    def add_workout_session(db: Session, record_id: int, workout_data: WorkoutSessionCreate) -> WorkoutSession:
         """为记录添加运动会话"""
         workout = WorkoutSession(user_daily_record_id=record_id, **workout_data.model_dump())
         db.add(workout)

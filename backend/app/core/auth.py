@@ -37,7 +37,8 @@ class JWTBearer:
 
             if not user_id or not jti:
                 raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED, detail="Token格式无效：缺少必要字段"
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Token格式无效：缺少必要字段",
                 )
 
             # 检查token是否在黑名单中
@@ -47,7 +48,8 @@ class JWTBearer:
             blacklisted_token = result.scalar_one_or_none()
             if blacklisted_token:
                 raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED, detail="Token已被撤销"
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Token已被撤销",
                 )
 
             return payload
@@ -56,11 +58,13 @@ class JWTBearer:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token已过期")
         except JWTError as e:
             raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED, detail=f"Token验证失败: {str(e)}"
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail=f"Token验证失败: {str(e)}",
             )
         except Exception as e:
             raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"认证服务错误: {str(e)}"
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"认证服务错误: {str(e)}",
             )
 
     async def __call__(
@@ -78,7 +82,8 @@ auth_handler = JWTBearer()
 
 
 async def get_current_user(
-    token_payload: Dict[str, Any] = Depends(auth_handler), db: AsyncSession = Depends(get_db)
+    token_payload: Dict[str, Any] = Depends(auth_handler),
+    db: AsyncSession = Depends(get_db),
 ) -> User:
     """获取当前用户信息"""
     try:
@@ -96,7 +101,8 @@ async def get_current_user(
 
     except KeyError as e:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail=f"Token中缺少必要信息: {str(e)}"
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=f"Token中缺少必要信息: {str(e)}",
         )
 
 

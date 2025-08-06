@@ -43,15 +43,15 @@ def setup_exception_handlers(app: FastAPI) -> None:
         error_code = _get_error_code_from_status(exc.status_code)
 
         response_data = create_error_response(
-            message=str(exc.detail), error_code=error_code, request_id=request_id
+            message=str(exc.detail),
+            error_code=error_code,
+            request_id=request_id,
         )
 
         return JSONResponse(status_code=exc.status_code, content=response_data)
 
     @app.exception_handler(StarletteHTTPException)
-    async def starlette_http_exception_handler(
-        request: Request, exc: StarletteHTTPException
-    ) -> JSONResponse:
+    async def starlette_http_exception_handler(request: Request, exc: StarletteHTTPException) -> JSONResponse:
         """Starlette HTTP异常处理器"""
         request_id = str(uuid.uuid4())
 
@@ -68,15 +68,15 @@ def setup_exception_handlers(app: FastAPI) -> None:
         error_code = _get_error_code_from_status(exc.status_code)
 
         response_data = create_error_response(
-            message=str(exc.detail), error_code=error_code, request_id=request_id
+            message=str(exc.detail),
+            error_code=error_code,
+            request_id=request_id,
         )
 
         return JSONResponse(status_code=exc.status_code, content=response_data)
 
     @app.exception_handler(RequestValidationError)
-    async def validation_exception_handler(
-        request: Request, exc: RequestValidationError
-    ) -> JSONResponse:
+    async def validation_exception_handler(request: Request, exc: RequestValidationError) -> JSONResponse:
         """请求验证错误处理器"""
         request_id = str(uuid.uuid4())
 
@@ -108,12 +108,13 @@ def setup_exception_handlers(app: FastAPI) -> None:
             request_id=request_id,
         )
 
-        return JSONResponse(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, content=response_data)
+        return JSONResponse(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            content=response_data,
+        )
 
     @app.exception_handler(ValidationError)
-    async def pydantic_validation_exception_handler(
-        request: Request, exc: ValidationError
-    ) -> JSONResponse:
+    async def pydantic_validation_exception_handler(request: Request, exc: ValidationError) -> JSONResponse:
         """Pydantic验证错误处理器"""
         request_id = str(uuid.uuid4())
 
@@ -145,7 +146,10 @@ def setup_exception_handlers(app: FastAPI) -> None:
             request_id=request_id,
         )
 
-        return JSONResponse(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, content=response_data)
+        return JSONResponse(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            content=response_data,
+        )
 
     @app.exception_handler(SQLAlchemyError)
     async def sqlalchemy_exception_handler(request: Request, exc: SQLAlchemyError) -> JSONResponse:
@@ -170,7 +174,8 @@ def setup_exception_handlers(app: FastAPI) -> None:
         )
 
         return JSONResponse(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content=response_data
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content=response_data,
         )
 
     @app.exception_handler(Exception)
@@ -198,7 +203,8 @@ def setup_exception_handlers(app: FastAPI) -> None:
         )
 
         return JSONResponse(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content=response_data
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content=response_data,
         )
 
 

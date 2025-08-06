@@ -55,14 +55,13 @@ async def get_github_auth_url():
 
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"生成授权URL失败: {str(e)}"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"生成授权URL失败: {str(e)}",
         )
 
 
 @router.post("/github/callback", response_model=AuthResponse)
-async def github_oauth_callback(
-    callback_data: GitHubCallbackRequest, db: AsyncSession = Depends(get_db)
-):
+async def github_oauth_callback(callback_data: GitHubCallbackRequest, db: AsyncSession = Depends(get_db)):
     """
     处理GitHub OAuth回调
     """
@@ -125,7 +124,8 @@ async def github_oauth_callback(
         raise
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"OAuth回调处理失败: {str(e)}"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"OAuth回调处理失败: {str(e)}",
         )
 
 
@@ -176,7 +176,8 @@ async def refresh_token(
 
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"令牌刷新失败: {str(e)}"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"令牌刷新失败: {str(e)}",
         )
 
 
@@ -208,12 +209,15 @@ async def logout(
         raise
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"登出失败: {str(e)}"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"登出失败: {str(e)}",
         )
 
 
 @router.get("/profile", response_model=UserProfile)
-async def get_current_user_profile(current_user: User = Depends(get_current_user)):
+async def get_current_user_profile(
+    current_user: User = Depends(get_current_user),
+):
     """
     获取当前用户资料
     需要JWT认证
@@ -238,7 +242,8 @@ async def get_current_user_profile(current_user: User = Depends(get_current_user
 
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"获取用户资料失败: {str(e)}"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"获取用户资料失败: {str(e)}",
         )
 
 
@@ -285,13 +290,17 @@ async def email_register(register_data: EmailRegisterRequest, db: AsyncSession =
 
         # 注册用户
         user = await email_auth_service.register_user(
-            email=register_data.email, password=register_data.password, name=register_data.name
+            email=register_data.email,
+            password=register_data.password,
+            name=register_data.name,
         )
 
         # 发送验证邮件
         if user.verification_token:
             email_sent = await email_service.send_verification_email(
-                to_email=user.email, verification_token=user.verification_token, user_name=user.name
+                to_email=user.email,
+                verification_token=user.verification_token,
+                user_name=user.name,
             )
 
             if not email_sent:
@@ -310,7 +319,8 @@ async def email_register(register_data: EmailRegisterRequest, db: AsyncSession =
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"注册失败: {str(e)}"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"注册失败: {str(e)}",
         )
 
 
@@ -325,17 +335,20 @@ async def email_login(login_data: EmailLoginRequest, db: AsyncSession = Depends(
         email_auth_service = EmailAuthService(db)
 
         # 验证用户登录
-        user = await email_auth_service.authenticate_user(
-            email=login_data.email, password=login_data.password
-        )
+        user = await email_auth_service.authenticate_user(email=login_data.email, password=login_data.password)
 
         if not user:
             raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED, detail="邮箱或密码错误，或邮箱未验证"
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="邮箱或密码错误，或邮箱未验证",
             )
 
         # 生成JWT令牌
-        token_data = {"user_id": user.id, "email": user.email, "auth_provider": user.auth_provider}
+        token_data = {
+            "user_id": user.id,
+            "email": user.email,
+            "auth_provider": user.auth_provider,
+        }
 
         jwt_token = jwt_service.create_access_token(token_data)
 
@@ -368,13 +381,15 @@ async def email_login(login_data: EmailLoginRequest, db: AsyncSession = Depends(
         raise
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"登录失败: {str(e)}"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"登录失败: {str(e)}",
         )
 
 
 @router.post("/email/verify", response_model=SuccessResponse)
 async def verify_email(
-    verification_data: EmailVerificationRequest, db: AsyncSession = Depends(get_db)
+    verification_data: EmailVerificationRequest,
+    db: AsyncSession = Depends(get_db),
 ):
     """
     验证邮箱地址
@@ -390,9 +405,7 @@ async def verify_email(
         success = await email_auth_service.verify_email(verification_data.token)
 
         if not success:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail="验证令牌无效或已过期"
-            )
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="验证令牌无效或已过期")
 
         # 获取已验证的用户发送欢迎邮件
         user = await email_auth_service.get_user_by_verification_token(verification_data.token)
@@ -409,7 +422,8 @@ async def verify_email(
         raise
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"邮箱验证失败: {str(e)}"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"邮箱验证失败: {str(e)}",
         )
 
 
@@ -454,7 +468,8 @@ async def forgot_password(forgot_data: ForgotPasswordRequest, db: AsyncSession =
         raise
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"密码重置申请失败: {str(e)}"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"密码重置申请失败: {str(e)}",
         )
 
 
@@ -469,14 +484,10 @@ async def reset_password(reset_data: ResetPasswordRequest, db: AsyncSession = De
         email_auth_service = EmailAuthService(db)
 
         # 重置密码
-        success = await email_auth_service.reset_password(
-            token=reset_data.token, new_password=reset_data.new_password
-        )
+        success = await email_auth_service.reset_password(token=reset_data.token, new_password=reset_data.new_password)
 
         if not success:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail="重置令牌无效或已过期"
-            )
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="重置令牌无效或已过期")
 
         return SuccessResponse(message="密码重置成功！现在可以使用新密码登录")
 
@@ -486,7 +497,8 @@ async def reset_password(reset_data: ResetPasswordRequest, db: AsyncSession = De
         raise
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"密码重置失败: {str(e)}"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"密码重置失败: {str(e)}",
         )
 
 
@@ -513,7 +525,8 @@ async def change_password(
 
         if not success:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail="当前密码错误或用户不支持密码认证"
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="当前密码错误或用户不支持密码认证",
             )
 
         return SuccessResponse(message="密码修改成功！")
@@ -524,7 +537,8 @@ async def change_password(
         raise
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"密码修改失败: {str(e)}"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"密码修改失败: {str(e)}",
         )
 
 
@@ -553,5 +567,6 @@ async def test_email(test_data: TestEmailRequest, db: AsyncSession = Depends(get
         raise
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"测试邮件发送失败: {str(e)}"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"测试邮件发送失败: {str(e)}",
         )

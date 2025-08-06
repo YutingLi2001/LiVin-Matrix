@@ -18,7 +18,9 @@ class JWTService:
     """JWT令牌管理服务"""
 
     def create_access_token(
-        self, user_data: Dict[str, Any], expires_delta: Optional[timedelta] = None
+        self,
+        user_data: Dict[str, Any],
+        expires_delta: Optional[timedelta] = None,
     ) -> str:
         """
         创建JWT访问令牌
@@ -36,19 +38,24 @@ class JWTService:
         if expires_delta:
             expire = datetime.now(timezone.utc) + expires_delta
         else:
-            expire = datetime.now(timezone.utc) + timedelta(
-                minutes=settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES
-            )
+            expire = datetime.now(timezone.utc) + timedelta(minutes=settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES)
 
         # 添加标准JWT声明
         jti = str(uuid.uuid4())  # JWT ID，用于令牌撤销
         to_encode.update(
-            {"exp": expire, "iat": datetime.now(timezone.utc), "jti": jti, "type": "access"}
+            {
+                "exp": expire,
+                "iat": datetime.now(timezone.utc),
+                "jti": jti,
+                "type": "access",
+            }
         )
 
         # 生成JWT令牌
         encoded_jwt = jwt.encode(
-            to_encode, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM
+            to_encode,
+            settings.JWT_SECRET_KEY,
+            algorithm=settings.JWT_ALGORITHM,
         )
 
         return encoded_jwt

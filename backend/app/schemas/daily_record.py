@@ -14,7 +14,9 @@ class WorkoutSessionBase(BaseModel):
 
     workout_type: str = Field(..., pattern="^(strength|cardio)$", description="训练类型")
     cardio_type: Optional[str] = Field(
-        None, pattern="^(running|cycling|swimming|hiit|machine|other)$", description="有氧类型"
+        None,
+        pattern="^(running|cycling|swimming|hiit|machine|other)$",
+        description="有氧类型",
     )
     start_time: time = Field(..., description="开始时间")
     end_time: time = Field(..., description="结束时间")
@@ -47,9 +49,7 @@ class WorkoutSessionUpdate(BaseModel):
     """更新运动记录模式"""
 
     workout_type: Optional[str] = Field(None, pattern="^(strength|cardio)$")
-    cardio_type: Optional[str] = Field(
-        None, pattern="^(running|cycling|swimming|hiit|machine|other)$"
-    )
+    cardio_type: Optional[str] = Field(None, pattern="^(running|cycling|swimming|hiit|machine|other)$")
     start_time: Optional[time] = None
     end_time: Optional[time] = None
     intensity: Optional[int] = Field(None, ge=1, le=10)
@@ -100,25 +100,19 @@ class UserDailyRecordBase(BaseModel):
     focus_quality: Optional[int] = Field(None, ge=1, le=10, description="专注质量 1-10")
     task_completion: Optional[int] = Field(None, ge=1, le=10, description="任务完成度 1-10")
     work_satisfaction: Optional[int] = Field(None, ge=1, le=10, description="工作满意度 1-10")
-    work_environment: Optional[str] = Field(
-        None, pattern="^(home|office|cafe|mixed)$", description="工作环境"
-    )
+    work_environment: Optional[str] = Field(None, pattern="^(home|office|cafe|mixed)$", description="工作环境")
 
     # 社交维度
     initiated_social: Optional[int] = Field(None, ge=0, description="发起社交次数")
     responded_social: Optional[int] = Field(None, ge=0, description="响应社交次数")
-    interpersonal_satisfaction: Optional[int] = Field(
-        None, ge=1, le=10, description="人际关系满意度 1-10"
-    )
+    interpersonal_satisfaction: Optional[int] = Field(None, ge=1, le=10, description="人际关系满意度 1-10")
     solitude_satisfaction: Optional[int] = Field(None, ge=1, le=10, description="独处满意度 1-10")
 
 
 class UserDailyRecordCreate(UserDailyRecordBase):
     """创建每日记录模式"""
 
-    workout_sessions: Optional[List[WorkoutSessionCreate]] = Field(
-        default_factory=list, description="运动记录"
-    )
+    workout_sessions: Optional[List[WorkoutSessionCreate]] = Field(default_factory=list, description="运动记录")
 
 
 class UserDailyRecordUpdate(BaseModel):

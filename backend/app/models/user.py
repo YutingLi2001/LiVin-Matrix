@@ -34,18 +34,14 @@ class User(BaseModel):
     verification_token = Column(String(255), nullable=True)  # 邮箱验证令牌
     password_reset_token = Column(String(255), nullable=True)  # 密码重置令牌
     password_reset_expires = Column(DateTime, nullable=True)  # 密码重置令牌过期时间
-    auth_provider = Column(
-        String(50), default="email", nullable=False
-    )  # 认证提供商: 'github' | 'email'
+    auth_provider = Column(String(50), default="email", nullable=False)  # 认证提供商: 'github' | 'email'
 
     # 用户配置
     timezone = Column(String(50), default="UTC", nullable=False)
     is_active = Column(Boolean, default=True, nullable=False)
 
     # 关系映射
-    daily_records = relationship(
-        "UserDailyRecord", back_populates="user", cascade="all, delete-orphan"
-    )
+    daily_records = relationship("UserDailyRecord", back_populates="user", cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<User(id={self.id}, email='{self.email}', github_id='{self.github_user_id}')>"

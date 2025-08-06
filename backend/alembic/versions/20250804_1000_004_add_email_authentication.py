@@ -35,21 +35,49 @@ def upgrade() -> None:
     """
 
     # 添加邮箱认证相关字段
-    op.add_column("users", sa.Column("password_hash", sa.String(length=255), nullable=True))
-    op.add_column(
-        "users", sa.Column("email_verified", sa.Boolean(), nullable=False, server_default="false")
-    )
-    op.add_column("users", sa.Column("verification_token", sa.String(length=255), nullable=True))
-    op.add_column("users", sa.Column("password_reset_token", sa.String(length=255), nullable=True))
-    op.add_column("users", sa.Column("password_reset_expires", sa.DateTime(), nullable=True))
     op.add_column(
         "users",
-        sa.Column("auth_provider", sa.String(length=50), nullable=False, server_default="email"),
+        sa.Column("password_hash", sa.String(length=255), nullable=True),
+    )
+    op.add_column(
+        "users",
+        sa.Column(
+            "email_verified",
+            sa.Boolean(),
+            nullable=False,
+            server_default="false",
+        ),
+    )
+    op.add_column(
+        "users",
+        sa.Column("verification_token", sa.String(length=255), nullable=True),
+    )
+    op.add_column(
+        "users",
+        sa.Column("password_reset_token", sa.String(length=255), nullable=True),
+    )
+    op.add_column(
+        "users",
+        sa.Column("password_reset_expires", sa.DateTime(), nullable=True),
+    )
+    op.add_column(
+        "users",
+        sa.Column(
+            "auth_provider",
+            sa.String(length=50),
+            nullable=False,
+            server_default="email",
+        ),
     )
 
     # 将GitHub字段改为可选，以支持邮箱认证用户
     op.alter_column("users", "github_user_id", existing_type=sa.BigInteger(), nullable=True)
-    op.alter_column("users", "github_username", existing_type=sa.String(length=255), nullable=True)
+    op.alter_column(
+        "users",
+        "github_username",
+        existing_type=sa.String(length=255),
+        nullable=True,
+    )
 
     # 更新现有GitHub OAuth用户的auth_provider
     op.execute("UPDATE users SET auth_provider = 'github' WHERE github_user_id IS NOT NULL")
@@ -57,12 +85,23 @@ def upgrade() -> None:
 
     # 添加索引以提高查询性能
     op.create_index(
-        op.f("ix_users_verification_token"), "users", ["verification_token"], unique=False
+        op.f("ix_users_verification_token"),
+        "users",
+        ["verification_token"],
+        unique=False,
     )
     op.create_index(
-        op.f("ix_users_password_reset_token"), "users", ["password_reset_token"], unique=False
+        op.f("ix_users_password_reset_token"),
+        "users",
+        ["password_reset_token"],
+        unique=False,
     )
-    op.create_index(op.f("ix_users_auth_provider"), "users", ["auth_provider"], unique=False)
+    op.create_index(
+        op.f("ix_users_auth_provider"),
+        "users",
+        ["auth_provider"],
+        unique=False,
+    )
 
 
 def downgrade() -> None:
@@ -85,5 +124,15 @@ def downgrade() -> None:
     op.drop_column("users", "password_hash")
 
     # 恢复GitHub字段为必填
-    op.alter_column("users", "github_username", existing_type=sa.String(length=255), nullable=False)
-    op.alter_column("users", "github_user_id", existing_type=sa.BigInteger(), nullable=False)
+    op.alter_column(
+        "users",
+        "github_username",
+        existing_type=sa.String(length=255),
+        nullable=False,
+    )
+    op.alter_column(
+        "users",
+        "github_user_id",
+        existing_type=sa.BigInteger(),
+        nullable=False,
+    )

@@ -9,7 +9,11 @@ from sqlalchemy.orm import Session
 
 from app.core.auth import get_current_user
 from app.core.database import get_db
-from app.schemas.responses import ErrorCodes, create_error_response, create_success_response
+from app.schemas.responses import (
+    ErrorCodes,
+    create_error_response,
+    create_success_response,
+)
 from app.schemas.user import User as UserResponse
 from app.schemas.user import UserUpdate
 from app.services.auth_service import AuthService

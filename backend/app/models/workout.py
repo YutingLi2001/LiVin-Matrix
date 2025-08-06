@@ -2,7 +2,15 @@
 运动训练记录模型
 """
 
-from sqlalchemy import CheckConstraint, Column, Computed, ForeignKey, Integer, String, Time
+from sqlalchemy import (
+    CheckConstraint,
+    Column,
+    Computed,
+    ForeignKey,
+    Integer,
+    String,
+    Time,
+)
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
@@ -18,13 +26,18 @@ class WorkoutSession(BaseModel):
 
     # 关联信息
     user_daily_record_id = Column(
-        Integer, ForeignKey("user_daily_records.id", ondelete="CASCADE"), nullable=False, index=True
+        Integer,
+        ForeignKey("user_daily_records.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
 
     # 训练基本信息
     workout_type = Column(String(20), nullable=False, comment="训练类型: strength/cardio")
     cardio_type = Column(
-        String(20), nullable=True, comment="有氧类型: running/cycling/swimming/hiit/machine/other"
+        String(20),
+        nullable=True,
+        comment="有氧类型: running/cycling/swimming/hiit/machine/other",
     )
 
     # 时间信息

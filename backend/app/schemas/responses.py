@@ -21,9 +21,7 @@ class ErrorDetail(BaseModel):
 class APIMetadata(BaseModel):
     """API响应元数据"""
 
-    model_config = ConfigDict(
-        json_encoders={datetime: lambda v: v.isoformat()}, use_enum_values=True
-    )
+    model_config = ConfigDict(json_encoders={datetime: lambda v: v.isoformat()}, use_enum_values=True)
 
     timestamp: datetime = Field(default_factory=datetime.utcnow, description="响应时间戳")
     version: str = Field(default="v1", description="API版本")
@@ -73,7 +71,9 @@ class PaginatedResponse(BaseModel, Generic[T]):
 
 # 响应格式化工具函数
 def create_success_response(
-    data: Any = None, message: Optional[str] = None, request_id: Optional[str] = None
+    data: Any = None,
+    message: Optional[str] = None,
+    request_id: Optional[str] = None,
 ) -> Dict[str, Any]:
     """创建成功响应"""
     metadata = APIMetadata(request_id=request_id)
@@ -128,7 +128,12 @@ def create_paginated_response(
     has_prev = page > 1
 
     pagination = PaginationMeta(
-        page=page, size=size, total=total, pages=pages, has_next=has_next, has_prev=has_prev
+        page=page,
+        size=size,
+        total=total,
+        pages=pages,
+        has_next=has_next,
+        has_prev=has_prev,
     )
 
     metadata = APIMetadata(request_id=request_id)

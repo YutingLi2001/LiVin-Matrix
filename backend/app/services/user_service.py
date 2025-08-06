@@ -121,16 +121,15 @@ class UserService:
 
     async def get_active_users(self, skip: int = 0, limit: int = 100) -> List[User]:
         """获取活跃用户列表"""
-        result = await self.db.execute(
-            select(User).where(User.is_active.is_(True)).offset(skip).limit(limit)
-        )
+        result = await self.db.execute(select(User).where(User.is_active.is_(True)).offset(skip).limit(limit))
         return list(result.scalars().all())
 
     async def search_by_username(self, username: str) -> List[User]:
         """根据GitHub用户名搜索用户"""
         result = await self.db.execute(
             select(User).where(
-                User.github_username.ilike(f"%{username}%"), User.is_active.is_(True)
+                User.github_username.ilike(f"%{username}%"),
+                User.is_active.is_(True),
             )
         )
         return list(result.scalars().all())

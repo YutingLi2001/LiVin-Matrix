@@ -27,7 +27,10 @@ class UserDailyRecord(BaseModel):
 
     # 基础信息
     user_id = Column(
-        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+        Integer,
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     record_date = Column(Date, nullable=False, index=True)
 
@@ -70,7 +73,9 @@ class UserDailyRecord(BaseModel):
     # 关系映射
     user = relationship("User", back_populates="daily_records")
     workout_sessions = relationship(
-        "WorkoutSession", back_populates="daily_record", cascade="all, delete-orphan"
+        "WorkoutSession",
+        back_populates="daily_record",
+        cascade="all, delete-orphan",
     )
 
     # 约束条件
@@ -78,16 +83,28 @@ class UserDailyRecord(BaseModel):
         # 用户每日记录唯一性约束
         UniqueConstraint("user_id", "record_date", name="_user_date_uc"),
         # 睡眠质量检查约束
-        CheckConstraint("sleep_quality >= 1 AND sleep_quality <= 10", name="sleep_quality_range"),
-        CheckConstraint("wake_clarity >= 1 AND wake_clarity <= 10", name="wake_clarity_range"),
+        CheckConstraint(
+            "sleep_quality >= 1 AND sleep_quality <= 10",
+            name="sleep_quality_range",
+        ),
+        CheckConstraint(
+            "wake_clarity >= 1 AND wake_clarity <= 10",
+            name="wake_clarity_range",
+        ),
         # 饮食数据检查约束
         CheckConstraint("calories >= 0 AND calories <= 5000", name="calories_range"),
         CheckConstraint("protein >= 0 AND protein <= 500", name="protein_range"),
         CheckConstraint("fat >= 0 AND fat <= 500", name="fat_range"),
-        CheckConstraint("carbohydrates >= 0 AND carbohydrates <= 1000", name="carbohydrates_range"),
+        CheckConstraint(
+            "carbohydrates >= 0 AND carbohydrates <= 1000",
+            name="carbohydrates_range",
+        ),
         # 运动数据检查约束
         CheckConstraint("total_workout_duration >= 0", name="workout_duration_positive"),
-        CheckConstraint("daily_steps >= 0 AND daily_steps <= 50.0", name="daily_steps_range"),
+        CheckConstraint(
+            "daily_steps >= 0 AND daily_steps <= 50.0",
+            name="daily_steps_range",
+        ),
         # 情绪数据检查约束
         CheckConstraint("overall_mood >= 1 AND overall_mood <= 10", name="mood_range"),
         CheckConstraint("stress_level >= 1 AND stress_level <= 10", name="stress_range"),
@@ -95,18 +112,25 @@ class UserDailyRecord(BaseModel):
         CheckConstraint("energy_level >= 1 AND energy_level <= 10", name="energy_range"),
         # 工作效率数据检查约束
         CheckConstraint(
-            "deep_work_hours >= 0 AND deep_work_hours <= 24.0", name="deep_work_hours_range"
+            "deep_work_hours >= 0 AND deep_work_hours <= 24.0",
+            name="deep_work_hours_range",
         ),
         CheckConstraint("active_breaks >= 0", name="active_breaks_positive"),
-        CheckConstraint("focus_quality >= 1 AND focus_quality <= 10", name="focus_quality_range"),
         CheckConstraint(
-            "task_completion >= 1 AND task_completion <= 10", name="task_completion_range"
+            "focus_quality >= 1 AND focus_quality <= 10",
+            name="focus_quality_range",
         ),
         CheckConstraint(
-            "work_satisfaction >= 1 AND work_satisfaction <= 10", name="work_satisfaction_range"
+            "task_completion >= 1 AND task_completion <= 10",
+            name="task_completion_range",
         ),
         CheckConstraint(
-            "work_environment IN ('home', 'office', 'cafe', 'mixed')", name="work_environment_valid"
+            "work_satisfaction >= 1 AND work_satisfaction <= 10",
+            name="work_satisfaction_range",
+        ),
+        CheckConstraint(
+            "work_environment IN ('home', 'office', 'cafe', 'mixed')",
+            name="work_environment_valid",
         ),
         # 社交数据检查约束
         CheckConstraint("initiated_social >= 0", name="initiated_social_positive"),

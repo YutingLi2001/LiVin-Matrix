@@ -64,7 +64,10 @@ class Settings(BaseSettings):
                 "http://127.0.0.1:5173",  # Vite默认端口
             ]
         elif self.ENVIRONMENT == "production":
-            return ["https://your-domain.github.io", "https://livin-matrix.com"]
+            return [
+                "https://your-domain.github.io",
+                "https://livin-matrix.com",
+            ]
         else:
             return []
 
@@ -125,38 +128,47 @@ def create_settings() -> Settings:
 
             # JWT签名密钥
             base_settings.JWT_SECRET_KEY = get_secret(
-                "JWT_SECRET_KEY", "JWT_SECRET_KEY", base_settings.JWT_SECRET_KEY
+                "JWT_SECRET_KEY",
+                "JWT_SECRET_KEY",
+                base_settings.JWT_SECRET_KEY,
             )
 
             # FastAPI应用密钥
-            base_settings.SECRET_KEY = get_secret(
-                "SESSION_SECRET_KEY", "SECRET_KEY", base_settings.SECRET_KEY
-            )
+            base_settings.SECRET_KEY = get_secret("SESSION_SECRET_KEY", "SECRET_KEY", base_settings.SECRET_KEY)
 
             # 邮件服务密钥
             base_settings.RESEND_API_KEY = get_secret(
-                "RESEND_API_KEY", "RESEND_API_KEY", base_settings.RESEND_API_KEY
+                "RESEND_API_KEY",
+                "RESEND_API_KEY",
+                base_settings.RESEND_API_KEY,
             )
 
             # GitHub OAuth Client ID
             base_settings.GITHUB_CLIENT_ID = get_secret(
-                "GITHUB_CLIENT_ID", "GITHUB_CLIENT_ID", base_settings.GITHUB_CLIENT_ID
+                "GITHUB_CLIENT_ID",
+                "GITHUB_CLIENT_ID",
+                base_settings.GITHUB_CLIENT_ID,
             )
 
             # GitHub OAuth Redirect URI
             base_settings.GITHUB_REDIRECT_URI = get_secret(
-                "GITHUB_REDIRECT_URI", "GITHUB_REDIRECT_URI", base_settings.GITHUB_REDIRECT_URI
+                "GITHUB_REDIRECT_URI",
+                "GITHUB_REDIRECT_URI",
+                base_settings.GITHUB_REDIRECT_URI,
             )
 
             # 数据库密码（如果DATABASE_URL中包含密码占位符，需要替换）
             if base_settings.DATABASE_URL and "postgres@postgres" in base_settings.DATABASE_URL:
                 try:
                     postgres_password = get_secret(
-                        "POSTGRES_PASSWORD", "POSTGRES_PASSWORD", "your_secure_password_here"
+                        "POSTGRES_PASSWORD",
+                        "POSTGRES_PASSWORD",
+                        "your_secure_password_here",
                     )
                     # 替换URL中的密码占位符
                     base_settings.DATABASE_URL = base_settings.DATABASE_URL.replace(
-                        "postgres@postgres", f"postgres:{postgres_password}@postgres"
+                        "postgres@postgres",
+                        f"postgres:{postgres_password}@postgres",
                     )
                     logger.info("Database URL updated with secret password")
                 except Exception as e:
