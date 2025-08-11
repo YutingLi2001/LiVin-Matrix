@@ -637,7 +637,7 @@ critical_risks_monitoring:
     risk_id: "DATA-ACCUMULATION"
     risk_level: "HIGH"
     impact: "Epic 3相关性分析无法实现统计意义"
-    mitigation: "数据模拟工具、用户激励、降低数据量要求"
+    mitigation: "数据模拟工具、用户激励、降低数据量要求"3
     monitoring: "每周数据量和质量评估"
 
   aws_cost_overrun:
