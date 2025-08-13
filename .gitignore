@@ -290,3 +290,5 @@ Thumbs.db
 
 # Docker Compose 开发环境配置（包含敏感信息）
 docker-compose.dev.yml
+docker-compose.secrets.yml
+deployment-info.txt

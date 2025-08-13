@@ -205,41 +205,19 @@ create_subnets() {
     local vpc_id="$1"
     log_info "创建子网..."
 
-    # 公有子网配置
-    declare -A public_subnets=(
-        ["public-1a"]="10.0.1.0/24,us-east-1a"
-        ["public-1b"]="10.0.2.0/24,us-east-1b"
-    )
-
-    # 私有子网配置
-    declare -A private_subnets=(
-        ["private-1a"]="10.0.10.0/24,us-east-1a"
-        ["private-1b"]="10.0.11.0/24,us-east-1b"
-    )
-
-    # 数据库子网配置
-    declare -A db_subnets=(
-        ["db-1a"]="10.0.20.0/24,us-east-1a"
-        ["db-1b"]="10.0.21.0/24,us-east-1b"
-    )
+    # 使用简单的方式创建子网，避免关联数组的bash兼容性问题
 
     # 创建公有子网
-    for subnet_name in "${!public_subnets[@]}"; do
-        IFS=',' read -r cidr az <<< "${public_subnets[$subnet_name]}"
-        create_subnet "$vpc_id" "$subnet_name" "$cidr" "$az" "public"
-    done
+    create_subnet "$vpc_id" "public-1a" "10.0.1.0/24" "us-east-1a" "public"
+    create_subnet "$vpc_id" "public-1b" "10.0.2.0/24" "us-east-1b" "public"
 
     # 创建私有子网
-    for subnet_name in "${!private_subnets[@]}"; do
-        IFS=',' read -r cidr az <<< "${private_subnets[$subnet_name]}"
-        create_subnet "$vpc_id" "$subnet_name" "$cidr" "$az" "private"
-    done
+    create_subnet "$vpc_id" "private-1a" "10.0.10.0/24" "us-east-1a" "private"
+    create_subnet "$vpc_id" "private-1b" "10.0.11.0/24" "us-east-1b" "private"
 
     # 创建数据库子网
-    for subnet_name in "${!db_subnets[@]}"; do
-        IFS=',' read -r cidr az <<< "${db_subnets[$subnet_name]}"
-        create_subnet "$vpc_id" "$subnet_name" "$cidr" "$az" "database"
-    done
+    create_subnet "$vpc_id" "db-1a" "10.0.20.0/24" "us-east-1a" "database"
+    create_subnet "$vpc_id" "db-1b" "10.0.21.0/24" "us-east-1b" "database"
 }
 
 create_subnet() {
@@ -578,10 +556,13 @@ deploy_eks_cluster() {
         return 0
     fi
 
+    # 准备EKS配置文件，替换占位符
+    prepare_eks_config
+
     log_info "创建EKS集群，这可能需要15-20分钟..."
 
     eksctl create cluster \
-        --config-file="$AWS_CONFIG_DIR/eks-cluster.yaml" \
+        --config-file="$AWS_CONFIG_DIR/eks-cluster-prepared.yaml" \
         --verbose 4
 
     log_success "EKS集群创建完成"
@@ -592,6 +573,36 @@ deploy_eks_cluster() {
         --name livin-matrix-cluster
 
     log_success "kubectl配置完成"
+}
+
+# 准备EKS配置文件，替换VPC和子网占位符
+prepare_eks_config() {
+    log_info "准备EKS集群配置文件..."
+
+    local vpc_id=$(cat "$PROJECT_ROOT/.aws-vpc-id")
+    local public_subnet_1a=$(cat "$PROJECT_ROOT/.aws-subnet-public-1a-id")
+    local public_subnet_1b=$(cat "$PROJECT_ROOT/.aws-subnet-public-1b-id")
+    local private_subnet_1a=$(cat "$PROJECT_ROOT/.aws-subnet-private-1a-id")
+    local private_subnet_1b=$(cat "$PROJECT_ROOT/.aws-subnet-private-1b-id")
+    local eks_sg_id=$(cat "$PROJECT_ROOT/.aws-sg-eks-id")
+
+    # 复制原始配置文件并替换占位符
+    cp "$AWS_CONFIG_DIR/eks-cluster.yaml" "$AWS_CONFIG_DIR/eks-cluster-prepared.yaml"
+
+    # 使用sed替换占位符
+    sed -i.bak \
+        -e "s/VPC_ID_PLACEHOLDER/$vpc_id/g" \
+        -e "s/PUBLIC_SUBNET_1A_PLACEHOLDER/$public_subnet_1a/g" \
+        -e "s/PUBLIC_SUBNET_1B_PLACEHOLDER/$public_subnet_1b/g" \
+        -e "s/PRIVATE_SUBNET_1A_PLACEHOLDER/$private_subnet_1a/g" \
+        -e "s/PRIVATE_SUBNET_1B_PLACEHOLDER/$private_subnet_1b/g" \
+        -e "s/EKS_SECURITY_GROUP_PLACEHOLDER/$eks_sg_id/g" \
+        "$AWS_CONFIG_DIR/eks-cluster-prepared.yaml"
+
+    # 删除备份文件
+    rm -f "$AWS_CONFIG_DIR/eks-cluster-prepared.yaml.bak"
+
+    log_success "EKS配置文件准备完成"
 }
 
 # 部署RDS数据库
@@ -646,11 +657,11 @@ create_db_parameter_group() {
             --description "Custom PostgreSQL parameters for LiVin Matrix" \
             --tags Key=Project,Value=LiVin-Matrix
 
-        # 修改参数
+        # 修改参数（使用适合t3.micro的值）
         aws rds modify-db-parameter-group \
             --db-parameter-group-name "livin-matrix-postgres-params" \
             --parameters "ParameterName=max_connections,ParameterValue=100,ApplyMethod=pending-reboot" \
-                        "ParameterName=shared_buffers,ParameterValue=128MB,ApplyMethod=pending-reboot" \
+                        "ParameterName=shared_buffers,ParameterValue=32768,ApplyMethod=pending-reboot" \
                         "ParameterName=log_statement,ParameterValue=mod,ApplyMethod=immediate"
 
         log_success "数据库参数组创建成功"

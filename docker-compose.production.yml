@@ -1,0 +1,81 @@
+# 生产环境 Docker Compose 配置
+# 使用方式: docker compose -f docker-compose.yml -f docker-compose.production.yml up -d
+
+services:
+  # 后端生产配置
+  backend:
+    build:
+      target: production
+    environment:
+      - ENVIRONMENT=production
+      - DEBUG=false
+      - BACKEND_CORS_ORIGINS=["https://your-domain.com","http://localhost:3000"]
+      # 生产环境安全配置
+      - SECURE_COOKIES=true
+      - HTTPS_ONLY=${HTTPS_ONLY:-false}
+    restart: always
+    # 资源限制
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  # 前端生产配置
+  frontend:
+    build:
+      target: production
+    environment:
+      - VITE_API_BASE_URL=${FRONTEND_API_URL:-http://localhost:8000}
+      - VITE_APP_ENVIRONMENT=production
+      - NODE_ENV=production
+    restart: always
+    # 资源限制
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+
+  # 启用 Nginx 反向代理
+  nginx:
+    deploy:
+      replicas: 1  # 生产环境启动nginx
+    restart: always
+
+  # PostgreSQL 生产配置
+  postgres:
+    restart: always
+    # 数据备份配置
+    environment:
+      - POSTGRES_INITDB_ARGS="--data-checksums"
+    # 资源限制
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+
+  # Redis 生产配置
+  redis:
+    restart: always
+    # 持久化配置
+    command: redis-server --appendonly yes --appendfsync everysec
+    # 资源限制
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 128M
