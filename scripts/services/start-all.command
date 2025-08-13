@@ -60,7 +60,7 @@ wait_for_service() {
 
     while [ $attempt -le $max_attempts ]; do
         # 使用docker-compose ps检查服务状态
-        if docker-compose -f docker-compose.yml -f docker-compose.secrets.yml ps --services --filter "status=running" | grep -q "$service"; then
+        if docker-compose -f $COMPOSE_FILE ps --services --filter "status=running" | grep -q "$service"; then
             echo "✅ $service 服务已启动"
             return 0
         fi
@@ -78,7 +78,7 @@ wait_for_service() {
 show_service_status() {
     echo ""
     echo "📊 服务状态："
-    docker-compose -f docker-compose.yml -f docker-compose.secrets.yml ps
+    docker-compose -f $COMPOSE_FILE ps
     echo ""
 }
 
@@ -86,8 +86,19 @@ show_service_status() {
 check_secrets_files() {
     echo "🔐 检查Secrets文件配置..."
 
-    local required_secrets=("POSTGRES_PASSWORD" "JWT_SECRET_KEY" "GITHUB_CLIENT_SECRET"
-                           "SESSION_SECRET_KEY" "RESEND_API_KEY" "GITHUB_CLIENT_ID" "GITHUB_REDIRECT_URI")
+    # 基础必需的secrets
+    local base_secrets=("POSTGRES_PASSWORD" "JWT_SECRET_KEY" "SESSION_SECRET_KEY" "RESEND_API_KEY" "GITHUB_REDIRECT_URI")
+
+    # 根据环境添加GitHub OAuth secrets
+    local github_secrets=()
+    if [ "${DEPLOYMENT_ENV:-local}" = "production" ]; then
+        github_secrets=("GITHUB_CLIENT_ID_PRODUCTION" "GITHUB_CLIENT_SECRET_PRODUCTION" "GITHUB_REDIRECT_URI_PRODUCTION")
+    else
+        github_secrets=("GITHUB_CLIENT_ID_LOCAL" "GITHUB_CLIENT_SECRET_LOCAL")
+    fi
+
+    # 合并所有需要的secrets
+    local required_secrets=("${base_secrets[@]}" "${github_secrets[@]}")
     local missing_secrets=()
 
     for secret in "${required_secrets[@]}"; do
@@ -120,14 +131,19 @@ check_configuration() {
         exit 1
     fi
 
-    if [ ! -f "docker-compose.secrets.yml" ]; then
-        echo "❌ 缺少 docker-compose.secrets.yml 文件"
-        echo "请确保已经完成 Docker Secrets 配置"
-        echo "参考: docs/stories/epic1.5/1.5.4.1.docker-secrets-management.md"
-        echo ""
-        echo "按任意键关闭此窗口..."
-        read -n 1
-        exit 1
+    # 检查环境配置文件
+    if [ "${DEPLOYMENT_ENV:-local}" = "production" ]; then
+        if [ ! -f "docker-compose.production.yml" ]; then
+            echo "❌ 缺少 docker-compose.production.yml 文件"
+            echo "请确保已经完成生产环境配置"
+            exit 1
+        fi
+    else
+        if [ ! -f "docker-compose.local.yml" ]; then
+            echo "❌ 缺少 docker-compose.local.yml 文件"
+            echo "请确保已经完成本地开发环境配置"
+            exit 1
+        fi
     fi
 
     echo "✅ 配置文件检查完成"
@@ -149,8 +165,17 @@ main() {
     echo ""
     echo "🚀 启动所有服务..."
 
-    # 使用Docker Compose启动所有服务（测试模式）
-    if ! docker-compose -f docker-compose.yml -f docker-compose.secrets.yml up -d; then
+    # 检查环境变量决定使用哪个配置文件
+    if [ "${DEPLOYMENT_ENV:-local}" = "production" ]; then
+        echo "🚀 使用生产环境配置启动服务..."
+        COMPOSE_FILE="docker-compose.yml -f docker-compose.production.yml"
+    else
+        echo "🚀 使用本地开发配置启动服务..."
+        COMPOSE_FILE="docker-compose.yml -f docker-compose.local.yml"
+    fi
+
+    # 使用选定的配置启动所有服务
+    if ! docker-compose -f $COMPOSE_FILE up -d; then
         echo "❌ 服务启动失败"
         echo "请检查 Docker 配置和网络连接"
         echo "按任意键关闭此窗口..."
@@ -163,19 +188,19 @@ main() {
 
     # 等待数据库服务
     if ! wait_for_service "postgres"; then
-        echo "数据库启动失败，查看日志: docker-compose -f docker-compose.yml -f docker-compose.secrets.yml logs postgres"
+        echo "数据库启动失败，查看日志: docker-compose -f $COMPOSE_FILE logs postgres"
         exit 1
     fi
 
     # 等待Redis服务
     if ! wait_for_service "redis"; then
-        echo "Redis启动失败，查看日志: docker-compose -f docker-compose.yml -f docker-compose.secrets.yml logs redis"
+        echo "Redis启动失败，查看日志: docker-compose -f $COMPOSE_FILE logs redis"
         exit 1
     fi
 
     # 等待后端服务
     if ! wait_for_service "backend"; then
-        echo "后端服务启动失败，查看日志: docker-compose -f docker-compose.yml -f docker-compose.secrets.yml logs backend"
+        echo "后端服务启动失败，查看日志: docker-compose -f $COMPOSE_FILE logs backend"
         exit 1
     fi
 
@@ -189,12 +214,12 @@ main() {
     echo "   • API文档:  http://localhost:8000/docs"
     echo ""
     echo "📋 管理命令:"
-    echo "   • 查看状态: docker-compose -f docker-compose.yml -f docker-compose.secrets.yml ps"
-    echo "   • 查看日志: docker-compose -f docker-compose.yml -f docker-compose.secrets.yml logs [service]"
+    echo "   • 查看状态: docker-compose -f $COMPOSE_FILE ps"
+    echo "   • 查看日志: docker-compose -f $COMPOSE_FILE logs [service]"
     echo "   • 停止服务: ./scripts/services/stop-all.command"
     echo ""
     echo "💡 按 Ctrl+C 可以安全退出此脚本，服务将继续在后台运行"
-    echo "   要停止所有服务，请运行停止脚本或使用 docker-compose -f docker-compose.yml -f docker-compose.secrets.yml down"
+    echo "   要停止所有服务，请运行停止脚本或使用 docker-compose -f $COMPOSE_FILE down"
     echo ""
 
     # 持续监控服务状态
@@ -202,7 +227,7 @@ main() {
     while true; do
         sleep 30
         # 检查是否有服务不在运行状态
-        if ! docker-compose -f docker-compose.yml -f docker-compose.secrets.yml ps --filter "status=running" | grep -q "Up"; then
+        if ! docker-compose -f $COMPOSE_FILE ps --filter "status=running" | grep -q "Up"; then
             echo "⚠️  检测到服务状态异常"
             show_service_status
         fi

@@ -119,12 +119,19 @@ def create_settings() -> Settings:
 
         # 使用Docker Secrets覆盖敏感配置
         try:
-            # GitHub OAuth密钥
-            base_settings.GITHUB_CLIENT_SECRET = get_secret(
-                "GITHUB_CLIENT_SECRET",
-                "GITHUB_CLIENT_SECRET",
-                base_settings.GITHUB_CLIENT_SECRET,
-            )
+            # GitHub OAuth密钥 - 根据环境选择
+            if base_settings.ENVIRONMENT == "production":
+                base_settings.GITHUB_CLIENT_SECRET = get_secret(
+                    "GITHUB_CLIENT_SECRET_PRODUCTION",
+                    "GITHUB_CLIENT_SECRET",
+                    base_settings.GITHUB_CLIENT_SECRET,
+                )
+            else:
+                base_settings.GITHUB_CLIENT_SECRET = get_secret(
+                    "GITHUB_CLIENT_SECRET_LOCAL",
+                    "GITHUB_CLIENT_SECRET",
+                    base_settings.GITHUB_CLIENT_SECRET,
+                )
 
             # JWT签名密钥
             base_settings.JWT_SECRET_KEY = get_secret(
@@ -143,19 +150,35 @@ def create_settings() -> Settings:
                 base_settings.RESEND_API_KEY,
             )
 
-            # GitHub OAuth Client ID
-            base_settings.GITHUB_CLIENT_ID = get_secret(
-                "GITHUB_CLIENT_ID",
-                "GITHUB_CLIENT_ID",
-                base_settings.GITHUB_CLIENT_ID,
-            )
+            # GitHub OAuth Client ID - 根据环境选择
+            if base_settings.ENVIRONMENT == "production":
+                base_settings.GITHUB_CLIENT_ID = get_secret(
+                    "GITHUB_CLIENT_ID_PRODUCTION",
+                    "GITHUB_CLIENT_ID",
+                    base_settings.GITHUB_CLIENT_ID,
+                )
+            else:
+                base_settings.GITHUB_CLIENT_ID = get_secret(
+                    "GITHUB_CLIENT_ID_LOCAL",
+                    "GITHUB_CLIENT_ID",
+                    base_settings.GITHUB_CLIENT_ID,
+                )
 
-            # GitHub OAuth Redirect URI
-            base_settings.GITHUB_REDIRECT_URI = get_secret(
-                "GITHUB_REDIRECT_URI",
-                "GITHUB_REDIRECT_URI",
-                base_settings.GITHUB_REDIRECT_URI,
-            )
+            # GitHub OAuth Redirect URI - 根据环境选择
+            if base_settings.ENVIRONMENT == "production":
+                # 生产环境使用专用的回调URL
+                base_settings.GITHUB_REDIRECT_URI = get_secret(
+                    "GITHUB_REDIRECT_URI_PRODUCTION",
+                    "GITHUB_REDIRECT_URI",
+                    "http://34.195.202.97:3000/auth/callback",
+                )
+            else:
+                # 开发环境使用本地回调URL
+                base_settings.GITHUB_REDIRECT_URI = get_secret(
+                    "GITHUB_REDIRECT_URI",
+                    "GITHUB_REDIRECT_URI",
+                    base_settings.GITHUB_REDIRECT_URI,
+                )
 
             # 数据库密码（如果DATABASE_URL中包含密码占位符，需要替换）
             if base_settings.DATABASE_URL and "postgres@postgres" in base_settings.DATABASE_URL:

@@ -69,17 +69,39 @@
 
 ### 配置管理策略
 
-**Docker Secrets集成**
-- **生产环境** — Docker Swarm Secrets企业级密钥管理
-- **开发环境** — 模板化配置文件，零配置启动
-- **密钥安全** — 完全移除.env明文存储，权限600保护
-- **4个核心密钥** — GitHub OAuth、JWT、PostgreSQL、Session统一管理
+**多环境配置分离架构** (ADR-005)
+- **基础配置** — docker-compose.yml（共同组件定义）
+- **本地开发** — docker-compose.local.yml（开发环境覆盖）
+- **生产环境** — docker-compose.production.yml（生产环境覆盖）
+- **统一启动** — 环境变量DEPLOYMENT_ENV自动选择配置
 
-**环境配置分离**
-```yaml
-生产部署: docker-compose.yml + docker-compose.secrets.yml
-开发环境: docker-compose.yml + docker-compose.dev.yml
-前端部署: GitHub Pages + 环境变量注入
+**Docker Secrets集成**
+- **生产环境** — Docker Secrets挂载到/var/secrets，企业级密钥管理
+- **开发环境** — 标准环境变量，零配置启动
+- **密钥安全** — 完全移除.env明文存储，权限600保护
+- **核心密钥** — GitHub OAuth、JWT、PostgreSQL、Session统一管理
+
+**环境特定配置差异**
+| 配置项 | 本地开发 | 生产环境 |
+|--------|----------|----------|
+| API地址 | localhost:8000 | 34.195.202.97:8000 |
+| 前端地址 | localhost:3000 | 34.195.202.97:3000 |
+| GitHub回调URL | localhost:3000/auth/callback | 34.195.202.97:3000/auth/callback |
+| 密钥管理 | 环境变量 | Docker Secrets |
+| 环境标识 | development | production |
+| 调试模式 | DEBUG=true | DEBUG=false |
+
+**部署命令标准化**
+```bash
+# 本地开发环境
+./scripts/services/start-all.command
+# 或
+docker-compose -f docker-compose.yml -f docker-compose.local.yml up -d
+
+# 生产环境
+DEPLOYMENT_ENV=production ./scripts/services/start-all.command
+# 或
+docker-compose -f docker-compose.yml -f docker-compose.production.yml up -d
 ```
 
 ---
